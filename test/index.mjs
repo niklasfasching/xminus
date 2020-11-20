@@ -48,6 +48,7 @@ async function main() {
   const results = {}, frameworks = [
     "mithril",
     "domc",
+    "xminus",
   ];
   for (const framework of frameworks) {
     try {

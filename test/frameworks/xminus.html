@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link href="../style.css" rel="stylesheet"/>
+    <script type="text/x-template" name="main">
+      <div class="container">
+        <div class="jumbotron">
+          <div class="row">
+            <div class="col-md-6">
+              <h1>xminus</h1>
+            </div>
+            <div class="col-md-6">
+              <div class="row">
+                <div class="col-sm-6 smallpad">
+                  <button type="button" class="btn btn-primary btn-block" id="run" .on:click="$.store.run()">Create 1,000 rows</button>
+                </div>
+                <div class="col-sm-6 smallpad">
+                  <button type="button" class="btn btn-primary btn-block" id="runlots" .on:click="$.store.runLots()">Create 10,000 rows</button>
+                </div>
+                <div class="col-sm-6 smallpad">
+                  <button type="button" class="btn btn-primary btn-block" id="add" .on:click="$.store.add()">Append 1,000 rows</button>
+                </div>
+                <div class="col-sm-6 smallpad">
+                  <button type="button" class="btn btn-primary btn-block" id="update" .on:click="$.store.update()">Update every 10th row</button>
+                </div>
+                <div class="col-sm-6 smallpad">
+                  <button type="button" class="btn btn-primary btn-block" id="clear" .on:click="$.store.clear()">Clear</button>
+                </div>
+                <div class="col-sm-6 smallpad">
+                  <button type="button" class="btn btn-primary btn-block" id="swaprows" .on:click="$.store.swapRows()">Swap Rows</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <table class="table table-hover table-striped test-data" on:click="handleClick">
+          <tbody>
+            <tr .for="row of $.store.rows" class="{$.row.id === $.store.selected && 'danger'}">
+              <td class="col-md-1">{$.row.id}</td>
+              <td class="col-md-4">
+                <a .on:click="$.store.select($.row.id)">{$.row.label}</a>
+              </td>
+              <td class="col-md-1">
+                <a>
+                  <span class="glyphicon glyphicon-remove" aria-hidden="true" .on:click="$.store.remove($.row.id)"></span>
+                </a>
+              </td>
+              <td class="col-md-6"></td>
+            </tr>
+          </tbody>
+        </table>
+        <span class="preloadicon glyphicon glyphicon-remove" aria-hidden="true"></span>
+      </div>
+    </script>
+    <script type="module">
+     import Store from '../store.mjs';
+     import {mount} from "/src/compile.mjs";
+     window.store = new Store();
+     mount(document.body, "main", {store});
+    </script>
+  </head>
+  <body></body>
+</html>
