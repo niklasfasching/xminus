@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- adapted from https://github.com/krausest/js-framework-benchmark/blob/master/frameworks/keyed/mithril/index.html -->
+    <meta charset="utf-8">
+    <link href="../style.css" rel="stylesheet"/>
+    <script type="module">
+     import 'https://cdnjs.cloudflare.com/ajax/libs/mithril/1.1.7/mithril.js';
+     import Store from '../store.mjs'
+
+     window.store = new Store()
+
+     const Button = (title, id, onclick, type = "button") => m("div.col-sm-6.smallpad", [
+       m("button.btn.btn-primary.btn-block", {id, onclick, type}, title)
+     ]);
+
+     const Row = {
+       oninit({attrs}) {
+         this.click = () => attrs.onclick(attrs.id);
+         this.delete = () => attrs.ondelete(attrs.id);
+       },
+       view({attrs: {label, id, styleClass}}) {
+         return m("tr", {key: id, className: styleClass}, [
+           m("td.col-md-1", id),
+           m("td.col-md-4", [
+             m("a", {onclick: this.click}, label),
+           ]),
+           m("td.col-md-1", [
+             m("a", {onclick: this.delete}, [m("span.glyphicon.glyphicon-remove", {"aria-hidden": true})]),
+           ]),
+           m("td.col-md-6"),
+         ]);
+       }
+     };
+
+     const Controller = {
+       oninit() {
+         this.store = store;
+       },
+       view() {
+         const rows = this.store.rows.map(({id, label}, i) => {
+           return m(Row, {
+             id,
+             label,
+             key: id,
+             styleClass: id === this.selected ? 'danger' : '',
+
+             onclick: () => this.store.select(id),
+             ondelete: () => this.store.delete(d.id),
+           });
+         });
+         return m("div.container", [
+           m("div.jumbotron", [
+             m("div.row", [
+               m("div.col-md-6", [
+                 m("h1", "mithril")
+               ]),
+               m("div.col-md-6", [
+                 m("div.row", [
+                   Button("Create 1,000 rows", "run", () => this.store.run()),
+                   Button("Create 10,000 rows", "runlots", () => this.store.runLots()),
+                   Button("Append 1,000 rows", "append", () => this.store.add()),
+                   Button("Update every 10th row", "update", () => this.store.update()),
+                   Button("Clear", "clear", () => this.store.clear()),
+                   Button("Swap Rows", "swap", () => this.store.swapRows()),
+                 ]),
+               ]),
+             ]),
+           ]),
+           m("table.table.table-hover.table-striped.test-data", [
+             m("tbody", rows)
+           ]),
+           m("span.preloadicon.glyphicon.glyphicon-remove", {"aria-hidden": true}),
+         ]);
+       }
+     };
+
+     m.mount(document.querySelector("#main"), Controller);
+    </script>
+  </head>
+  <body>
+    <div id="main"></div>
+  </body>
+</html>
