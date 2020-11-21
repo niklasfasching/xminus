@@ -28,15 +28,11 @@ export function updateFor(parentNode, $, values, create) {
 
 export async function mount(parentNode, name, $) {
   window.xm = await import(import.meta.url);
-  document.querySelectorAll(`script[type="text/x-template"][name^=x-]`).forEach(template => {
-    const name = template.getAttribute("name");
-    try {
-      components[name] = eval(generateComponent(name, template.text));
-    } catch (e) {
-      throw new Error(`eval: ${e.message}:\n${generateComponent(name, template.text)}`);
-    }
-
-  });
+  try {
+    eval(await generateCode(location.toString()));
+  } catch (e) {
+    throw new Error(`eval: ${e.message}:\n${url}`);
+  }
   if (!components[name]) throw new Error(`component ${name} does not exist`);
   parentNode.innerHTML = "";
   parentNode.appendChild(components[name]($, {}));
@@ -59,6 +55,15 @@ function forMacro(vnode, $, key, value) {
                   `$["${name}"] = _args[0];`);
   $.create += `for (let value of ${values}) ${_}templateParent.appendChild(${_}create($, value));\n`;
   $.update += `xm.updateFor(${_}templateParent, $, ${values}, ${_}create);\n`;
+}
+
+async function generateCode(url) {
+  let code = `//# sourceURL=${url}.generated.js\n`, d = document;
+  d.querySelectorAll(`script[type="text/x-template"][name^=x-]`).forEach(template => {
+    const name = template.getAttribute("name");
+    code += `components["${name}"] = ${generateComponent(name, template.text)}`;
+  });
+  return code;
 }
 
 function generateComponent(name, template) {
