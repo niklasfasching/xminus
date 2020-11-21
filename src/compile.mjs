@@ -164,7 +164,7 @@ function generateProperties(vnode, $) {
   for (const k in vnode.properties) {
     const [key, rawKey, isDynamicKey] = compileValue(k),
           [value, rawValue, isDynamicValue] = compileValue(vnode.properties[k]);
-    if (!isDynamicKey && !isDynamicValue) $.html += ` ${rawKey}=${rawValue}`;
+    if (!isDynamicKey && !isDynamicValue) $.html += ` ${rawKey}=${value}`;
     else if (!isDynamicKey) {
       $.create += `xm.setProperty(${vnode.node}, ${key}, ${value});\n`;
       $.update += `xm.setProperty(${vnode.node}, ${key}, ${value});\n`;
