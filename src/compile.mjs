@@ -69,9 +69,8 @@ async function generateCode(url) {
       `${importFrom} "${new URL(importURL, new URL(url, location))}"`) + "\n";
   }
 
-  d.querySelectorAll(`script[type="text/x-template"][name^=x-]`).forEach(template => {
-    const name = template.getAttribute("name");
-    code += `xm.components["${name}"] = ${generateComponent(name, template.text)}`;
+  d.querySelectorAll(`script[type="text/x-template"][id^=x-]`).forEach(({id, text}) => {
+    code += `xm.components["${id}"] = ${generateComponent(id, text)}`;
   });
   return code;
 }
