@@ -26,9 +26,14 @@ window.updateFor = function updateFor(parentNode, $, values, create) {
 }
 
 export async function mount(parentNode, name, $) {
-  document.querySelectorAll(`script[type="text/x-template"][name]`).forEach(template => {
+  document.querySelectorAll(`script[type="text/x-template"][name^=x-]`).forEach(template => {
     const name = template.getAttribute("name");
-    components[name] = eval(generateComponent(name, template.text));
+    try {
+      components[name] = eval(generateComponent(name, template.text));
+    } catch (e) {
+      throw new Error(`eval: ${e.message}:\n${generateComponent(name, template.text)}`)
+    }
+
   });
   if (!components[name]) throw new Error(`component ${name} does not exist`);
   parentNode.innerHTML = "";
@@ -57,6 +62,7 @@ function forMacro(vnode, $, key, value) {
 export function generateComponent(name, template) {
   const vnode = {node: "_node", properties: {}, children: compile(template)},
         $ = {html: "", create: "", update: ""};
+  name = name.slice(2);
   generateChildren(vnode, $)
   return `(function() {
             //# sourceURL=${name}Component.generated.js
@@ -113,7 +119,7 @@ function generateVnode(vnode, $) {
   }
 
   const [tag, rawTag, isDynamicTag] = compileValue(vnode.tag);
-  if (!isDynamicTag && !isComponentTag(tag)) {
+  if (!isDynamicTag && !isComponentTag(rawTag)) {
     $.html += `<${rawTag}`;
     if (Object.entries(vnode.properties).some(([k, v]) => compileValue(k)[2] || compileValue(v)[2])) {
       vnode.node = generateNodeName($, vnode.node);
