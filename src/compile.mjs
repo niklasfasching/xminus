@@ -75,7 +75,7 @@ async function generateCode(url) {
   return code;
 }
 
-function generateComponent(name, template) {
+export function generateComponent(name, template) {
   const vnode = {node: "_node", properties: {}, children: compile(template)},
         $ = {html: "", create: "", update: ""};
   name = name.slice(2);
@@ -226,7 +226,7 @@ function compileValue(input) {
           isDynamic];
 }
 
-function compile(template) {
+export function compile(template) {
   const tokens = lex(template), vnodes = [], parents = [];
   for (let i = 0, $ = tokens[0], x = tokens[1]; i < tokens.length; i += 2, $ = tokens[i], x = tokens[i+1]) {
     if ($ === "open") {
@@ -245,7 +245,7 @@ function compile(template) {
   return vnodes;
 }
 
-function lex(template) {
+export function lex(template) {
   let $ = "child", tag = "", tmp = "", tokens = [], push = ($next) => {
     if (tmp.trim()) tokens.push($, tmp);
     if ($ === "open") tag = tmp;

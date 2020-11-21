@@ -1,0 +1,80 @@
+[
+  {
+    "id": "x-properties",
+    "tokens": [
+      "child",
+      "\n      values\n      ",
+      "open",
+      "div",
+      "key",
+      "key1",
+      "value",
+      "value",
+      "key",
+      "with",
+      "value",
+      "true",
+      "key",
+      "spaces",
+      "value",
+      "true",
+      "key",
+      "key2",
+      "value",
+      "value with spaces",
+      "key",
+      "key3",
+      "value",
+      "value with spaces",
+      "close",
+      "/",
+      "child",
+      "\n\n      keys\n      ",
+      "open",
+      "div",
+      "key",
+      "key-1",
+      "value",
+      "value",
+      "key",
+      "key-2",
+      "value",
+      "true",
+      "key",
+      "key-3",
+      "value",
+      "true",
+      "key",
+      "value",
+      "value",
+      "true",
+      "close",
+      "/"
+    ],
+    "vnodes": [
+      "\n      values\n      ",
+      {
+        "tag": "div",
+        "properties": {
+          "key1": "value",
+          "with": "true",
+          "spaces": "true",
+          "key2": "value with spaces",
+          "key3": "value with spaces"
+        },
+        "children": []
+      },
+      "\n\n      keys\n      ",
+      {
+        "tag": "div",
+        "properties": {
+          "key-1": "value",
+          "key-2": "true",
+          "key-3": "true",
+          "value": "true"
+        },
+        "children": []
+      }
+    ]
+  }
+]
