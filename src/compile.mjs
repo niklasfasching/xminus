@@ -3,19 +3,20 @@ const voidTags = {area: 1, base: 1, br: 1, col: 1, embed: 1, hr: 1, img: 1, inpu
       prefix = () => `_${prefixId++}_`;
 let prefixId = 0;
 
-const components = {},
-      macros = [
-        [/^\.for$/, forMacro],
-        [/^\.on:/, onMacro],
-      ];
+export const components = {};
 
-window.setProperty = function setProperty(node, k, v) {
+const macros = [
+  [/^\.for$/, forMacro],
+  [/^\.on:/, onMacro],
+];
+
+export function setProperty(node, k, v) {
   if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
   else node.setAttribute(k, v);
 };
 
-window.updateFor = function updateFor(parentNode, $, values, create) {
+export function updateFor(parentNode, $, values, create) {
   const childNodes = [...parentNode.childNodes];
   for (let i = 0, j = 0; i < childNodes.length || j < values.length; i++, j++) {
     let node = childNodes[i], value = values[j];
@@ -26,6 +27,7 @@ window.updateFor = function updateFor(parentNode, $, values, create) {
 };
 
 export async function mount(parentNode, name, $) {
+  window.xm = await import(import.meta.url);
   document.querySelectorAll(`script[type="text/x-template"][name^=x-]`).forEach(template => {
     const name = template.getAttribute("name");
     try {
@@ -56,10 +58,10 @@ function forMacro(vnode, $, key, value) {
                   `$ = Object.assign(Object.create($), {"${name}": _args[0]});`,
                   `$["${name}"] = _args[0];`);
   $.create += `for (let value of ${values}) ${_}templateParent.appendChild(${_}create($, value));\n`;
-  $.update += `updateFor(${_}templateParent, $, ${values}, ${_}create);\n`;
+  $.update += `xm.updateFor(${_}templateParent, $, ${values}, ${_}create);\n`;
 }
 
-export function generateComponent(name, template) {
+function generateComponent(name, template) {
   const vnode = {node: "_node", properties: {}, children: compile(template)},
         $ = {html: "", create: "", update: ""};
   name = name.slice(2);
@@ -149,14 +151,14 @@ function generateProperties(vnode, $) {
           [value, rawValue, isDynamicValue] = compileValue(vnode.properties[k]);
     if (!isDynamicKey && !isDynamicValue) $.html += ` ${rawKey}=${rawValue}`;
     else if (!isDynamicKey) {
-      $.create += `setProperty(${vnode.node}, ${key}, ${value});\n`;
-      $.update += `setProperty(${vnode.node}, ${key}, ${value});\n`;
+      $.create += `xm.setProperty(${vnode.node}, ${key}, ${value});\n`;
+      $.update += `xm.setProperty(${vnode.node}, ${key}, ${value});\n`;
     } else {
       const _ = prefix();
       $.create += `let ${_}key = ${key}; setProperty(${vnode.node}, ${_}key, ${value});\n`;
       $.update += `let ${_}updatedKey = ${key};
-                   if (${_}key !== ${_}updatedKey) setProperty(${vnode.node}, ${_}key, undefined);
-                   setProperty(${vnode.node}, ${_}updatedKey, ${value});
+                   if (${_}key !== ${_}updatedKey) xm.setProperty(${vnode.node}, ${_}key, undefined);
+                   xm.setProperty(${vnode.node}, ${_}updatedKey, ${value});
                    ${_}key = ${_}updatedKey;\n`;
     }
   }
