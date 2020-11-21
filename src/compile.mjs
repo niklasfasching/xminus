@@ -26,12 +26,14 @@ export function updateFor(parentNode, $, values, create) {
   }
 };
 
-export async function mount(parentNode, name, $) {
+export async function mount(parentNode, name, $, ...componentURLs) {
   window.xm = await import(import.meta.url);
-  try {
-    eval(await generateCode(location.toString()));
-  } catch (e) {
-    throw new Error(`eval: ${e.message}:\n${url}`);
+  for (const url of [...componentURLs, location.toString()]) {
+    try {
+      await import(`data:text/javascript,${encodeURIComponent(await generateCode(url))}`);
+    } catch (e) {
+      throw new Error(`eval: ${e.message}:\n${url}`);
+    }
   }
   if (!components[name]) throw new Error(`component ${name} does not exist`);
   parentNode.innerHTML = "";
@@ -59,9 +61,17 @@ function forMacro(vnode, $, key, value) {
 
 async function generateCode(url) {
   let code = `//# sourceURL=${url}.generated.js\n`, d = document;
+  if (url !== location.toString()) {
+    d = await fetch(url).then(r => r.text()).then(html => new DOMParser().parseFromString(html, "text/html"));
+    const scripts = d.querySelectorAll(`script[type="module"]`);
+    if (scripts.length !== 1) throw new Error(`components must have one module script tag: ${url}`);
+    code += scripts[0].text.replaceAll(/^\s*(import.*from) ["'](.+)["']/g, (_, importFrom, importURL) =>
+      `${importFrom} "${new URL(importURL, new URL(url, location))}"`) + "\n";
+  }
+
   d.querySelectorAll(`script[type="text/x-template"][name^=x-]`).forEach(template => {
     const name = template.getAttribute("name");
-    code += `components["${name}"] = ${generateComponent(name, template.text)}`;
+    code += `xm.components["${name}"] = ${generateComponent(name, template.text)}`;
   });
   return code;
 }
