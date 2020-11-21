@@ -16,10 +16,11 @@ window.setProperty = function setProperty(node, k, v) {
 }
 
 window.updateFor = function updateFor(parentNode, $, values, create) {
-  for (let i = 0, j = 0; i < parentNode.childNodes.length || j < values.length; i++, j++) {
-    let node = parentNode.childNodes[i], value = values[j];
-    if (node && j < values.length) node._update($, value);
-    else if (node) parentNode.removeChild(node), i--;
+  const childNodes = [...parentNode.childNodes];
+  for (let i = 0, j = 0; i < childNodes.length || j < values.length; i++, j++) {
+    let node = childNodes[i], value = values[j];
+    if (node && j < values.length) node._updateClosure($, value);
+    else if (node) parentNode.removeChild(node);
     else create($, value);
   }
 }
