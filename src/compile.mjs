@@ -21,7 +21,7 @@ window.updateFor = function updateFor(parentNode, $, values, create) {
     let node = childNodes[i], value = values[j];
     if (node && j < values.length) node._updateClosure($, value);
     else if (node) parentNode.removeChild(node);
-    else create($, value);
+    else parentNode.appendChild(create($, value));
   }
 }
 
@@ -46,28 +46,12 @@ function onMacro(vnode, $, key, value) {
 function forMacro(vnode, $, key, value) {
   if (!vnode.parent || vnode.parent.children.length > 1) throw new Error("for: must be only child node");
   const _ = prefix(),
-        [name, inOrOf, values] = value.split(/ (of|in) /),
-        $$ = {create: "", update: "", html: ""},
-        node = vnode.node = generateNodeName($, vnode.node);
-  generateVnode(vnode, $$);
-  $.html += $$.html;
-  $.create += `let ${_}forParent = ${node}.parentNode, ${_}forNode = ${node};
-               ${_}forParent.removeChild(${_}forNode);
-               function ${_}create($, ${_}value) {
-                 $ = Object.assign(Object.create($), {"${name}": ${_}value});
-                 let ${node} = ${_}forNode.cloneNode(true);
-                 ${$$.create}
-                 ${node}._update = ($, ${_}value) => {
-                   $["${name}"] = ${_}value;
-                   ${$$.update}
-                 };
-                 ${_}forParent.appendChild(${node});
-               }
-               for (let value of ${values}) ${_}create($, value);\n`;
-  $.update += `updateFor(${_}forParent, $, ${values}, ${_}create);\n`
-  function updateItems(forParent, create) {
-
-  }
+        [name, inOrOf, values] = value.split(/ (of|in) /);
+    generateClosure(vnode, $, _,
+                  `$ = Object.assign(Object.create($), {"${name}": _args[0]});`,
+                  `$["${name}"] = _args[0];`);
+  $.create += `for (let value of ${values}) ${_}templateParent.appendChild(${_}create($, value));\n`;
+  $.update += `updateFor(${_}templateParent, $, ${values}, ${_}create);\n`;
 }
 
 export function generateComponent(name, template) {
@@ -93,6 +77,25 @@ export function generateComponent(name, template) {
               return _node;
             };
           })()\n`;
+}
+
+function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
+  const $$ = {create: "", update: "", html: ""},
+        node = vnode.node = generateNodeName($, vnode.node);
+  generateVnode(vnode, $$);
+  $.html += $$.html;
+  $.create += `let ${_}template = ${node}, ${_}templateParent = ${node}.parentNode;
+               ${_}templateParent.removeChild(${node});
+               function ${_}create($, ..._args) {
+                 let ${node} = ${_}template.cloneNode(true);
+                 ${beforeCreate}
+                 ${$$.create}
+                 ${node}._updateClosure = function($, ..._args) {
+                   ${beforeUpdate}
+                   ${$$.update}
+                 };
+                 return ${node};
+               };\n`;
 }
 
 function isComponentTag(tag) { return tag.startsWith("x-"); }
