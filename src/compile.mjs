@@ -63,15 +63,18 @@ export function generateComponent(name, template) {
             const _hooks = typeof ${name} === "undefined" ? {} : ${name};
             const _template = document.createElement("template");
             _template.innerHTML = \`${$.html.replaceAll("`", "\\`")}\`;
-            return function _${name}Component($, properties) {
+            return function _${name}Component($, properties, _createChildren) {
               const _node = _template.content.cloneNode(true);
               const $update = () => _node._update($);
               $ = Object.create($);
               $ = Object.assign($, _hooks.create?.($, properties, $update));
+              const _childrenTemplate = _createChildren?.($);
+              const children = _childrenTemplate?.content;
               ${$.create}
               _node._update = ($, _properties) => {
                 if (_properties) properties = _properties;
                 _hooks.update?.($, properties, $update);
+                _childrenTemplate?._updateClosure($);
                 ${$.update}
               }
               return _node;
@@ -120,8 +123,17 @@ function generateVnode(vnode, $) {
     if (voidTags[tag]) return;
     generateChildren(vnode, $);
     $.html += `</${rawTag}>`
+  } else if (isComponentTag(rawTag) && !isDynamicTag) {
+    vnode.node = generateNodeName($, vnode.node);
+    const _ = prefix(),
+          properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
+            `${out}[${compileValue(k)[0]}]: ${compileValue(v)[0]}, `, "{ ") + "}";
+    generateClosure(Object.assign({}, vnode, {tag: "template", properties: {}}), $, _);
+    $.create += `const ${_}component = components["${rawTag}"]($, ${properties}, ${_}create);
+                 ${_}templateParent.appendChild(${_}component);\n`;
+    $.update += `${_}component._update($, ${properties});\n`;
   } else {
-    throw new Error("not impemented: dynamic/component tag");
+    throw new Error("not impemented: dynamic tags");
   }
 }
 
