@@ -166,7 +166,11 @@ function generateChildren(vnode, $) {
   let node = vnode.node + ".firstChild";
   if (!vnode.parent) node = generateNodeName($, node);
   for (const vchild of vnode.children) {
-    if (!vchild.tag) {
+    if (vchild.tag) {
+      vchild.node = node;
+      generateVnode(vchild, $);
+      node = vchild.node;
+    } else {
       const [value, rawValue, isDynamic] = compileValue(vchild);
       if (!isDynamic) $.html += vchild;
       else {
@@ -178,10 +182,6 @@ function generateChildren(vnode, $) {
                      if (${_}text !== ${_}updatedText) ${node}.nodeValue = ${_}updatedText;
                      ${_}text = ${_}updatedText;\n`
       }
-    } else {
-      vchild.node = node;
-      generateVnode(vchild, $);
-      node = vchild.node;
     }
     node = node + ".nextSibling"
   }
