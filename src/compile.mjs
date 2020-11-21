@@ -13,7 +13,7 @@ window.setProperty = function setProperty(node, k, v) {
   if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
   else node.setAttribute(k, v);
-}
+};
 
 window.updateFor = function updateFor(parentNode, $, values, create) {
   const childNodes = [...parentNode.childNodes];
@@ -23,7 +23,7 @@ window.updateFor = function updateFor(parentNode, $, values, create) {
     else if (node) parentNode.removeChild(node);
     else parentNode.appendChild(create($, value));
   }
-}
+};
 
 export async function mount(parentNode, name, $) {
   document.querySelectorAll(`script[type="text/x-template"][name^=x-]`).forEach(template => {
@@ -31,7 +31,7 @@ export async function mount(parentNode, name, $) {
     try {
       components[name] = eval(generateComponent(name, template.text));
     } catch (e) {
-      throw new Error(`eval: ${e.message}:\n${generateComponent(name, template.text)}`)
+      throw new Error(`eval: ${e.message}:\n${generateComponent(name, template.text)}`);
     }
 
   });
@@ -63,7 +63,7 @@ export function generateComponent(name, template) {
   const vnode = {node: "_node", properties: {}, children: compile(template)},
         $ = {html: "", create: "", update: ""};
   name = name.slice(2);
-  generateChildren(vnode, $)
+  generateChildren(vnode, $);
   return `(function() {
             //# sourceURL=${name}Component.generated.js
             const _hooks = typeof ${name} === "undefined" ? {} : ${name};
@@ -114,7 +114,7 @@ function generateVnode(vnode, $) {
     const kv = Object.entries(vnode.properties).find(([k]) => predicate.test(k));
     if (kv) {
       delete vnode.properties[kv[0]];
-      return macro(vnode, $, ...kv);
+      return void macro(vnode, $, ...kv);
     }
   }
 
@@ -128,7 +128,7 @@ function generateVnode(vnode, $) {
     $.html += ">";
     if (voidTags[tag]) return;
     generateChildren(vnode, $);
-    $.html += `</${rawTag}>`
+    $.html += `</${rawTag}>`;
   } else if (isComponentTag(rawTag) && !isDynamicTag) {
     vnode.node = generateNodeName($, vnode.node);
     const _ = prefix(),
@@ -177,13 +177,13 @@ function generateChildren(vnode, $) {
         const _ = prefix();
         node = generateNodeName($, node);
         $.html += value;
-        $.create += `let ${_}text = ${value}; ${node}.nodeValue = ${_}text;\n`
+        $.create += `let ${_}text = ${value}; ${node}.nodeValue = ${_}text;\n`;
         $.update += `let ${_}updatedText = ${value};
                      if (${_}text !== ${_}updatedText) ${node}.nodeValue = ${_}updatedText;
-                     ${_}text = ${_}updatedText;\n`
+                     ${_}text = ${_}updatedText;\n`;
       }
     }
-    node = node + ".nextSibling"
+    node = node + ".nextSibling";
   }
 }
 
