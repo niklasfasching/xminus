@@ -20,7 +20,7 @@ export function updateFor(parentNode, $, values, create) {
   const childNodes = [...parentNode.childNodes];
   for (let i = 0, j = 0; i < childNodes.length || j < values.length; i++, j++) {
     let node = childNodes[i], value = values[j];
-    if (node && j < values.length) node._updateClosure($, value);
+    if (node && j < values.length) node._updateClosure(value);
     else if (node) parentNode.removeChild(node);
     else parentNode.appendChild(create($, value));
   }
@@ -96,7 +96,7 @@ export function generateComponent(name, template) {
               _node._update = ($, _properties) => {
                 if (_properties) properties = _properties;
                 _hooks.update?.($, properties, $update);
-                _childrenTemplate?._updateClosure($);
+                _childrenTemplate?._updateClosure();
                 ${$.update}
               }
               return _node;
@@ -115,7 +115,7 @@ function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
                  let ${node} = ${_}template.cloneNode(true);
                  ${beforeCreate}
                  ${$$.create}
-                 ${node}._updateClosure = function($, ..._args) {
+                 ${node}._updateClosure = function(..._args) {
                    ${beforeUpdate}
                    ${$$.update}
                  };
