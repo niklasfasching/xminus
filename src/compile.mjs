@@ -75,6 +75,7 @@ export function generateComponent(name, template) {
         $ = {html: "", create: "", update: ""};
   generateChildren(vnode, $)
   return `(function() {
+            //# sourceURL=${name}Component.generated.js
             const _hooks = typeof ${name} === "undefined" ? {} : ${name};
             const _template = document.createElement("template");
             _template.innerHTML = \`${$.html.replaceAll("`", "\\`")}\`;
