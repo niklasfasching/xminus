@@ -127,20 +127,11 @@
   },
   {
     "id": "x-closure",
-    "code": [
-      "(function() {",
-      "            //# sourceURL=closureComponent.generated.js",
-      "            const _hooks = typeof closure === \"undefined\" ? {} : closure;",
-      "            const _template = document.createElement(\"template\");",
-      "            _template.innerHTML = `<div><div></div></div>`;",
-      "            return function _closureComponent($, properties, _createChildren) {",
-      "              const _node = _template.content.cloneNode(true);",
-      "              const $update = () => _node._update($);",
-      "              $ = Object.create($);",
-      "              $ = Object.assign($, _hooks.create?.($, properties, $update));",
-      "              const _childrenTemplate = _createChildren?.($);",
-      "              const children = _childrenTemplate?.content;",
-      "              let _0_node = _node.firstChild;",
+    "html": [
+      "<div><div></div></div>"
+    ],
+    "create": [
+      "let _0_node = _node.firstChild;",
       "let _1_node = _0_node.firstChild;",
       "let _2_template = _1_node, _2_templateParent = _1_node.parentNode;",
       "               _2_templateParent.removeChild(_1_node);",
@@ -161,17 +152,10 @@
       "let _2_reference = _2_templateParent.appendChild(document.createComment(\"for\")),",
       "                   _2_nodeGroups = [];",
       "               xm.updateFor(_2_reference, _2_nodeGroups, [1, 2, 3], _2_create, $);",
-      "",
-      "              _node._update = ($, _properties) => {",
-      "                if (_properties) properties = _properties;",
-      "                _hooks.update?.($, properties, $update);",
-      "                _childrenTemplate?._updateClosure();",
-      "                xm.updateFor(_2_reference, _2_nodeGroups, [1, 2, 3], _2_create, $);",
-      "",
-      "              }",
-      "              return _node;",
-      "            };",
-      "          })()",
+      ""
+    ],
+    "update": [
+      "xm.updateFor(_2_reference, _2_nodeGroups, [1, 2, 3], _2_create, $);",
       ""
     ]
   }

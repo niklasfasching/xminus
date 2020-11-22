@@ -193,7 +193,7 @@ function generateProperties(vnode, $) {
   }
 }
 
-function generateChildren(vnode, $) {
+export function generateChildren(vnode, $) {
   let node = vnode.node + ".firstChild";
   if (!vnode.parent) node = generateNodeName($, node);
   for (const vchild of vnode.children) {

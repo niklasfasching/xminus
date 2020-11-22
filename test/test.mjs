@@ -8,12 +8,18 @@ async function run(name) {
     const {id, text} = t,
           lex = t.hasAttribute("lex"),
           compile = t.hasAttribute("compile"),
-          generate = t.hasAttribute("generate");
+          generate = t.hasAttribute("generate"),
+          $ = {create: "", update: "", html: ""};
+    if (generate) {
+      xminus.generateChildren({node: "_node", properties: {}, children: xminus.compile(text)}, $);
+    }
     return {
       id,
       tokens: lex ? xminus.lex(text) : undefined,
       vnodes: compile ? xminus.compile(text): undefined,
-      code: generate ? xminus.generateComponent(id, text).split("\n") : undefined,
+      html: generate ? $.html.split("\n") : undefined,
+      create: generate ? $.create.split("\n") : undefined,
+      update: generate ? $.update.split("\n") : undefined,
     };
   });
 
