@@ -13,4 +13,8 @@ update-fixtures:
 .PHONY: test
 test:
 	headless run test/test.mjs update-fixtures 2> /tmp/index.json || true
-	git --no-pager diff /tmp/index.json test/testcases/index.json
+	git --no-pager diff test/testcases/index.json /tmp/index.json
+
+.PHONY: setup
+setup:
+	git config core.hooksPath etc/githooks
