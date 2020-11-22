@@ -14,17 +14,30 @@ export function setProperty(node, k, v) {
   if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
   else node.setAttribute(k, v);
-};
+}
 
-export function updateFor(parentNode, $, values, create) {
-  const childNodes = [...parentNode.childNodes];
-  for (let i = 0, j = 0; i < childNodes.length || j < values.length; i++, j++) {
-    let node = childNodes[i], value = values[j];
-    if (node && j < values.length) node._updateClosure(value);
-    else if (node) parentNode.removeChild(node);
-    else parentNode.appendChild(create($, value));
+export function updateFor(reference, nodeGroups, values, create, $) {
+  const createNodeGroup = node => Object.assign(node instanceof DocumentFragment ? [...node.childNodes] : [node],
+                                                {update: node._updateClosure});
+  updateNodeGroups(reference, nodeGroups, values, value => createNodeGroup(create($, value)));
+}
+
+export function updateNodeGroups(reference, nodeGroups, values, create) {
+  const parent = reference.parentNode;
+  for (let i = 0, j = 0; i < nodeGroups.length || j < values.length; i++, j++) {
+    if (nodeGroups[i] && j < values.length) {
+      nodeGroups[i].update(values[j]);
+    } else if (nodeGroups[i]) {
+      for (let node of nodeGroups[i]) parent.removeChild(node);
+      delete nodeGroups[i];
+    } else if (j < values.length) {
+      const afterLast = (nodeGroups.slice(-1)[0]?.slice(-1)?.[0] || reference).nextSibling;
+      nodeGroups[i] = create(values[j]);
+      for (let node of nodeGroups[i]) parent.insertBefore(node, afterLast);
+    }
   }
-};
+  nodeGroups.length = values.length;
+}
 
 export async function mount(parentNode, name, $, ...componentURLs) {
   window.xm = await import(import.meta.url);
@@ -52,11 +65,13 @@ function forMacro(vnode, $, key, value) {
   if (!vnode.parent || vnode.parent.children.length > 1) throw new Error("for: must be only child node");
   const _ = prefix(),
         [name, inOrOf, values] = value.split(/ (of|in) /);
-    generateClosure(vnode, $, _,
+  generateClosure(vnode, $, _,
                   `$ = Object.assign(Object.create($), {"${name}": _args[0]});`,
                   `$["${name}"] = _args[0];`);
-  $.create += `for (let value of ${values}) ${_}templateParent.appendChild(${_}create($, value));\n`;
-  $.update += `xm.updateFor(${_}templateParent, $, ${values}, ${_}create);\n`;
+  $.create += `let ${_}reference = ${_}templateParent.appendChild(document.createComment("for")),
+                   ${_}nodeGroups = [];
+               xm.updateFor(${_}reference, ${_}nodeGroups, ${values}, ${_}create, $);\n`;
+  $.update += `xm.updateFor(${_}reference, ${_}nodeGroups, ${values}, ${_}create, $);\n`;
 }
 
 async function generateCode(url) {
