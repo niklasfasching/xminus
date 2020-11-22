@@ -228,7 +228,7 @@ function compileValue(input) {
 
 export function compile(template) {
   const tokens = lex(template), vnodes = [], parents = [];
-  for (let i = 0, $ = tokens[0], x = tokens[1]; i < tokens.length; i += 2, $ = tokens[i], x = tokens[i+1]) {
+  for (let i = 0, [$, x] = tokens[0]; i < tokens.length; i++, [$, x] = tokens[i] || []) {
     if ($ === "open") {
       const vchild = {tag: x, properties: {}, children: [], parent: parents[0]};
       (parents[0]?.children || vnodes).push(vchild);
@@ -238,7 +238,7 @@ export function compile(template) {
     } else if ($ === "child") {
       (parents[0]?.children || vnodes).push(x);
     } else if ($ === "key") {
-      parents[0].properties[x] = tokens[(i += 2) + 1];
+      parents[0].properties[x] = tokens[++i][1];
     } else throw "unexpected: " + $;
   }
   if (parents.length) throw new Error(`unclosed ${parents[0].tag}: ${template}`);
@@ -247,7 +247,7 @@ export function compile(template) {
 
 export function lex(template) {
   let $ = "child", tag = "", tmp = "", tokens = [], push = ($next) => {
-    if (tmp.trim()) tokens.push($, tmp);
+    if (tmp.trim()) tokens.push([$, tmp]);
     if ($ === "open") tag = tmp;
     $ = $next, tmp = "";
   };
@@ -257,10 +257,10 @@ export function lex(template) {
     } else if ($ !== "child" && (c === ">" || c === "/" && template[i+1] === ">")) {
       push("child");
       if (c === "/") i++;
-      if (c === "/" || voidTags[tag]) tokens.push("close", "/");
+      if (c === "/" || voidTags[tag]) tokens.push(["close", "/"]);
     } else if ($ !== "child" && (c === " " || c === "\n")) {
       push("key");
-      if (tokens[tokens.length - 2] === "key") tokens.push("value", "true");
+      if (tokens[tokens.length-1][0] === "key") tokens.push(["value", "true"]);
     } else if ($ === "value" && (c === "'" || c === '"')) {
       while (template[++i] !== c) tmp += template[i];
       tmp = tmp || "true";
