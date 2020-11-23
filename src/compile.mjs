@@ -91,7 +91,7 @@ async function generateCode(url) {
 }
 
 export function generateComponent(name, template) {
-  const vnode = {node: "_node", properties: {}, children: compile(template)},
+  const vnode = {node: "_node", properties: {}, children: parse(template)},
         $ = {html: "", create: "", update: ""};
   name = name.slice(2);
   generateChildren(vnode, $);
@@ -148,10 +148,10 @@ function generateVnode(vnode, $) {
     }
   }
 
-  const [tag, rawTag, isDynamicTag] = compileValue(vnode.tag);
+  const [tag, rawTag, isDynamicTag] = parseValue(vnode.tag);
   if (!isDynamicTag && !isComponentTag(rawTag)) {
     $.html += `<${rawTag}`;
-    if (Object.entries(vnode.properties).some(([k, v]) => compileValue(k)[2] || compileValue(v)[2])) {
+    if (Object.entries(vnode.properties).some(([k, v]) => parseValue(k)[2] || parseValue(v)[2])) {
       vnode.node = generateNodeName($, vnode.node);
     }
     generateProperties(vnode, $);
@@ -163,7 +163,7 @@ function generateVnode(vnode, $) {
     vnode.node = generateNodeName($, vnode.node);
     const _ = prefix(),
           properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
-            `${out}[${compileValue(k)[0]}]: ${compileValue(v)[0]}, `, "{ ") + "}";
+            `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
     generateClosure(Object.assign({}, vnode, {tag: "template", properties: {}}), $, _);
     $.create += `const ${_}component = components["${rawTag}"]($, ${properties}, ${_}create);
                  ${_}parent.appendChild(${_}component);\n`;
@@ -175,8 +175,8 @@ function generateVnode(vnode, $) {
 
 function generateProperties(vnode, $) {
   for (const k in vnode.properties) {
-    const [key, rawKey, isDynamicKey] = compileValue(k),
-          [value, rawValue, isDynamicValue] = compileValue(vnode.properties[k]);
+    const [key, rawKey, isDynamicKey] = parseValue(k),
+          [value, rawValue, isDynamicValue] = parseValue(vnode.properties[k]);
     if (!isDynamicKey && !isDynamicValue) $.html += ` ${rawKey}=${value}`;
     else if (!isDynamicKey) {
       $.create += `xm.setProperty(${vnode.node}, ${key}, ${value});\n`;
@@ -201,7 +201,7 @@ export function generateChildren(vnode, $) {
       generateVnode(vchild, $);
       node = vchild.node;
     } else {
-      const [value, rawValue, isDynamic] = compileValue(vchild);
+      const [value, rawValue, isDynamic] = parseValue(vchild);
       if (!isDynamic) $.html += vchild;
       else {
         const _ = prefix();
@@ -224,14 +224,14 @@ function generateNodeName($, name) {
   return `${_}node`;
 }
 
-function compileValue(input) {
-  const [parts, isDynamic] = parseValue(input);
+function parseValue(input) {
+  const [parts, isDynamic] = parseValueParts(input);
   return [parts.length === 1 ? parts[0][0] : parts.map(p => p[0]).join(" + "),
           isDynamic ?  null : parts[0][1],
           isDynamic];
 }
 
-function parseValue(input) {
+function parseValueParts(input) {
   let parts = [], part = "", lvl = 0, push = () => {
     if (part) part && parts.push([lvl === 1 ? `(${part})` : `"${part}"`, part, lvl === 1]);
     part = "";
@@ -245,7 +245,7 @@ function parseValue(input) {
   return [parts, parts.some(p => p[2])];
 }
 
-export function compile(template) {
+export function parse(template) {
   const tokens = lex(template), vnodes = [], parents = [];
   for (let i = 0, [$, x] = tokens[0]; i < tokens.length; i++, [$, x] = tokens[i] || []) {
     if ($ === "open") {
