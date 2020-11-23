@@ -17,9 +17,9 @@ export function setProperty(node, k, v) {
 }
 
 export function updateFor(reference, nodeGroups, values, create, $) {
-  const createNodeGroup = node => Object.assign(node instanceof DocumentFragment ? [...node.childNodes] : [node],
-                                                {update: node._updateClosure});
-  updateNodeGroups(reference, nodeGroups, values, value => createNodeGroup(create($, value)));
+  const group = ([node, update]) => Object.assign(node instanceof DocumentFragment ? [...node.childNodes] : [node],
+                                                  {update});
+  updateNodeGroups(reference, nodeGroups, values, value => group(create($, value)));
 }
 
 export function updateNodeGroups(reference, nodeGroups, values, create) {
@@ -68,7 +68,7 @@ function forMacro(vnode, $, key, value) {
   generateClosure(vnode, $, _,
                   `$ = Object.assign(Object.create($), {"${name}": _args[0]});`,
                   `$["${name}"] = _args[0];`);
-  $.create += `let ${_}reference = ${_}templateParent.appendChild(document.createComment("for")),
+  $.create += `let ${_}reference = ${_}parent.appendChild(document.createComment("for")),
                    ${_}nodeGroups = [];
                xm.updateFor(${_}reference, ${_}nodeGroups, ${values}, ${_}create, $);\n`;
   $.update += `xm.updateFor(${_}reference, ${_}nodeGroups, ${values}, ${_}create, $);\n`;
@@ -124,17 +124,16 @@ function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
         node = vnode.node = generateNodeName($, vnode.node);
   generateVnode(vnode, $$);
   $.html += $$.html;
-  $.create += `let ${_}template = ${node}, ${_}templateParent = ${node}.parentNode;
-               ${_}templateParent.removeChild(${node});
+  $.create += `let ${_}template = ${node}, ${_}parent = ${node}.parentNode;
+               ${_}parent.removeChild(${node});
                function ${_}create($, ..._args) {
                  let ${node} = ${_}template.cloneNode(true);
                  ${beforeCreate}
                  ${$$.create}
-                 ${node}._updateClosure = function(..._args) {
+                 return [${node}, (..._args) => {
                    ${beforeUpdate}
                    ${$$.update}
-                 };
-                 return ${node};
+                 }];
                };\n`;
 }
 
@@ -167,7 +166,7 @@ function generateVnode(vnode, $) {
             `${out}[${compileValue(k)[0]}]: ${compileValue(v)[0]}, `, "{ ") + "}";
     generateClosure(Object.assign({}, vnode, {tag: "template", properties: {}}), $, _);
     $.create += `const ${_}component = components["${rawTag}"]($, ${properties}, ${_}create);
-                 ${_}templateParent.appendChild(${_}component);\n`;
+                 ${_}parent.appendChild(${_}component);\n`;
     $.update += `${_}component._update($, ${properties});\n`;
   } else {
     throw new Error("not impemented: dynamic tags");
