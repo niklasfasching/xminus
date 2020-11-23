@@ -165,5 +165,58 @@
       "xm.updateFor(_2_reference, _2_nodeGroups, [1, 2, 3], _2_create, $);",
       ""
     ]
+  },
+  {
+    "id": "x-parent-component",
+    "html": [
+      "<div>",
+      "        Here we embed another component. The content of the component tag is made available inside that component as children.",
+      "        <template>slot value</template></div>"
+    ],
+    "create": [
+      "let _3_node = _node.firstChild;",
+      "let _4_node = _3_node.firstChild;",
+      "let _5_node = _4_node.nextSibling;",
+      "let _6_template = _5_node, _6_parent = _5_node.parentNode;",
+      "               _6_parent.removeChild(_5_node);",
+      "               function _6_create($, ..._args) {",
+      "                 let _5_node = _6_template.cloneNode(true);",
+      "                 ",
+      "                 ",
+      "                 return [_5_node, (..._args) => {",
+      "                   ",
+      "                   ",
+      "                 }];",
+      "               };",
+      "const _6_component = xm.components[\"x-child-component\"]($, { }, _6_create);",
+      "                 _6_parent.appendChild(_6_component);",
+      ""
+    ],
+    "update": [
+      "_6_component._update($, { });",
+      ""
+    ]
+  },
+  {
+    "id": "x-child-component",
+    "html": [
+      "<div>",
+      "        Conent of tag at call site: <!---->",
+      "      </div>"
+    ],
+    "create": [
+      "let _7_node = _node.firstChild;",
+      "let _8_node = _7_node.firstChild;",
+      "const _9_nodeGroups = [(children)].map(v => xm.createNodeGroup(v));",
+      "                 [_8_node.nextSibling].forEach((placeholder, i) => {",
+      "                    for (let node of _9_nodeGroups[i]) _7_node.insertBefore(node, placeholder);",
+      "                    _7_node.removeChild(placeholder);",
+      "                 });",
+      ""
+    ],
+    "update": [
+      "xm.updateNodeGroups(_7_node.firstChild, _9_nodeGroups, [(children)], xm.createChild);",
+      ""
+    ]
   }
 ]

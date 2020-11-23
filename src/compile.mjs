@@ -119,13 +119,13 @@ export function generateComponent(name, template) {
               const $update = () => _node._update($);
               $ = Object.create($);
               $ = Object.assign($, _hooks.create?.($, properties, $update));
-              const _childrenTemplate = _createChildren?.($);
-              const children = _childrenTemplate?.content;
+              const [_childrenTemplate, _updateChildren] = _createChildren?.($) || [];
+              const children = _childrenTemplate?.content || "";
               ${$.create}
               _node._update = ($, _properties) => {
                 if (_properties) properties = _properties;
                 _hooks.update?.($, properties, $update);
-                _childrenTemplate?._updateClosure();
+                _updateChildren?.();
                 ${$.update}
               }
               return _node;
@@ -179,7 +179,7 @@ function generateVnode(vnode, $) {
           properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
             `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
     generateClosure(Object.assign({}, vnode, {tag: "template", properties: {}}), $, _);
-    $.create += `const ${_}component = components["${rawTag}"]($, ${properties}, ${_}create);
+    $.create += `const ${_}component = xm.components["${rawTag}"]($, ${properties}, ${_}create);
                  ${_}parent.appendChild(${_}component);\n`;
     $.update += `${_}component._update($, ${properties});\n`;
   } else {

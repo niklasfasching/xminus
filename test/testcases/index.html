@@ -4,6 +4,7 @@
     <meta charset="utf-8">
   </head>
   <body>
+
     <script type="text/x-template" id="x-properties" lex parse>
       values
       <div key1=value with spaces key2='value with spaces' key3="value with spaces"/>
@@ -20,6 +21,20 @@
         <div .for="x of [1, 2, 3]" .on:click="console.log($.x)"/>
       </div>
     </script>
+
+    <script type="text/x-template" id="x-parent-component" generate>
+      <div>
+        Here we embed another component. The content of the component tag is made available inside that component as children.
+        <x-child-component>slot value</x-child-component>
+      </div>
+    </script>
+
+    <script type="text/x-template" id="x-child-component" generate>
+      <div>
+        Conent of tag at call site: {children}
+      </div>
+    </script>
+
 
 
 
