@@ -170,7 +170,7 @@ function generateVnode(vnode, $) {
     }
     generateProperties(vnode, $);
     $.html += ">";
-    if (voidTags[tag]) return;
+    if (voidTags[rawTag]) return;
     generateChildren(vnode, $);
     $.html += `</${rawTag}>`;
   } else if (isComponentTag(rawTag) && !isDynamicTag) {
