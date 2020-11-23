@@ -225,19 +225,24 @@ function generateNodeName($, name) {
 }
 
 function compileValue(input) {
-  let parts = [], part = "", lvl = 0, isDynamic = false, push = ([open, close]) => {
-    if (part) parts.push(open + (lvl === 0 ? part.replace(/\n/g, "\\n") : part) + close);
-    part = "", isDynamic ||= lvl;
+  const [parts, isDynamic] = parseValue(input);
+  return [parts.length === 1 ? parts[0][0] : parts.map(p => p[0]).join(" + "),
+          isDynamic ?  null : parts[0][1],
+          isDynamic];
+}
+
+function parseValue(input) {
+  let parts = [], part = "", lvl = 0, push = () => {
+    if (part) part && parts.push([lvl === 1 ? `(${part})` : `"${part}"`, part, lvl === 1]);
+    part = "";
   };
   for (let c of input) {
-    if (c === "{" && lvl === 0) push(["'", "'"]), lvl++;
-    else if (c === "}" && lvl === 1) push(["(", ")"]), lvl--;
+    if (c === "{" && lvl === 0) push(), lvl++;
+    else if (c === "}" && lvl === 1) push(), lvl--;
     else part +=c;
   }
-  push(lvl === 0 ? ["'", "'"] : ["(", ")"]);
-  return [parts.length === 1 ? parts[0] : parts.join(" + "),
-          isDynamic ? null : parts[0].slice(1, -1),
-          isDynamic];
+  push();
+  return [parts, parts.some(p => p[2])];
 }
 
 export function compile(template) {
