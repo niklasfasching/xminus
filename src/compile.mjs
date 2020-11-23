@@ -17,13 +17,14 @@ export function setProperty(node, k, v) {
 }
 
 export function updateFor(reference, nodeGroups, values, create, $) {
-  const group = ([node, update]) => Object.assign(node instanceof DocumentFragment ? [...node.childNodes] : [node],
-                                                  {update});
+  const group = ([nodes, update]) => Object.assign(nodes, {update});
   updateNodeGroups(reference, nodeGroups, values, value => group(create($, value)));
 }
 
 export function createNodeGroup(value) {
-  const group = value instanceof Node ? [value] : [document.createTextNode(value)];
+  const group = Object(value) !== value ?
+        [document.createTextNode(value)] :
+        Array.isArray(value) ? value : [value];
   group.update = (updatedValue) => {
     if (value !== updatedValue) {
       const first = group[0], parent = group[0].parentNode, nodes = createChild(value);
@@ -45,6 +46,7 @@ export function updateNodeGroups(reference, nodeGroups, values, create) {
       for (let node of nodeGroups[i]) parent.removeChild(node);
       delete nodeGroups[i];
     } else if (j < values.length) {
+
       const afterLast = (nodeGroups.slice(-1)[0]?.slice(-1)?.[0] || reference).nextSibling;
       nodeGroups[i] = create(values[j]);
       for (let node of nodeGroups[i]) parent.insertBefore(node, afterLast);
@@ -64,7 +66,7 @@ export async function mount(parentNode, name, $, ...componentURLs) {
   }
   if (!components[name]) throw new Error(`component ${name} does not exist`);
   parentNode.innerHTML = "";
-  parentNode.appendChild(components[name]($, {}));
+  for (let node of components[name]($, {})[0]) parentNode.appendChild(node);
 }
 
 function onMacro(vnode, $, key, value) {
@@ -116,19 +118,18 @@ export function generateComponent(name, template) {
             _template.innerHTML = \`${$.html.replaceAll("`", "\\`")}\`;
             return function _${name}Component($, properties, _createChildren) {
               const _node = _template.content.cloneNode(true);
-              const $update = () => _node._update($);
+              const $update = () => _update($);
               $ = Object.create($);
               $ = Object.assign($, _hooks.create?.($, properties, $update));
-              const [_childrenTemplate, _updateChildren] = _createChildren?.($) || [];
-              const children = _childrenTemplate?.content || "";
+              const [children, _updateChildren] = _createChildren?.($) || [];
               ${$.create}
-              _node._update = ($, _properties) => {
+              const _update = ($, _properties) => {
                 if (_properties) properties = _properties;
                 _hooks.update?.($, properties, $update);
                 _updateChildren?.();
                 ${$.update}
-              }
-              return _node;
+              };
+              return [[..._node.childNodes], _update];
             };
           })()\n`;
 }
@@ -144,7 +145,7 @@ function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
                  let ${node} = ${_}template.cloneNode(true);
                  ${beforeCreate}
                  ${$$.create}
-                 return [${node}, (..._args) => {
+                 return [[${vnode.tag === "template" ? `...${node}.content.childNodes` : node}], (..._args) => {
                    ${beforeUpdate}
                    ${$$.update}
                  }];
@@ -179,9 +180,9 @@ function generateVnode(vnode, $) {
           properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
             `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
     generateClosure(Object.assign({}, vnode, {tag: "template", properties: {}}), $, _);
-    $.create += `const ${_}component = xm.components["${rawTag}"]($, ${properties}, ${_}create);
-                 ${_}parent.appendChild(${_}component);\n`;
-    $.update += `${_}component._update($, ${properties});\n`;
+    $.create += `const [${_}nodes, ${_}update] = xm.components["${rawTag}"]($, ${properties}, ${_}create);
+                 for (let node of ${_}nodes) ${_}parent.appendChild(node);\n`;
+    $.update += `${_}update($, ${properties});\n`;
   } else {
     throw new Error("not impemented: dynamic tags");
   }

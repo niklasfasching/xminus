@@ -151,7 +151,7 @@
       "                 $update();",
       "               });",
       "",
-      "                 return [_1_node, (..._args) => {",
+      "                 return [[_1_node], (..._args) => {",
       "                   $[\"x\"] = _args[0];",
       "                   ",
       "                 }];",
@@ -183,17 +183,17 @@
       "                 let _5_node = _6_template.cloneNode(true);",
       "                 ",
       "                 ",
-      "                 return [_5_node, (..._args) => {",
+      "                 return [[..._5_node.content.childNodes], (..._args) => {",
       "                   ",
       "                   ",
       "                 }];",
       "               };",
-      "const _6_component = xm.components[\"x-child-component\"]($, { }, _6_create);",
-      "                 _6_parent.appendChild(_6_component);",
+      "const [_6_nodes, _6_update] = xm.components[\"x-child-component\"]($, { }, _6_create);",
+      "                 for (let node of _6_nodes) _6_parent.appendChild(node);",
       ""
     ],
     "update": [
-      "_6_component._update($, { });",
+      "_6_update($, { });",
       ""
     ]
   },
