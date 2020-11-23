@@ -100,7 +100,11 @@
       ]
     ],
     "vnodes": [
-      "\n      values\n      ",
+      [
+        "\"\n      values\n      \"",
+        "\n      values\n      ",
+        false
+      ],
       {
         "tag": "div",
         "properties": {
@@ -112,7 +116,11 @@
         },
         "children": []
       },
-      "\n\n      keys\n      ",
+      [
+        "\"\n\n      keys\n      \"",
+        "\n\n      keys\n      ",
+        false
+      ],
       {
         "tag": "div",
         "properties": {

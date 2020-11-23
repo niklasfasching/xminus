@@ -22,6 +22,20 @@ export function updateFor(reference, nodeGroups, values, create, $) {
   updateNodeGroups(reference, nodeGroups, values, value => group(create($, value)));
 }
 
+export function createNodeGroup(value) {
+  const group = value instanceof Node ? [value] : [document.createTextNode(value)];
+  group.update = (updatedValue) => {
+    if (value !== updatedValue) {
+      const first = group[0], parent = group[0].parentNode, nodes = createChild(value);
+      for (let node of nodes) parent.insertBefore(node, first);
+      for (let node of group) parent.removeChild(node);
+      group.splice(0, group.length, ...nodes);
+    }
+    value = updatedValue;
+  }
+  return group;
+}
+
 export function updateNodeGroups(reference, nodeGroups, values, create) {
   const parent = reference.parentNode;
   for (let i = 0, j = 0; i < nodeGroups.length || j < values.length; i++, j++) {
@@ -193,7 +207,7 @@ function generateProperties(vnode, $) {
 }
 
 export function generateChildren(vnode, $) {
-  let node = vnode.node + ".firstChild";
+  let node = vnode.node + ".firstChild", dynamicChildren = [];
   if (!vnode.parent) node = generateNodeName($, node);
   for (const vchild of vnode.children) {
     if (vchild.tag) {
@@ -201,19 +215,20 @@ export function generateChildren(vnode, $) {
       generateVnode(vchild, $);
       node = vchild.node;
     } else {
-      const [value, rawValue, isDynamic] = parseValue(vchild);
-      if (!isDynamic) $.html += vchild;
-      else {
-        const _ = prefix();
-        node = generateNodeName($, node);
-        $.html += value;
-        $.create += `let ${_}text = ${value}; ${node}.nodeValue = ${_}text;\n`;
-        $.update += `let ${_}updatedText = ${value};
-                     if (${_}text !== ${_}updatedText) ${node}.nodeValue = ${_}updatedText;
-                     ${_}text = ${_}updatedText;\n`;
-      }
+      const [value, rawValue, isDynamic] = vchild;
+      $.html += isDynamic ? "<!---->" : rawValue;
+      if (isDynamic) dynamicChildren.push([node, value]);
     }
     node = node + ".nextSibling";
+  }
+  if (dynamicChildren.length) {
+    const _ = prefix(), values = dynamicChildren.map(([_, v]) => v), nodes = dynamicChildren.map(([n]) => n);
+    $.create += `const ${_}nodeGroups = [${values}].map(v => xm.createNodeGroup(v));
+                 [${nodes}].forEach((placeholder, i) => {
+                    for (let node of ${_}nodeGroups[i]) ${vnode.node}.insertBefore(node, placeholder);
+                    ${vnode.node}.removeChild(placeholder);
+                 });\n`;
+    $.update += `xm.updateNodeGroups(${vnode.node}.firstChild, ${_}nodeGroups, [${values}], xm.createChild);\n`;
   }
 }
 
@@ -255,7 +270,7 @@ export function parse(template) {
     } else if ($ === "close") {
       parents.shift();
     } else if ($ === "child") {
-      (parents[0]?.children || vnodes).push(x);
+      (parents[0]?.children || vnodes).push(...parseValueParts(x)[0]);
     } else if ($ === "key") {
       parents[0].properties[x] = tokens[++i][1];
     } else throw "unexpected: " + $;
