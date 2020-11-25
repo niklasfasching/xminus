@@ -1,18 +1,22 @@
 .PHONY: install
 install:
-	go get github.com/niklasfasching/goheadless/cmd/headless
+	go build -o cli/xminus cli/*.go
+
+.PHONY: dev
+dev:
+	cli/xminus
 
 .PHONY: bench
 bench:
-	headless run test/bench.mjs
+	cli/xminus -e -r test/bench.mjs
 
 .PHONY: update-fixtures
 update-fixtures:
-	headless run test/test.mjs update-fixtures 2> test/testcases/index.json
+	cli/xminus -e -r test/test.mjs update-fixtures 2> test/testcases/index.json
 
 .PHONY: test
 test:
-	headless run test/test.mjs update-fixtures 2> /tmp/index.json || true
+	cli/xminus -e -r test/test.mjs update-fixtures 2> /tmp/index.json || true
 	git --no-pager diff test/testcases/index.json /tmp/index.json
 
 .PHONY: setup
