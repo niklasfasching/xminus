@@ -88,11 +88,13 @@ func (w *Watcher) Start() {
 			sum += info.ModTime().Unix()
 			return nil
 		})
-		if sum != previousSum || err != nil {
-			if previousSum != 0 {
-				log.Println("Directory changed. Updating...")
-			} else if err != nil {
+		if (previousSum == 0 || previousSum == sum) && err == nil {
+			previousSum = sum
+		} else {
+			if err != nil {
 				log.Println("Error traversing directory. Updating...")
+			} else {
+				log.Println("Directory changed. Updating...")
 			}
 			previousSum = sum
 			w.Lock()
