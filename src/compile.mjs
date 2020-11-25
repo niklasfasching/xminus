@@ -27,7 +27,7 @@ export function createNodeGroup(value) {
         [document.createTextNode(value)];
   group.update = (updatedValue) => {
     if (value !== updatedValue) {
-      const first = group[0], parent = group[0].parentNode, nodes = createChild(value);
+      const first = group[0], parent = group[0].parentNode, nodes = createNodeGroup(value);
       for (let node of nodes) parent.insertBefore(node, first);
       for (let node of group) parent.removeChild(node);
       group.splice(0, group.length, ...nodes);
