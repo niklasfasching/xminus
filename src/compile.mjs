@@ -22,9 +22,9 @@ export function updateFor(reference, nodeGroups, values, create, $) {
 }
 
 export function createNodeGroup(value) {
-  const group = Object(value) !== value ?
-        [document.createTextNode(value)] :
-        Array.isArray(value) ? value : [value];
+  const group = Array.isArray(value) && (!value[0] || value[0] instanceof Node) ?
+        value :
+        [document.createTextNode(value)];
   group.update = (updatedValue) => {
     if (value !== updatedValue) {
       const first = group[0], parent = group[0].parentNode, nodes = createChild(value);
