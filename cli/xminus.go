@@ -172,12 +172,13 @@ func (r *Runner) Start() {
 		go func() {
 			exitCode, err := goheadless.ServeAndRun(ctx, out, address, servePath, fileName, flag.Args())
 			f = func() {
-				if err != nil {
-					panic(err)
-				} else if r.Watcher == nil {
+				if r.Watcher == nil {
+					if err != nil {
+						panic(err)
+					}
 					os.Exit(exitCode)
 				} else {
-					log.Printf("Run: Finished with %d", exitCode)
+					log.Printf("Run: Finished with %d %v", exitCode, err)
 				}
 			}
 		}()
