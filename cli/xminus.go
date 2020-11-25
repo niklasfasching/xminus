@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"io/ioutil"
 	"log"
@@ -157,29 +158,33 @@ func (r *Runner) Start() {
 	if r.Path == "" {
 		return
 	}
-	address, f := "localhost:"+goheadless.GetFreePort(), func() {}
-	servePath, fileName := goheadless.SplitPath(r.Path)
 	for {
+		address, f := "localhost:"+goheadless.GetFreePort(), func() {}
+		servePath, fileName := goheadless.SplitPath(r.Path)
 		out := make(chan string)
+		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
 			for msg := range out {
 				log.Println(msg)
 			}
 			f()
 		}()
-		exitCode, err := goheadless.ServeAndRun(out, address, servePath, fileName, flag.Args())
-		f = func() {
-			if err != nil {
-				panic(err)
-			} else if r.Watcher == nil {
-				os.Exit(exitCode)
-			} else {
-				log.Printf("Run: Finished with %d", exitCode)
+		go func() {
+			exitCode, err := goheadless.ServeAndRun(ctx, out, address, servePath, fileName, flag.Args())
+			f = func() {
+				if err != nil {
+					panic(err)
+				} else if r.Watcher == nil {
+					os.Exit(exitCode)
+				} else {
+					log.Printf("Run: Finished with %d", exitCode)
+				}
 			}
-		}
+		}()
 		if r.Watcher == nil {
 			select {} // wait for call to f()
 		}
 		r.Watcher.AwaitChange()
+		cancel()
 	}
 }
