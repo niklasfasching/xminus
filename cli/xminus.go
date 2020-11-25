@@ -159,7 +159,7 @@ func (r *Runner) Start() {
 		return
 	}
 	for {
-		address, f := "localhost:"+goheadless.GetFreePort(), func() {}
+		address, done := "localhost:"+goheadless.GetFreePort(), make(chan struct{})
 		servePath, fileName := goheadless.SplitPath(r.Path)
 		out := make(chan string)
 		ctx, cancel := context.WithCancel(context.Background())
@@ -167,19 +167,18 @@ func (r *Runner) Start() {
 			for msg := range out {
 				log.Println(msg)
 			}
-			f()
+			close(done)
 		}()
 		go func() {
 			exitCode, err := goheadless.ServeAndRun(ctx, out, address, servePath, fileName, flag.Args())
-			f = func() {
-				if r.Watcher == nil {
-					if err != nil {
-						panic(err)
-					}
-					os.Exit(exitCode)
-				} else {
-					log.Printf("Run: Finished with %d %v", exitCode, err)
+			<-done
+			if r.Watcher == nil {
+				if err != nil {
+					panic(err)
 				}
+				os.Exit(exitCode)
+			} else {
+				log.Printf("Run: Finished with %d %v", exitCode, err)
 			}
 		}()
 		if r.Watcher == nil {
