@@ -1,6 +1,7 @@
 .PHONY: install
 install:
-	go build -o cli/xminus cli/*.go
+	cd cli && go get -u ./...
+	cd cli && go build *.go
 
 .PHONY: dev
 dev:
