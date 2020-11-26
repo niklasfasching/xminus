@@ -46,6 +46,7 @@ type Watcher struct {
 type Server struct {
 	Address string
 	*Watcher
+	*Runner
 
 	*http.Server
 }
@@ -53,6 +54,9 @@ type Server struct {
 type Runner struct {
 	Path string
 	*Watcher
+
+	servePath string
+	*http.Server
 }
 
 func main() {
@@ -62,8 +66,8 @@ func main() {
 	flag.Visit(func(f *flag.Flag) { flags[f.Name] = true })
 
 	w := &Watcher{Path: "./", Interval: time.Duration(*watchInterval) * time.Millisecond}
-	s := &Server{Address: *listenAddress, Watcher: w}
 	r := &Runner{Path: *runFile, Watcher: w}
+	s := &Server{Address: *listenAddress, Watcher: w, Runner: r}
 
 	if *exitAfterRun {
 		r.Watcher = nil
@@ -125,6 +129,9 @@ func (s *Server) Start() error {
 			s.Watcher.AwaitChange()
 			w.WriteHeader(http.StatusNoContent)
 			return
+		} else if r.URL.Path == s.Runner.servePath {
+			s.Runner.Handler.ServeHTTP(w, r)
+			return
 		}
 
 		p := path.Join("./", path.Clean(r.URL.Path))
@@ -150,7 +157,12 @@ func (s *Server) Start() error {
 		}
 		w.Write(bs)
 	})
-	log.Println("Starting server at " + s.Addr)
+
+	addr := s.Addr
+	if strings.HasPrefix(addr, ":") {
+		addr = "localhost" + addr
+	}
+	log.Println("Listening at http://" + addr)
 	return s.Server.ListenAndServe()
 }
 
@@ -160,7 +172,8 @@ func (r *Runner) Start() {
 	}
 	address := "localhost:" + goheadless.GetFreePort()
 	servePath, fileName := goheadless.SplitPath(r.Path)
-	goheadless.Serve(address, servePath, fileName, flag.Args())
+	r.Server = goheadless.Serve(address, servePath, fileName, flag.Args())
+	r.servePath = servePath
 	for {
 		out, done := make(chan string), make(chan struct{})
 		ctx, cancel := context.WithCancel(context.Background())
