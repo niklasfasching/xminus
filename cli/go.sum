@@ -1,5 +1,5 @@
-github.com/niklasfasching/goheadless v0.0.0-20201125224019-9408b1afcdee h1:96py4CS1YAJM0cxdcUGiskg7eOOldAwi5i9EMVfEx5w=
-github.com/niklasfasching/goheadless v0.0.0-20201125224019-9408b1afcdee/go.mod h1:1r1GoIvH4WXTs3YcNe50NI9TYn+60SAItGQR4WMKCT8=
+github.com/niklasfasching/goheadless v0.0.0-20201126181903-a438772c4d93 h1:s4o00DHMuKXy1vYI4TC4KzazdWke8K++/W0BSPUfNSg=
+github.com/niklasfasching/goheadless v0.0.0-20201126181903-a438772c4d93/go.mod h1:1r1GoIvH4WXTs3YcNe50NI9TYn+60SAItGQR4WMKCT8=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
