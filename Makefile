@@ -1,5 +1,6 @@
 .PHONY: install
 install:
+	go env -w GOPROXY=direct
 	cd cli && go get -u ./...
 	cd cli && go build *.go
 
