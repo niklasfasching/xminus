@@ -1,3 +1,5 @@
 #!/bin/bash
 
-make install test
+git stash --include-untracked --quiet
+trap "git stash pop --quiet" EXIT
+make test
