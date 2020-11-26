@@ -96,10 +96,11 @@ func (w *Watcher) Start() {
 		if (previousSum == 0 || previousSum == sum) && err == nil {
 			previousSum = sum
 		} else {
+			log.Println("\n\n")
 			if err != nil {
-				log.Println("Error traversing directory. Updating...")
+				log.Println("Error traversing directory. Updating...\n")
 			} else {
-				log.Println("Directory changed. Updating...")
+				log.Println("Directory changed. Updating...\n")
 			}
 			previousSum = sum
 			w.Lock()
@@ -192,7 +193,7 @@ func (r *Runner) Start() {
 				}
 				os.Exit(exitCode)
 			} else {
-				log.Printf("Run: Finished with %d %v", exitCode, err)
+				log.Printf("\nRun: Finished with %d %v", exitCode, err)
 			}
 		}()
 		if r.Watcher == nil {
