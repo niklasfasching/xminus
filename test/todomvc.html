@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script type="text/x-template" id="x-todomvc">
+      <h1>todos</h1>
+      <input .on:keydown="$.input(event)"/>
+      <div class="todo-list">
+        <div class="todo-item" .for="item in $.store.items">
+          {$.item.title}
+        </div>
+      </div>
+    </script>
+    <script></script>
+    <script type="module">
+
+     import {mount} from "/src/compile.mjs";
+
+
+     class Store {
+
+       items = []
+
+       add(title) {
+         this.items.push({title, completed: false});
+       }
+
+       remove(item) {
+         this.items = this.items.filter(_ => _ !== item);
+       }
+
+       toggleCompleted(item) {
+         item.completed = !item.completed;
+       }
+     }
+
+     mount(document.body, "x-todomvc", {
+       store: new Store(),
+       input({target, key}) {
+         if (key !== "Enter") return
+         this.store.add(target.value);
+         target.value = "";
+       }
+     });
+    </script>
+  </head>
+  <body></body>
+</html>
