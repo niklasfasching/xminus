@@ -75,8 +75,8 @@ async function runFn(lvl, name, f, isTest) {
 }
 
 function log(lvl, color, line, ...lines) {
-  console.info("%c" + " ".repeat(lvl) + line, color);
-  for (let l of lines) console.info("%c" + " ".repeat(lvl + 2) + l, "color: grey");
+  console.info(" ".repeat(lvl) + "%c" + line, color);
+  for (let l of lines) console.info(" ".repeat(lvl + 2) + "%c" + l, "color: grey");
 }
 
 function newNode(name) {
