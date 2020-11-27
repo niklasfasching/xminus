@@ -1,4 +1,4 @@
-let node = newNode();
+let node = newNode(), count = 0;
 
 export function t(name, f) {
   node.children.push({name, f});
@@ -42,6 +42,7 @@ Object.assign(t, {
 });
 
 async function run(lvl, node) {
+  const start = performance.now();
   if (lvl) log(lvl, "", node.name);
   lvl += 2;
   for (let {name, f} of node.befores) await runFn(lvl, name, f, false);
@@ -50,9 +51,15 @@ async function run(lvl, node) {
     else await runFn(lvl, child.name, child.f, true);
   }
   for (let {f} of node.afters) await f();
+  lvl -= 2;
+
+  const ms = performance.now() - start;
+  if (lvl) log(lvl, "color: grey", `(${ms.toFixed()}ms)\n`);
+  else log(lvl + 2, "color: grey", `${count} tests\n`);
 }
 
 async function runFn(lvl, name, f, isTest) {
+  if (isTest) count++;
   try {
     const start = performance.now();
     await f?.();
