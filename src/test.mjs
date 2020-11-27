@@ -1,4 +1,6 @@
-let node = newNode(), count = 0;
+let node = newNode(), count = 0, countFailed = 0, resolve;
+
+export const done = new Promise((r) => resolve = r);
 
 export function t(name, f) {
   node.children.push({name, f});
@@ -55,7 +57,7 @@ async function run(lvl, node) {
 
   const ms = performance.now() - start;
   if (lvl) log(lvl, "color: grey", `(${ms.toFixed()}ms)\n`);
-  else log(lvl + 2, "color: grey", `${count} tests\n`);
+  else log(lvl + 2, "color: grey", `${count} tests (${countFailed} failures)\n`);
 }
 
 async function runFn(lvl, name, f, isTest) {
@@ -67,6 +69,7 @@ async function runFn(lvl, name, f, isTest) {
     if (isTest && f) log(lvl, "color: green", `✓ ${name} (${ms.toFixed()}ms)`);
     else if (isTest) log(lvl, "color: yellow", `✓ ${name}`);
   } catch (err) {
+    if (isTest) countFailed++;
     log(lvl, "color: red", `x ${name}`, ...err.stack.split("\n"));
   }
 }
@@ -80,4 +83,7 @@ function newNode(name) {
   return {name, children: [], befores: [], afters: []};
 }
 
-setTimeout(() => run(0, node));
+setTimeout(async () => {
+  await run(0, node);
+  resolve({count, countFailed});
+});
