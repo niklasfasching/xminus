@@ -1,4 +1,4 @@
-let node = {children: []};
+let node = newNode();
 
 export function t(name, f) {
   node.children.push({name, f});
@@ -7,11 +7,21 @@ export function t(name, f) {
 Object.assign(t, {
   describe(name, f) {
     const parent = node;
-    node = {name, children: []};
+    node = newNode(name);
     const result = f?.();
     if (result) throw new Error(`unexpected return value from describe: ${result}`);
     parent.children.push(node);
     node = parent;
+  },
+
+  before(name, f) {
+    if (!f) f = name, name = `before ${node.befores.length}`;
+    node.befores.push({name, f});
+  },
+
+  after(name, f) {
+    if (!f) f = name, name = `after ${node.afters.length}`;
+    node.afters.push({name, f});
   },
 
   assert(x, msg) {
@@ -34,19 +44,21 @@ Object.assign(t, {
 async function run(lvl, node) {
   if (lvl) log(lvl, "", node.name);
   lvl += 2;
+  for (let {name, f} of node.befores) await runFn(lvl, name, f, false);
   for (let child of node.children) {
     if (child.children) await run(lvl, child);
-    else await runTest(lvl, child.name, child.f);
+    else await runFn(lvl, child.name, child.f, true);
   }
+  for (let {f} of node.afters) await f();
 }
 
-async function runTest(lvl, name, f) {
+async function runFn(lvl, name, f, isTest) {
   try {
     const start = performance.now();
     await f?.();
     const ms = performance.now() - start;
-    if (f) log(lvl, "color: green", `✓ ${name} (${ms.toFixed()}ms)`);
-    else log(lvl, "color: yellow", `✓ ${name}`);
+    if (isTest && f) log(lvl, "color: green", `✓ ${name} (${ms.toFixed()}ms)`);
+    else if (isTest) log(lvl, "color: yellow", `✓ ${name}`);
   } catch (err) {
     log(lvl, "color: red", `x ${name}`, ...err.stack.split("\n"));
   }
@@ -55,6 +67,10 @@ async function runTest(lvl, name, f) {
 function log(lvl, color, line, ...lines) {
   console.info("%c" + " ".repeat(lvl) + line, color);
   for (let l of lines) console.info("%c" + " ".repeat(lvl + 2) + l, "color: grey");
+}
+
+function newNode(name) {
+  return {name, children: [], befores: [], afters: []};
 }
 
 setTimeout(() => run(0, node));
