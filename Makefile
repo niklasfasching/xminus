@@ -20,6 +20,7 @@ update-fixtures:
 test:
 	cli/xminus -e -r test/test.mjs update-fixtures 2> /tmp/index.json || true
 	git --no-pager diff test/testcases/index.json /tmp/index.json
+	cli/xminus -e -r test/todomvc.mjs
 
 .PHONY: setup
 setup:
