@@ -176,11 +176,11 @@ func (r *Runner) Start() {
 	r.Server = goheadless.Serve(address, servePath, fileName, flag.Args())
 	r.servePath = servePath
 	for {
-		out, done := make(chan string), make(chan struct{})
+		out, done := make(chan goheadless.Event), make(chan struct{})
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
-			for msg := range out {
-				log.Println(msg)
+			for event := range out {
+				log.Println(goheadless.Colorize(event))
 			}
 			close(done)
 		}()
