@@ -1,5 +1,6 @@
 #!/bin/bash
 
+dirty="$(git status --porcelain)"
 git stash --include-untracked --quiet
-trap "git stash pop --quiet" EXIT
+trap "if [[ -n '$dirty' ]]; then git stash pop --quiet; fi" EXIT
 make test
