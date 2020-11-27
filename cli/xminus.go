@@ -8,6 +8,7 @@ import (
 	"log"
 	"mime"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path"
 	"path/filepath"
@@ -130,25 +131,30 @@ func (s *Server) Start() error {
 			s.Watcher.AwaitChange()
 			w.WriteHeader(http.StatusNoContent)
 			return
-		} else if r.URL.Path == s.Runner.servePath {
-			s.Runner.Handler.ServeHTTP(w, r)
-			return
 		}
 
-		p := path.Join("./", path.Clean(r.URL.Path))
-		bs, err := ioutil.ReadFile(p)
-		if err != nil {
-			if !strings.HasSuffix(p, "/") {
-				p += "/"
-			}
-			p += "index.html"
+		bs := []byte{}
+		if r.URL.Path == s.Runner.servePath {
+			tmp := httptest.NewRecorder()
+			s.Runner.Handler.ServeHTTP(tmp, r)
+			bs = tmp.Body.Bytes()
+		} else {
+			p, err := path.Join("./", path.Clean(r.URL.Path)), error(nil)
 			bs, err = ioutil.ReadFile(p)
+			if err != nil {
+				if !strings.HasSuffix(p, "/") {
+					p += "/"
+				}
+				p += "index.html"
+				bs, err = ioutil.ReadFile(p)
+			}
+			if err != nil {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
 		}
-		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-		contentType := mime.TypeByExtension(path.Ext(p))
+
+		contentType := mime.TypeByExtension(path.Ext(r.URL.Path))
 		if contentType == "" {
 			contentType = http.DetectContentType(bs)
 		}
