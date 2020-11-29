@@ -139,10 +139,6 @@ function markNodes(node, key) {
   do { node[key] = true } while (node = node.parent);
 }
 
-function isSelected(node) {
-  return root.hasSelected ? node.selected || node.hasSelected : true;
-}
-
 function timer() {
   const start = performance.now()
   return () => (performance.now() - start).toFixed();
