@@ -38,6 +38,18 @@ Object.assign(t, {
     wrapper(name, f, "after");
   },
 
+  throws(f, regexp = /.*/, msg) {
+    if (typeof regexp === 'string') msg = regexp, regexp = /.*/;
+    if (typeof f !== 'function') t.fail(`expected ${f} to be a function`);
+    try {
+      f();
+    } catch(err) {
+      if (!regexp.test(err.message)) t.fail(`expected ${f} to throw ${regexp}`, err.message);
+      return;
+    }
+    t.fail(msg, `expected ${f} to throw`);
+  },
+
   assert(x, msg) {
     if (!x) t.fail(msg, `${x} == true`);
   },
@@ -47,7 +59,7 @@ Object.assign(t, {
   },
 
   assertStrictEqual(x, y, msg) {
-    if (x != y) t.fail(msg, `${x} === ${y}`);
+    if (x !== y) t.fail(msg, `${x} === ${y}`);
   },
 
   fail(msg, info = "fail") {
