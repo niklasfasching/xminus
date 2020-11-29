@@ -23,13 +23,11 @@ Object.assign(t, {
   },
 
   before(name, f) {
-    if (!f) f = name, name = `before ${node.befores.length}`;
-    node.befores.push({name, f});
+    wrapper(name, f, "before");
   },
 
   after(name, f) {
-    if (!f) f = name, name = `after ${node.afters.length}`;
-    node.afters.push({name, f});
+    wrapper(name, f, "after");
   },
 
   assert(x, msg) {
@@ -48,6 +46,11 @@ Object.assign(t, {
     throw new Error(`${msg ? msg + ": " : ""}${info}`);
   },
 });
+
+function wrapper(name, f, key) {
+  if (!f) f = name, name = `${key} ${node[key + "s"].length}`;
+  node[key + "s"].push({name, f});
+}
 
 function group(name, f, selected) {
   node = newNode(name, node, selected);
