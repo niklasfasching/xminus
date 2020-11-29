@@ -78,4 +78,11 @@ t.describe("t", () => {
       t.throws(() => t.fail("yolo"), /yolo: fail/);
     });
   });
+
+  t.describe("misc", () => {
+    t("should throw on t() or t.describe() inside t()", () => {
+      t.throws(() => t("foo"), /t\(\) must not be called async/);
+      t.throws(() => t.describe("foo"), /t\.describe\(\) must not be called async/);
+    })
+  })
 });

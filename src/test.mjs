@@ -1,14 +1,16 @@
 const root = newNode();
-let node = root, count = 0, countFailed = 0, resolve;
+let node = root, count = 0, countFailed = 0, started = false, resolve;
 
 export const done = new Promise((r) => resolve = r);
 
 export function t(name, f) {
+  if (started) throw new Error("t() must not be called async");
   node.children.push({name, f, selected: node.selected});
 }
 
 Object.assign(t, {
   describe(name, f) {
+    if (started) throw new Error("t.describe() must not be called async");
     group(name, f);
   },
 
@@ -157,6 +159,7 @@ function timer() {
 }
 
 setTimeout(async () => {
+  started = true;
   await run(0, node);
   resolve({count, countFailed});
 });
