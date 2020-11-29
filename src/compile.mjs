@@ -8,12 +8,23 @@ export const components = {};
 const macros = [
   [/^\.for$/, forMacro],
   [/^\.on:/, onMacro],
+  [/^\.if$/, ifMacro],
 ];
 
 export function setProperty(node, k, v) {
   if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
   else node.setAttribute(k, v);
+}
+
+export function nodeIf(condition, ifNode, elseNode) {
+  if (condition) {
+    if (elseNode.parentNode) elseNode.parentNode.replaceChild(ifNode, elseNode);
+    return ifNode;
+  } else {
+    if (ifNode.parentNode) ifNode.parentNode.replaceChild(elseNode, ifNode);
+    return elseNode;
+  }
 }
 
 export function updateFor(reference, nodeGroups, values, create, $) {
@@ -75,6 +86,15 @@ function onMacro(vnode, $, key, value) {
                  ${value};
                  $update();
                });\n`;
+}
+
+function ifMacro(vnode, $, key, value) {
+  vnode.node = generateNodeName($, vnode.node);
+  generateVnode(vnode, $);
+  const _ = prefix();
+  $.create += `const ${_}node = ${vnode.node}, ${_}placeholder = document.createComment("if");
+               ${vnode.node} = xm.nodeIf((${value}), ${_}node, ${_}placeholder);\n`;
+  $.update += `${vnode.node} = xm.nodeIf((${value}), ${_}node, ${_}placeholder);\n`
 }
 
 function forMacro(vnode, $, key, value) {
