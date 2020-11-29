@@ -60,27 +60,41 @@ function group(name, f, selected) {
 async function run(lvl, node) {
   const time = timer(), selected = !root.hasSelected || node.selected || node.hasSelected;
   if (selected && node !== root) log(lvl, "", node.name);
-  for (let {name, f} of node.befores) await runFn(lvl+2, name, f, false, selected);
+  for (let {name, f} of node.befores) await runWrapper(lvl+2, name, f, selected);
   for (let child of node.children) {
     if (child.children) await run(lvl+2, child);
-    else await runFn(lvl+2, child.name, child.f, true, !root.hasSelected || child.selected);
+    else await runTest(lvl+2, child);
   }
-  for (let {name, f} of node.afters) await runFn(lvl+2, name, f, false, selected);
+  for (let {name, f} of node.afters) await runWrapper(lvl+2, name, f, selected);
   if (selected && node !== root) log(lvl, "color: grey", `(${time()}ms)\n`);
   else if (node === root) log(lvl + 2, "color: grey", `${count} tests (${countFailed} failures)\n`);
 }
 
-async function runFn(lvl, name, f, isTest, selected) {
+async function runWrapper(lvl, name, f, selected) {
   if (!selected) return;
-  if (isTest) count++;
+  const [ms, err] = await runFn(f);
+  if (err) log(lvl, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
+}
+
+async function runTest(lvl, {name, f, selected}) {
+  if (root.hasSelected && !selected) return;
+  count++;
+  const [ms, err] = await runFn(f);
+  if (f && !err) log(lvl, "color: green", `✓ ${name} (${ms}ms)`);
+  else if (!err) log(lvl, "color: yellow", `✓ ${name}`);
+  else {
+    log(lvl, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
+    countFailed++;
+  }
+}
+
+async function runFn(f) {
   const time = timer();
   try {
     if (f) await f();
-    if (isTest && f) log(lvl, "color: green", `✓ ${name} (${time()}ms)`);
-    else if (isTest) log(lvl, "color: yellow", `✓ ${name}`);
+    return [time(), null];
   } catch (err) {
-    if (isTest) countFailed++;
-    log(lvl, "color: red", `x ${name} (${time()}ms)`, ...err.stack.split("\n"));
+    return [time(), err];
   }
 }
 
