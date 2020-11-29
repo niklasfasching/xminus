@@ -22,6 +22,14 @@ Object.assign(t, {
     markNodes(node, "hasSelected");
   },
 
+  beforeEach(name, f) {
+    wrapper(name, f, "beforeEach");
+  },
+
+  afterEach(name, f) {
+    wrapper(name, f, "afterEach");
+  },
+
   before(name, f) {
     wrapper(name, f, "before");
   },
@@ -52,10 +60,23 @@ function wrapper(name, f, key) {
   node[key + "s"].push({name, f});
 }
 
+function getEachWrappers(node) {
+  const befores = [], afters = [];
+  do {
+    befores.push(...node.beforeEachs.reverse());
+    afters.push(...node.afterEachs.reverse());
+  } while (node = node.parent);
+  return [befores.reverse(), afters.reverse()];
+}
+
 function group(name, f, selected) {
   node = newNode(name, node, selected);
   const result = f?.();
   if (result) throw new Error(`unexpected return value from describe: ${result}`);
+  const [beforeEachs, afterEachs] = getEachWrappers(node);
+  for (let child of node.children) {
+    Object.assign(child, {beforeEachs, afterEachs});
+  }
   node.parent.children.push(node);
   node = node.parent;
 }
@@ -79,9 +100,10 @@ async function runWrapper(lvl, name, f, selected) {
   if (err) log(lvl, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
 }
 
-async function runTest(lvl, {name, f, selected}) {
+async function runTest(lvl, {name, f, selected, beforeEachs, afterEachs}) {
   if (root.hasSelected && !selected) return;
   count++;
+  if (f) for (let {f, name} of beforeEachs) await runWrapper(lvl, name, f, true);
   const [ms, err] = await runFn(f);
   if (f && !err) log(lvl, "color: green", `✓ ${name} (${ms}ms)`);
   else if (!err) log(lvl, "color: yellow", `✓ ${name}`);
@@ -89,6 +111,7 @@ async function runTest(lvl, {name, f, selected}) {
     log(lvl, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
     countFailed++;
   }
+  if (f) for (let {f, name} of afterEachs) await runWrapper(lvl, name, f, true);
 }
 
 async function runFn(f) {
@@ -107,7 +130,9 @@ function log(lvl, color, line, ...lines) {
 }
 
 function newNode(name, parent, selected) {
-  return {name, parent, selected, children: [], befores: [], afters: []};
+  return {name, parent, selected, children: [],
+          befores: [], afters: [],
+          beforeEachs: [], afterEachs: []};
 }
 
 function markNodes(node, key) {
