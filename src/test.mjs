@@ -58,7 +58,7 @@ function group(name, f, selected) {
 }
 
 async function run(lvl, node) {
-  const start = performance.now(), selected = !root.hasSelected || node.selected || node.hasSelected;
+  const time = timer(), selected = !root.hasSelected || node.selected || node.hasSelected;
   if (selected && node !== root) log(lvl, "", node.name);
   for (let {name, f} of node.befores) await runFn(lvl+2, name, f, false, selected);
   for (let child of node.children) {
@@ -66,21 +66,21 @@ async function run(lvl, node) {
     else await runFn(lvl+2, child.name, child.f, true, !root.hasSelected || child.selected);
   }
   for (let {name, f} of node.afters) await runFn(lvl+2, name, f, false, selected);
-  if (selected && node !== root) log(lvl, "color: grey", `(${(performance.now() - start).toFixed()}ms)\n`);
+  if (selected && node !== root) log(lvl, "color: grey", `(${time()}ms)\n`);
   else if (node === root) log(lvl + 2, "color: grey", `${count} tests (${countFailed} failures)\n`);
 }
 
 async function runFn(lvl, name, f, isTest, selected) {
   if (!selected) return;
   if (isTest) count++;
-  const start = performance.now();
+  const time = timer();
   try {
     if (f) await f();
-    if (isTest && f) log(lvl, "color: green", `✓ ${name} (${(performance.now() - start).toFixed()}ms)`);
+    if (isTest && f) log(lvl, "color: green", `✓ ${name} (${time()}ms)`);
     else if (isTest) log(lvl, "color: yellow", `✓ ${name}`);
   } catch (err) {
     if (isTest) countFailed++;
-    log(lvl, "color: red", `x ${name} (${(performance.now() - start).toFixed()}ms)`, ...err.stack.split("\n"));
+    log(lvl, "color: red", `x ${name} (${time()}ms)`, ...err.stack.split("\n"));
   }
 }
 
@@ -99,6 +99,11 @@ function markNodes(node, key) {
 
 function isSelected(node) {
   return root.hasSelected ? node.selected || node.hasSelected : true;
+}
+
+function timer() {
+  const start = performance.now()
+  return () => (performance.now() - start).toFixed();
 }
 
 setTimeout(async () => {
