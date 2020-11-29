@@ -46,31 +46,26 @@ Object.assign(t, {
 async function run(lvl, node) {
   const start = performance.now();
   if (lvl) log(lvl, "", node.name);
-  lvl += 2;
-  for (let {name, f} of node.befores) await runFn(lvl, name, f, false);
+  for (let {name, f} of node.befores) await runFn(lvl+2, name, f, false);
   for (let child of node.children) {
-    if (child.children) await run(lvl, child);
-    else await runFn(lvl, child.name, child.f, true);
+    if (child.children) await run(lvl+2, child);
+    else await runFn(lvl+2, child.name, child.f, true);
   }
-  for (let {f} of node.afters) await f();
-  lvl -= 2;
-
-  const ms = performance.now() - start;
-  if (lvl) log(lvl, "color: grey", `(${ms.toFixed()}ms)\n`);
+  for (let {name, f} of node.afters) await runFn(lvl+2, name, f, false);
+  if (lvl) log(lvl, "color: grey", `(${(performance.now() - start).toFixed()}ms)\n`);
   else log(lvl + 2, "color: grey", `${count} tests (${countFailed} failures)\n`);
 }
 
 async function runFn(lvl, name, f, isTest) {
   if (isTest) count++;
+  const start = performance.now();
   try {
-    const start = performance.now();
-    await f?.();
-    const ms = performance.now() - start;
-    if (isTest && f) log(lvl, "color: green", `✓ ${name} (${ms.toFixed()}ms)`);
+    if (f) await f();
+    if (isTest && f) log(lvl, "color: green", `✓ ${name} (${(performance.now() - start).toFixed()}ms)`);
     else if (isTest) log(lvl, "color: yellow", `✓ ${name}`);
   } catch (err) {
     if (isTest) countFailed++;
-    log(lvl, "color: red", `x ${name}`, ...err.stack.split("\n"));
+    log(lvl, "color: red", `x ${name} (${(performance.now() - start).toFixed()}ms)`, ...err.stack.split("\n"));
   }
 }
 
