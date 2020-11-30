@@ -60,6 +60,11 @@ Object.assign(t, {
     if (x != y) t.fail(msg, `${x} == ${y}`);
   },
 
+  jsonEqual(x, y, msg) {
+    x = JSON.stringify(x), y = JSON.stringify(y);
+    if (x !== y) t.fail(msg, `${x} !== ${y}`);
+  },
+
   strictEqual(x, y, msg) {
     if (x !== y) t.fail(msg, `${x} === ${y}`);
   },
