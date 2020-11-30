@@ -209,19 +209,26 @@ function generateVnode(vnode, $) {
 }
 
 function generateProperties(vnode, $) {
+  const dynamicProperties = [];
   for (const k in vnode.properties) {
     const [key, rawKey, isDynamicKey] = parseValue(k),
           [value, rawValue, isDynamicValue] = parseValue(vnode.properties[k]);
     if (!isDynamicKey && !isDynamicValue) $.html += ` ${rawKey}=${value}`;
-    else if (!isDynamicKey) {
-      $.create += `xm.setProperty(${vnode.node}, ${key}, ${value});\n`;
-      $.update += `xm.setProperty(${vnode.node}, ${key}, ${value});\n`;
+    else dynamicProperties.push({key, value, isDynamicKey, isDynamicValue});
+  }
+  if (!dynamicProperties.length) return;
+  const node = `${prefix()}node`;
+  $.create += `const ${node} = ${vnode.node};\n`
+  for (let {key, value, isDynamicKey, isDynamicValue} of dynamicProperties) {
+    if (!isDynamicKey) {
+      $.create += `xm.setProperty(${node}, ${key}, ${value});\n`;
+      $.update += `xm.setProperty(${node}, ${key}, ${value});\n`;
     } else {
       const _ = prefix();
-      $.create += `let ${_}key = ${key}; setProperty(${vnode.node}, ${_}key, ${value});\n`;
+      $.create += `let ${_}key = ${key}; setProperty(${node}, ${_}key, ${value});\n`;
       $.update += `let ${_}updatedKey = ${key};
-                   if (${_}key !== ${_}updatedKey) xm.setProperty(${vnode.node}, ${_}key, undefined);
-                   xm.setProperty(${vnode.node}, ${_}updatedKey, ${value});
+                   if (${_}key !== ${_}updatedKey) xm.setProperty(${node}, ${_}key, undefined);
+                   xm.setProperty(${node}, ${_}updatedKey, ${value});
                    ${_}key = ${_}updatedKey;\n`;
     }
   }
@@ -244,12 +251,12 @@ export function generateChildren(vnode, $) {
   }
   if (dynamicChildren.length) {
     const _ = prefix(), values = dynamicChildren.map(([_, v]) => v), nodes = dynamicChildren.map(([n]) => n);
-    $.create += `const ${_}nodeGroups = [${values}].map(v => xm.createNodeGroup(v));
+    $.create += `const ${_}node = ${vnode.node}, ${_}nodeGroups = [${values}].map(v => xm.createNodeGroup(v));
                  [${nodes}].forEach((placeholder, i) => {
-                    for (let node of ${_}nodeGroups[i]) ${vnode.node}.insertBefore(node, placeholder);
-                    ${vnode.node}.removeChild(placeholder);
+                    for (let node of ${_}nodeGroups[i]) ${_}node.insertBefore(node, placeholder);
+                    ${_}node.removeChild(placeholder);
                  });\n`;
-    $.update += `xm.updateNodeGroups(${vnode.node}.firstChild, ${_}nodeGroups, [${values}], xm.createChild);\n`;
+    $.update += `xm.updateNodeGroups(${_}node.firstChild, ${_}nodeGroups, [${values}], xm.createChild);\n`;
   }
 }
 

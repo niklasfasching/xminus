@@ -207,15 +207,15 @@
     "create": [
       "let _7_node = _node.firstChild;",
       "let _8_node = _7_node.firstChild;",
-      "const _9_nodeGroups = [(children)].map(v => xm.createNodeGroup(v));",
+      "const _9_node = _7_node, _9_nodeGroups = [(children)].map(v => xm.createNodeGroup(v));",
       "                 [_8_node.nextSibling].forEach((placeholder, i) => {",
-      "                    for (let node of _9_nodeGroups[i]) _7_node.insertBefore(node, placeholder);",
-      "                    _7_node.removeChild(placeholder);",
+      "                    for (let node of _9_nodeGroups[i]) _9_node.insertBefore(node, placeholder);",
+      "                    _9_node.removeChild(placeholder);",
       "                 });",
       ""
     ],
     "update": [
-      "xm.updateNodeGroups(_7_node.firstChild, _9_nodeGroups, [(children)], xm.createChild);",
+      "xm.updateNodeGroups(_9_node.firstChild, _9_nodeGroups, [(children)], xm.createChild);",
       ""
     ]
   }
