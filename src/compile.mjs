@@ -269,7 +269,7 @@ function parseValue(input) {
 
 function parseValueParts(input) {
   let parts = [], part = "", lvl = 0, push = () => {
-    if (part) part && parts.push([lvl === 1 ? `(${part})` : `"${part}"`, part, lvl === 1]);
+    if (part) parts.push([lvl === 1 ? `(${part})` : `"${part}"`, part, lvl === 1]);
     part = "";
   };
   for (let c of input) {
