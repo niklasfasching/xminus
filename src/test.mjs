@@ -114,7 +114,7 @@ async function runWrapper(lvl, name, f, selected) {
   if (err) log(lvl, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
 }
 
-async function runTest(lvl, {name, f, selected, beforeEachs, afterEachs}) {
+async function runTest(lvl, {name, f, selected, beforeEachs = [], afterEachs = []}) {
   if (root.hasSelected && !selected) return;
   count++;
   if (f) for (let {f, name} of beforeEachs) await runWrapper(lvl, name, f, true);
