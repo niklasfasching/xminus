@@ -1,84 +1,11 @@
-// https://html.spec.whatwg.org/multipage/syntax.html#void-elements
-const voidTags = {area: 1, base: 1, br: 1, col: 1, embed: 1, hr: 1, img: 1, input: 1, link: 1, meta: 1, param: 1, source: 1, track: 1, wbr: 1},
-      prefix = () => `_${prefixId++}_`;
+const prefix = () => `_${prefixId++}_`;
 let prefixId = 0;
-
-export const components = {};
 
 const macros = [
   [/^\.if$/, ifMacro],
   [/^\.for$/, forMacro],
   [/^\.on:/, onMacro],
 ];
-
-export function setProperty(node, k, v) {
-  if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
-  else if (v == null || v === false) node.removeAttribute(k);
-  else node.setAttribute(k, v);
-}
-
-export function nodeIf(condition, ifNode, elseNode) {
-  if (condition) {
-    if (elseNode.parentNode) elseNode.parentNode.replaceChild(ifNode, elseNode);
-    return ifNode;
-  } else {
-    if (ifNode.parentNode) ifNode.parentNode.replaceChild(elseNode, ifNode);
-    return elseNode;
-  }
-}
-
-export function updateFor(reference, nodeGroups, values, create, $) {
-  const group = ([nodes, update]) => Object.assign(nodes, {update});
-  updateNodeGroups(reference, nodeGroups, values, value => group(create($, value)));
-}
-
-export function createNodeGroup(value) {
-  const group = Array.isArray(value) && (!value[0] || value[0] instanceof Node) ?
-        value :
-        [document.createTextNode(value)];
-  group.update = (updatedValue) => {
-    if (value !== updatedValue) {
-      const first = group[0], parent = group[0].parentNode, nodes = createNodeGroup(value);
-      for (let node of nodes) parent.insertBefore(node, first);
-      for (let node of group) parent.removeChild(node);
-      group.splice(0, group.length, ...nodes);
-    }
-    value = updatedValue;
-  }
-  return group;
-}
-
-export function updateNodeGroups(reference, nodeGroups, values, create) {
-  const parent = reference.parentNode;
-  for (let i = 0, j = 0; i < nodeGroups.length || j < values.length; i++, j++) {
-    if (nodeGroups[i] && j < values.length) {
-      nodeGroups[i].update(values[j]);
-    } else if (nodeGroups[i]) {
-      for (let node of nodeGroups[i]) parent.removeChild(node);
-      delete nodeGroups[i];
-    } else if (j < values.length) {
-
-      const afterLast = (nodeGroups.slice(-1)[0]?.slice(-1)?.[0] || reference).nextSibling;
-      nodeGroups[i] = create(values[j]);
-      for (let node of nodeGroups[i]) parent.insertBefore(node, afterLast);
-    }
-  }
-  nodeGroups.length = values.length;
-}
-
-export async function mount(parentNode, name, $, ...componentURLs) {
-  window.xm = await import(import.meta.url);
-  for (const url of [...componentURLs, location.toString()]) {
-    try {
-      await import(`data:text/javascript,${encodeURIComponent(await generateCode(url))}`);
-    } catch (e) {
-      throw new Error(`eval: ${e.message}:\n${url}`);
-    }
-  }
-  if (!components[name]) throw new Error(`component ${name} does not exist`);
-  parentNode.innerHTML = "";
-  for (let node of components[name]($, {})[0]) parentNode.appendChild(node);
-}
 
 function onMacro(vnode, $, key, value) {
   generateVnode(vnode, $);
@@ -265,74 +192,4 @@ function generateNodeName($, name) {
   const _ = prefix();
   $.create += `let ${_}node = ${name};\n`;
   return `${_}node`;
-}
-
-function parseValue(input) {
-  const [parts, isDynamic] = parseValueParts(input);
-  return [parts.length === 1 ? parts[0][0] : parts.map(p => p[0]).join(" + "),
-          isDynamic ?  null : parts[0][1],
-          isDynamic];
-}
-
-function parseValueParts(input) {
-  let parts = [], part = "", lvl = 0, push = () => {
-    if (part) parts.push([lvl === 1 ? `(${part})` : `"${part}"`, part, lvl === 1]);
-    part = "";
-  };
-  for (let c of input) {
-    if (c === "{" && lvl === 0) push(), lvl++;
-    else if (c === "}" && lvl === 1) push(), lvl--;
-    else part +=c;
-  }
-  push();
-  return [parts, parts.some(p => p[2])];
-}
-
-export function parse(template) {
-  const tokens = lex(template), vnodes = [], parents = [];
-  for (let i = 0, [$, x] = tokens[0]; i < tokens.length; i++, [$, x] = tokens[i] || []) {
-    if ($ === "open") {
-      const vchild = {tag: x, properties: {}, children: [], parent: parents[0]};
-      (parents[0]?.children || vnodes).push(vchild);
-      parents.unshift(vchild);
-    } else if ($ === "close") {
-      parents.shift();
-    } else if ($ === "child") {
-      (parents[0]?.children || vnodes).push(...parseValueParts(x)[0]);
-    } else if ($ === "key") {
-      parents[0].properties[x] = tokens[++i][1];
-    } else throw "unexpected: " + $;
-  }
-  if (parents.length) throw new Error(`unclosed ${parents[0].tag}: ${template}`);
-  return vnodes;
-}
-
-export function lex(template) {
-  let $ = "child", tag = "", tmp = "", tokens = [], push = ($next) => {
-    if (tmp.trim()) tokens.push([$, tmp]);
-    if ($ === "open") tag = tmp;
-    $ = $next, tmp = "";
-  };
-  for (let i = 0, c = template[0]; i < template.length; i++, c = template[i]) {
-    if ($ === "child" && c === "<") {
-      push(template[i+1] === "/" ? "close" : "open");
-    } else if ($ !== "child" && (c === ">" || c === "/" && template[i+1] === ">")) {
-      push("child");
-      if (c === "/") i++;
-      if (c === "/" || voidTags[tag]) tokens.push(["close", "/"]);
-    } else if ($ !== "child" && (c === " " || c === "\n")) {
-      push("key");
-      if (tokens[tokens.length-1][0] === "key") tokens.push(["value", "true"]);
-    } else if ($ === "value" && (c === "'" || c === '"')) {
-      while (template[++i] !== c) tmp += template[i];
-      tmp = tmp || "true";
-      push("key");
-    } else if ($ === "key" && c === "=") {
-      push("value");
-    } else {
-      tmp += c;
-    }
-  }
-  push();
-  return tokens;
 }
