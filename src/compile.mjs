@@ -6,9 +6,9 @@ let prefixId = 0;
 export const components = {};
 
 const macros = [
+  [/^\.if$/, ifMacro],
   [/^\.for$/, forMacro],
   [/^\.on:/, onMacro],
-  [/^\.if$/, ifMacro],
 ];
 
 export function setProperty(node, k, v) {
