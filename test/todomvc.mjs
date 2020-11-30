@@ -15,7 +15,7 @@ t.describe("TodoMVC", () => {
 
   t.describe("Initial load", () => {
     t("should focus todo input", async () => {
-      t.assertStrictEqual(iframe.contentDocument.activeElement, input);
+      t.strictEqual(iframe.contentDocument.activeElement, input);
     });
   });
 
@@ -39,19 +39,19 @@ t.describe("TodoMVC", () => {
     });
 
     t("should add todo items in order", () => {
-      t.assertEqual(items.length, 2);
-      t.assertEqual(items[0].innerText, title1);
-      t.assertEqual(items[1].innerText, title2);
+      t.equal(items.length, 2);
+      t.equal(items[0].innerText, title1);
+      t.equal(items[1].innerText, title2);
     });
 
     t("should clear input after an item is added", () => {
-      t.assertEqual(items.length, 2);
-      t.assertEqual(input.value, "");
+      t.equal(items.length, 2);
+      t.equal(input.value, "");
     });
 
     t("should trim entered text", () => {
-      t.assertEqual(items[0].innerText, title1);
-      t.assertEqual(iframe.contentWindow.store.items[0].title, title1);
+      t.equal(items[0].innerText, title1);
+      t.equal(iframe.contentWindow.store.items[0].title, title1);
     });
 
     t("should show $main and $footer when there are todos", async () => {
@@ -85,9 +85,9 @@ t.describe("TodoMVC", () => {
     });
 
     t("should keep the 'complete all' checkbox updated", () => {
-      t.assertEqual(toggleAll.checked, false);
+      t.equal(toggleAll.checked, false);
       toggleAll.click()
-      t.assertEqual(toggleAll.checked, true);
+      t.equal(toggleAll.checked, true);
     });
   });
 
@@ -100,15 +100,15 @@ t.describe("TodoMVC", () => {
     });
 
     t("should allow marking items as complete", () => {
-      t.assertEqual(item.querySelector(".toggle").checked, false);
+      t.equal(item.querySelector(".toggle").checked, false);
       item.querySelector(".toggle").click();
-      t.assertEqual(item.querySelector(".toggle").checked, true);
+      t.equal(item.querySelector(".toggle").checked, true);
     });
 
     t("should allow un-marking items as complete", () => {
       item.querySelector(".toggle").click();
       item.querySelector(".toggle").click();
-      t.assertEqual(item.querySelector(".toggle").checked, false);
+      t.equal(item.querySelector(".toggle").checked, false);
     });
 
     t("should allow editing items");

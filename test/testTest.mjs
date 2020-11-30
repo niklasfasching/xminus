@@ -19,12 +19,12 @@ t.describe("t", () => {
       t.after(() => beforeAfterString += "6");
 
       t("should run befores in order", () => {
-        t.assertEqual(beforeAfterString, "123");
+        t.equal(beforeAfterString, "123");
       });
     });
 
     t("should run afters in order", () => {
-      t.assertEqual(beforeAfterString, "123456");
+      t.equal(beforeAfterString, "123456");
     });
 
     let beforeEachAfterEachString = "";
@@ -39,16 +39,16 @@ t.describe("t", () => {
       t.afterEach(() => beforeEachAfterEachString += "6");
 
       t("should run beforeEachs in order", () => {
-        t.assertEqual(beforeEachAfterEachString, "123");
+        t.equal(beforeEachAfterEachString, "123");
       });
 
       t("should run beforeEachs for each test", () => {
-        t.assertEqual(beforeEachAfterEachString, "123456123");
+        t.equal(beforeEachAfterEachString, "123456123");
       });
     });
 
     t("should run afterEachs in order", () => {
-      t.assertEqual(beforeEachAfterEachString, "123456123456");
+      t.equal(beforeEachAfterEachString, "123456123456");
     });
   });
 
@@ -63,15 +63,15 @@ t.describe("t", () => {
       t.throws(() => t.assert(false), /false == true/);
     });
 
-    t("should support assertEqual", () => {
-      t.assertEqual(1, 1);
-      t.assertEqual(null, undefined);
-      t.throws(() => t.assertEqual(1, 2), /1 == 2/);
+    t("should support equal", () => {
+      t.equal(1, 1);
+      t.equal(null, undefined);
+      t.throws(() => t.equal(1, 2), /1 == 2/);
     });
 
-    t("should support assertStrictEqual", () => {
-      t.assertStrictEqual(1, 1);
-      t.throws(() => t.assertStrictEqual(null, undefined), /null === undefined/);
+    t("should support strictEqual", () => {
+      t.strictEqual(1, 1);
+      t.throws(() => t.strictEqual(null, undefined), /null === undefined/);
     });
 
     t("should support fail", () => {

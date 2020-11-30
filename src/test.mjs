@@ -56,11 +56,11 @@ Object.assign(t, {
     if (!x) t.fail(msg, `${x} == true`);
   },
 
-  assertEqual(x, y, msg) {
+  equal(x, y, msg) {
     if (x != y) t.fail(msg, `${x} == ${y}`);
   },
 
-  assertStrictEqual(x, y, msg) {
+  strictEqual(x, y, msg) {
     if (x !== y) t.fail(msg, `${x} === ${y}`);
   },
 
