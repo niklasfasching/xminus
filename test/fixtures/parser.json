@@ -1,0 +1,53 @@
+{
+  "": {
+    "vnodes": [
+      {
+        "tag": "input",
+        "properties": {
+          "foo": "true"
+        },
+        "children": [],
+        "void": true
+      },
+      {
+        "tag": "div",
+        "properties": {},
+        "children": [],
+        "void": false
+      },
+      {
+        "tag": "div",
+        "properties": {
+          "foo": "true"
+        },
+        "children": [],
+        "void": false
+      }
+    ]
+  },
+  "should support dynamic keys and values": {
+    "vnodes": [
+      {
+        "tag": "div",
+        "properties": {
+          "{foo bar}": "value",
+          "key": "{foo bar}"
+        },
+        "children": [],
+        "void": false
+      }
+    ]
+  },
+  "should support dynamic tags and children": {
+    "vnodes": [
+      {
+        "tag": "{foo bar}",
+        "properties": {},
+        "children": [
+          "{foo bar}"
+        ],
+        "void": false
+      }
+    ]
+  }
+}

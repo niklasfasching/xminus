@@ -15,12 +15,12 @@ bench:
 .PHONY: update-fixtures
 update-fixtures:
 	cli/xminus -e -r test/test.mjs update-fixtures 2> test/fixtures/test.json
+	cli/xminus -e -r test/parser.mjs update-fixtures 2> test/fixtures/parser.json
 
 .PHONY: test
 test:
-	cli/xminus -e -r test/test.mjs update-fixtures 2> /tmp/index.json || true
-	git --no-pager diff test/testcases/index.json /tmp/index.json
-	cli/xminus -e -r test/todomvc.mjs
+	cli/xminus -e -r test/test.mjs
+	cli/xminus -e -r test/parser.mjs
 
 .PHONY: setup
 setup:
