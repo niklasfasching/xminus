@@ -109,44 +109,50 @@ function group(name, f, selected) {
 async function run(lvl, node) {
   const time = timer(), selected = !root.hasSelected || node.selected || node.hasSelected;
   if (selected && node !== root) log(lvl, 0, "", node.name);
-  for (let {name, f} of node.befores) await runWrapper(lvl+2, name, f, selected);
+  for (let {name, f} of node.befores) await runWrapper(lvl+2, node, name, f, selected);
   for (let child of node.children) {
     if (child.children) await run(lvl+2, child);
-    else await runTest(lvl+2, child);
+    else await runTest(lvl+2, node, child);
   }
-  for (let {name, f} of node.afters) await runWrapper(lvl+2, name, f, selected);
+  for (let {name, f} of node.afters) await runWrapper(lvl+2, node, name, f, selected);
   if (selected && node !== root) log(lvl, 0, "color: grey", `(${time()}ms)\n`);
   else if (node === root) log(lvl + 2, 0, "color: grey", `${count} tests (${countFailed} failures)\n`);
 }
 
-async function runWrapper(lvl, name, f, selected) {
+async function runWrapper(lvl, node, name, f, selected) {
   if (!selected) return;
-  const [ms, err] = await runFn(f, name);
+  const [ms, err] = await runFn(node, f, name);
   if (err) log(lvl, 1, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
 }
 
-async function runTest(lvl, {name, f, selected, beforeEachs = [], afterEachs = []}) {
+async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEachs = []}) {
   if (root.hasSelected && !selected) return;
   count++;
-  if (f) for (let {f, name} of beforeEachs) await runWrapper(lvl, name, f, true);
-  const [ms, err] = await runFn(f, name);
+  if (f) for (let {f, name} of beforeEachs) await runWrapper(lvl, node, name, f, true);
+  const [ms, err] = await runFn(node, f, name);
   if (f && !err) log(lvl, 0, "color: green", `✓ ${name} (${ms}ms)`);
   else if (!err) log(lvl, 0, "color: yellow", `✓ ${name}`);
   else {
     log(lvl, 1, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
     countFailed++;
   }
-  if (f) for (let {f, name} of afterEachs) await runWrapper(lvl, name, f, true);
+  if (f) for (let {f, name} of afterEachs) await runWrapper(lvl, node, name, f, true);
 }
 
-async function runFn(f, name) {
+async function runFn(node, f, name) {
   const time = timer();
   try {
-    if (f) await f(name);
+    if (f) await f(id(node, name));
     return [time(), null];
   } catch (err) {
     return [time(), err];
   }
+}
+
+function id(node, name) {
+  let names = [name];
+  do { names.push(node.name) } while (node = node.parent);
+  return names.reverse().filter(Boolean).join(": ");
 }
 
 function log(lvl, isFailure, color, line, ...lines) {

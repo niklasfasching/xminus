@@ -1,5 +1,5 @@
 {
-  "should test actual value against json fixture": {
+  "t: json fixtures: should test actual value against json fixture": {
     "value": "hello world"
   }
 }

@@ -87,8 +87,8 @@ t.describe("t", () => {
   t.describe("json fixtures", () => {
     const assertFixture = t.setupFixtures("./fixtures/test.json");
 
-    t("should test actual value against json fixture", (name) => {
-      assertFixture({id: name, value: "hello world"});
+    t("should test actual value against json fixture", (id) => {
+      assertFixture({id, value: "hello world"});
     });
   });
 });

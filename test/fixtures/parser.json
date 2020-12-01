@@ -1,5 +1,5 @@
 {
-  "should support self closing tags and properties": {
+  "parser: should support self closing tags and properties": {
     "vnodes": [
       {
         "tag": "input",
@@ -25,7 +25,7 @@
       }
     ]
   },
-  "should support dynamic keys and values": {
+  "parser: should support dynamic keys and values": {
     "vnodes": [
       {
         "tag": "div",
@@ -38,7 +38,7 @@
       }
     ]
   },
-  "should support dynamic tags and children": {
+  "parser: should support dynamic tags and children": {
     "vnodes": [
       {
         "tag": "{foo bar}",
