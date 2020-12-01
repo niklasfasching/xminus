@@ -1,4 +1,5 @@
-import * as xminus from "/src/compile.mjs";
+import * as p from "/src/parser.mjs";
+import * as c from "/src/compile.mjs";
 
 async function run(name) {
   const expectedResults = await fetch(`./${name}.json`).then(r => r.json()).catch(() => []);
@@ -11,12 +12,12 @@ async function run(name) {
           generate = t.hasAttribute("generate"),
           $ = {create: "", update: "", html: ""};
     if (generate) {
-      xminus.generateChildren({node: "_node", properties: {}, children: xminus.parse(text)}, $);
+      c.generateChildren({node: "_node", properties: {}, children: p.parse(text)}, $);
     }
     return {
       id,
-      tokens: lex ? xminus.lex(text) : undefined,
-      vnodes: parse ? xminus.parse(text): undefined,
+      tokens: lex ? p.lex(text) : undefined,
+      vnodes: parse ? p.parse(text): undefined,
       html: generate ? $.html.split("\n") : undefined,
       create: generate ? $.create.split("\n") : undefined,
       update: generate ? $.update.split("\n") : undefined,

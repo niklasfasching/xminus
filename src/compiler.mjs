@@ -1,3 +1,5 @@
+import {parse, parseValue, parseValueParts} from "./parser.mjs";
+
 const prefix = () => `_${prefixId++}_`;
 let prefixId = 0;
 
@@ -37,7 +39,7 @@ function forMacro(vnode, $, key, value) {
   $.update += `xm.updateFor(${_}reference, ${_}nodeGroups, ${values}, ${_}create, $);\n`;
 }
 
-async function generateCode(url) {
+export async function generateCode(url) {
   let code = `//# sourceURL=${url}.generated.js\n`, d = document;
   if (url !== location.toString()) {
     d = await fetch(url).then(r => r.text()).then(html => new DOMParser().parseFromString(html, "text/html"));
@@ -118,7 +120,7 @@ function generateVnode(vnode, $) {
     }
     generateProperties(vnode, $);
     $.html += ">";
-    if (voidTags[rawTag]) return;
+    if (vnode.void) return;
     generateChildren(vnode, $);
     $.html += `</${rawTag}>`;
   } else if (isComponentTag(rawTag) && !isDynamicTag) {
@@ -170,9 +172,10 @@ export function generateChildren(vnode, $) {
       generateVnode(vchild, $);
       node = vchild.node;
     } else {
-      const [value, rawValue, isDynamic] = vchild;
-      $.html += isDynamic ? "<!---->" : rawValue;
-      if (isDynamic) dynamicChildren.push([node, value]);
+      for (let [value, rawValue, isDynamic] of parseValueParts(vchild)[0]) {
+        $.html += isDynamic ? "<!---->" : rawValue;
+        if (isDynamic) dynamicChildren.push([node, value]);
+      }
     }
     node = node + ".nextSibling";
   }

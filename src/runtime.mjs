@@ -56,6 +56,7 @@ export function updateNodeGroups(reference, nodeGroups, values, create) {
 }
 
 export async function mount(parentNode, name, $, ...componentURLs) {
+  const {generateCode} = await import("./compiler.mjs");
   window.xm = await import(import.meta.url);
   for (const url of [...componentURLs, location.toString()]) {
     try {

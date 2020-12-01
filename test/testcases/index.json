@@ -23,16 +23,8 @@
         "with"
       ],
       [
-        "value",
-        "true"
-      ],
-      [
         "key",
         "spaces"
-      ],
-      [
-        "value",
-        "true"
       ],
       [
         "key",
@@ -75,24 +67,12 @@
         "key-2"
       ],
       [
-        "value",
-        "true"
-      ],
-      [
         "key",
         "key-3"
       ],
       [
-        "value",
-        "true"
-      ],
-      [
         "key",
         "value"
-      ],
-      [
-        "value",
-        "true"
       ],
       [
         "close",
@@ -100,11 +80,7 @@
       ]
     ],
     "vnodes": [
-      [
-        "\"\n      values\n      \"",
-        "\n      values\n      ",
-        false
-      ],
+      "\n      values\n      ",
       {
         "tag": "div",
         "properties": {
@@ -114,13 +90,10 @@
           "key2": "value with spaces",
           "key3": "value with spaces"
         },
-        "children": []
+        "children": [],
+        "void": false
       },
-      [
-        "\"\n\n      keys\n      \"",
-        "\n\n      keys\n      ",
-        false
-      ],
+      "\n\n      keys\n      ",
       {
         "tag": "div",
         "properties": {
@@ -129,7 +102,8 @@
           "key-3": "true",
           "value": "true"
         },
-        "children": []
+        "children": [],
+        "void": false
       }
     ]
   },
@@ -208,7 +182,7 @@
       "let _7_node = _node.firstChild;",
       "let _8_node = _7_node.firstChild;",
       "const _9_node = _7_node, _9_nodeGroups = [(children)].map(v => xm.createNodeGroup(v));",
-      "                 [_8_node.nextSibling].forEach((placeholder, i) => {",
+      "                 [_8_node].forEach((placeholder, i) => {",
       "                    for (let node of _9_nodeGroups[i]) _9_node.insertBefore(node, placeholder);",
       "                    _9_node.removeChild(placeholder);",
       "                 });",
