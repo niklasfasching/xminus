@@ -55,7 +55,7 @@
     </script>
     <script type="module">
      import Store from '../store.mjs';
-     import {mount} from "/src/compile.mjs";
+     import {mount} from "/src/runtime.mjs";
      window.store = new Store();
      mount(document.body, "x-main", {store});
     </script>

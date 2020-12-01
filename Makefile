@@ -10,7 +10,7 @@ dev:
 
 .PHONY: bench
 bench:
-	cli/xminus -e -r test/bench.mjs
+	cli/xminus -e -r test/integration/bench.mjs
 
 .PHONY: update-fixtures
 update-fixtures:

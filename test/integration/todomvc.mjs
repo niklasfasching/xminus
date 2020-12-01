@@ -1,10 +1,8 @@
-import {t, done} from "../src/test.mjs";
+import {t, done} from "/src/test.mjs";
 
-done.then(({countFailed}) => {
-  window.close(countFailed && 1)
-});
 
 t.describe("TodoMVC", () => {
+  t.exitAfter();
 
   let iframe, input;
   t.beforeEach(async () => {
@@ -75,6 +73,7 @@ t.describe("TodoMVC", () => {
       for (let item of items) t.assert(!item.classList.contains("completed"));
       toggleAll.click()
       for (let item of items) t.assert(item.classList.contains("completed"));
+      // TODO: test not toggleComplete but real mark/unmark all
     });
 
     t("should allow un-marking all items as completed", () => {

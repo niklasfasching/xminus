@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8">
     <script type="text/x-template" id="x-todomvc">
-
       <section class="todoapp">
         <header class="header">
           <h1>todos</h1>
@@ -81,6 +80,7 @@
        },
 
        toggleAll() {
+         // TODO: set according to own state! toggle x = !x is not right
          for (const item of this.store.items) this.store.toggleCompleted(item);
        }
 
