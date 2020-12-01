@@ -1,0 +1,194 @@
+{
+  "compiler: generateVnode: should not generate update code for static html": {
+    "html": "<div>hello <b>world</b></div>",
+    "create": [
+      "let _0_node = root.firstChild;",
+      "let _1_node = _0_node.nextSibling;",
+      "let _2_node = _1_node.firstChild;",
+      ""
+    ],
+    "update": ""
+  },
+  "compiler: generateVnode: should generate create and update code for dynamic properties": {
+    "html": "<div>hello world</div>",
+    "create": [
+      "let _0_node = root;",
+      "let _1_key = (dynamic key); setProperty(_0_node, _1_key, \"value\");",
+      "xm.setProperty(_0_node, \"key\", (dynamic value));",
+      "let _2_node = _0_node.firstChild;",
+      ""
+    ],
+    "update": [
+      "let _1_updatedKey = (dynamic key);",
+      "if (_1_key !== _1_updatedKey) xm.setProperty(_0_node, _1_key, undefined);",
+      "xm.setProperty(_0_node, _1_updatedKey, \"value\");",
+      "_1_key = _1_updatedKey;",
+      "xm.setProperty(_0_node, \"key\", (dynamic value));",
+      ""
+    ]
+  },
+  "compiler: generateVnode: should generate create and update code for dynamic children": {
+    "html": "<div>hello <!----></div>",
+    "create": [
+      "let _0_node = root.firstChild;",
+      "const _1_node = root, _1_nodes = [_0_node], _1_values = [],",
+      "_1_anchor = _0_node.previousSibling;",
+      "xm.updateNodes(_1_node, _1_anchor, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
+      ""
+    ],
+    "update": [
+      "xm.updateNodes(_1_node, _1_anchor, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
+      ""
+    ]
+  },
+  "compiler: generateVnode: should generate void tags without children": {
+    "html": "<div><input><!----></div>",
+    "create": [
+      "let _0_node = root.firstChild;",
+      "let _1_node = _0_node.nextSibling;",
+      "const _2_node = root, _2_nodes = [_1_node], _2_values = [],",
+      "_2_anchor = _1_node.previousSibling;",
+      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(not a child of input)], $, xm.createChildNode);",
+      ""
+    ],
+    "update": [
+      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(not a child of input)], $, xm.createChildNode);",
+      ""
+    ]
+  },
+  "compiler: generateVnode: should generate component tags": {
+    "html": "<template>foo bar <!----></template><!---->",
+    "create": [
+      "let _0_node = root, _0_parent = root.parentNode, _0_anchor = document.createComment(\"closure anchor\");",
+      "_0_node.replaceWith(_0_anchor);",
+      "root = _0_anchor;",
+      "function _0_create($, ..._args) {",
+      "let root = _0_node.cloneNode(true);",
+      "let _1_node = root.firstChild;",
+      "const _2_node = root, _2_nodes = [_1_node], _2_values = [],",
+      "_2_anchor = _1_node.previousSibling;",
+      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
+      "const _0_closureNode = new xm.Fragment([...root.content.childNodes]);",
+      "_0_closureNode.update = (..._args) => {",
+      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
+      "return _0_closureNode;",
+      "};",
+      "return _0_closureNode;",
+      "}",
+      "const [_0_component, _0_update] = xm.components[\"x-component\"]($, { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), }, _0_create);",
+      "root.replaceWith(_0_component);",
+      "root = _0_component;",
+      ""
+    ],
+    "update": [
+      "_0_update($, { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), });",
+      ""
+    ]
+  },
+  "compiler: generateVnode: should generate nested dynamic children": {
+    "html": "<div><div><!----></div><!----></div>",
+    "create": [
+      "let _0_node = root.firstChild;",
+      "let _1_node = _0_node.firstChild;",
+      "const _2_node = _0_node, _2_nodes = [_1_node], _2_values = [],",
+      "_2_anchor = _1_node.previousSibling;",
+      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(foo bar)], $, xm.createChildNode);",
+      "let _3_node = _0_node.nextSibling;",
+      "const _4_node = root, _4_nodes = [_3_node], _4_values = [],",
+      "_4_anchor = _3_node.previousSibling;",
+      "xm.updateNodes(_4_node, _4_anchor, _4_nodes, _4_values, [(baz)], $, xm.createChildNode);",
+      ""
+    ],
+    "update": [
+      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(foo bar)], $, xm.createChildNode);",
+      "xm.updateNodes(_4_node, _4_anchor, _4_nodes, _4_values, [(baz)], $, xm.createChildNode);",
+      ""
+    ]
+  },
+  "compiler: generateVnode: macro: should generate .on macro": {
+    "html": "<div></div>",
+    "create": [
+      "let _0_node = root;",
+      "xm.setProperty(_0_node, \"key\", (dynamic value));",
+      "_0_node.addEventListener(\"click\", (event) => {",
+      "console.log('magic');",
+      "$update();",
+      "});",
+      ""
+    ],
+    "update": [
+      "xm.setProperty(_0_node, \"key\", (dynamic value));",
+      ""
+    ]
+  },
+  "compiler: generateVnode: macro: should generate .for macro": {
+    "html": "<div></div>",
+    "create": [
+      "let _0_node = root, _0_parent = root.parentNode, _0_anchor = document.createComment(\"closure anchor\");",
+      "_0_node.replaceWith(_0_anchor);",
+      "root = _0_anchor;",
+      "function _0_create($, ..._args) {",
+      "let root = _0_node.cloneNode(true);",
+      "$ = Object.assign(Object.create($), {\"item\": _args[0]});",
+      "let _1_node = root;",
+      "xm.setProperty(_1_node, \"key\", (dynamic value));",
+      "const _0_closureNode = root;",
+      "_0_closureNode.update = (..._args) => {",
+      "$[\"item\"] = _args[0];",
+      "xm.setProperty(_1_node, \"key\", (dynamic value));",
+      "return _0_closureNode;",
+      "};",
+      "return _0_closureNode;",
+      "}",
+      "const _0_values = [], _0_nodes = [];",
+      "xm.updateNodes(_0_parent, _0_anchor, _0_nodes, _0_values, $.items, $, _0_create);",
+      ""
+    ],
+    "update": [
+      "xm.updateNodes(_0_parent, _0_anchor, _0_nodes, _0_values, $.items, $, _0_create);",
+      ""
+    ]
+  },
+  "compiler: generateVnode: macro: should generate .if macro": {
+    "html": "<div></div>",
+    "create": [
+      "let _0_node = root;",
+      "xm.setProperty(_0_node, \"key\", (dynamic value));",
+      "const _1_node = _0_node, _1_placeholder = document.createComment(\"if\");",
+      "_0_node = xm.nodeIf(($.condition), _1_node, _1_placeholder);",
+      ""
+    ],
+    "update": [
+      "xm.setProperty(_0_node, \"key\", (dynamic value));",
+      "_0_node = xm.nodeIf(($.condition), _1_node, _1_placeholder);",
+      ""
+    ]
+  },
+  "compiler: generateComponent: should generate a component (smoke test)": {
+    "result": [
+      "(function() {",
+      "const _hooks = typeof fooComponent === \"undefined\" ? {} : fooComponent;",
+      "const _template = document.createElement(\"template\");",
+      "_template.innerHTML = `<div></div>`;",
+      "return function _fooComponentComponent($, properties, _createChildren) {",
+      "const _node = _template.content.cloneNode(true);",
+      "const $update = () => _update($);",
+      "$ = Object.create($);",
+      "$ = Object.assign($, _hooks.create?.($, properties, $update));",
+      "const children = _createChildren?.($);",
+      "let _0_node = _node.firstChild;",
+      "const _update = ($, _properties) => {",
+      "if (_properties) properties = _properties;",
+      "_hooks.update?.($, properties, $update);",
+      "children?.update();",
+      "};",
+      "return [new xm.Fragment([..._node.childNodes]), _update];",
+      "};",
+      "})()",
+      ""
+    ],
+    "html": "",
+    "create": "",
+    "update": ""
+  }
+}

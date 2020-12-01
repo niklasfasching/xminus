@@ -16,56 +16,75 @@ export function nodeIf(condition, ifNode, elseNode) {
   }
 }
 
-export function updateFor(reference, nodeGroups, values, create, $) {
-  const group = ([nodes, update]) => Object.assign(nodes, {update});
-  updateNodeGroups(reference, nodeGroups, values, value => group(create($, value)));
-}
-
-export function createNodeGroup(value) {
-  const group = Array.isArray(value) && (!value[0] || value[0] instanceof Node) ?
-        value :
-        [document.createTextNode(value)];
-  group.update = (updatedValue) => {
-    if (value !== updatedValue) {
-      const first = group[0], parent = group[0].parentNode, nodes = createNodeGroup(value);
-      for (let node of nodes) parent.insertBefore(node, first);
-      for (let node of group) parent.removeChild(node);
-      group.splice(0, group.length, ...nodes);
-    }
-    value = updatedValue;
-  }
-  return group;
-}
-
-export function updateNodeGroups(reference, nodeGroups, values, create) {
-  const parent = reference.parentNode;
-  for (let i = 0, j = 0; i < nodeGroups.length || j < values.length; i++, j++) {
-    if (nodeGroups[i] && j < values.length) {
-      nodeGroups[i].update(values[j]);
-    } else if (nodeGroups[i]) {
-      for (let node of nodeGroups[i]) parent.removeChild(node);
-      delete nodeGroups[i];
-    } else if (j < values.length) {
-
-      const afterLast = (nodeGroups.slice(-1)[0]?.slice(-1)?.[0] || reference).nextSibling;
-      nodeGroups[i] = create(values[j]);
-      for (let node of nodeGroups[i]) parent.insertBefore(node, afterLast);
+export function createChildNode($, value) {
+  let node = value, oldValue;
+  if (value instanceof DocumentFragment) node = new Fragment([...value.childNodes]);
+  else if (!(value instanceof Node)) node = document.createTextNode(value);
+  if (node.update) throw new Error("unexpected closure node");
+  node.update = (updatedValue) => {
+    oldValue = value, value = updatedValue;
+    if (oldValue === updatedValue) return node;
+    else if ((updatedValue instanceof Node)) return createChildNode($, updatedValue);
+    else {
+      node.textContent = updatedValue;
+      return node;
     }
   }
-  nodeGroups.length = values.length;
+  return node
+}
+
+export function updateNodes(parent, anchor, nodes, values, updatedValues, $, create) {
+  if (updatedValues.length < values.length) {
+    for (let i = updatedValues.length; i < values.length; i++) nodes[i].remove();
+    values.length = updatedValues.length;
+    nodes.length = values.length;
+  }
+  for (let i = 0; i < updatedValues.length; i++) {
+    if (!nodes[i]) {
+      nodes[i] = create($, updatedValues[i]);
+      parent.insertBefore(nodes[i], (nodes[nodes.length - 1] || anchor).nextSibling);
+    } else {
+      let oldNode = nodes[i], updatedValue = updatedValues[i];
+      nodes[i] = oldNode.update ? oldNode.update(updatedValue) : create($, updatedValue);
+      if (oldNode !== nodes[i]) oldNode.replaceWith(nodes[i]);
+    }
+    values[i] = updatedValues[i];
+  }
 }
 
 export async function mount(parentNode, name, $, ...componentURLs) {
-  const {generateCode} = await import("./compiler.mjs");
+  const {compile} = await import("./compiler.mjs");
   window.xm = await import(import.meta.url);
   for (const url of [...componentURLs, location.toString()]) {
     try {
-      await import(`data:text/javascript,${encodeURIComponent(await generateCode(url))}`);
+      await import(`data:text/javascript,${encodeURIComponent(await compile(url))}`);
     } catch (e) {
       throw new Error(`eval: ${e.message}:\n${url}`);
     }
   }
   if (!components[name]) throw new Error(`component ${name} does not exist`);
   parentNode.innerHTML = "";
-  for (let node of components[name]($, {})[0]) parentNode.appendChild(node);
+  parentNode.appendChild(components[name]($, {})[0]);
+}
+
+export class Fragment extends DocumentFragment {
+  constructor(childNodes = [] = () => {}) {
+    super();
+    this._anchor = document.createComment("fragment anchor");
+    this._childNodes = [this._anchor, ...childNodes];
+    this.append(...this._childNodes);
+  }
+
+  get nextSibling() {
+    return this._childNodes[this._childNodes.length - 1].nextSibling;
+  }
+
+  replaceWith(node) {
+    for (let i = 0; i < this._childNodes.length - 1; i++) this._childNodes[i].remove();
+    this._childNodes[this._childNodes.length - 1].replaceWith(node);
+  }
+
+  remove() {
+    for (let node of this._childNodes) node.remove();
+  }
 }
