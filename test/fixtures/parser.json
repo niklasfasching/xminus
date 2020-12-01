@@ -1,5 +1,5 @@
 {
-  "": {
+  "should support self closing tags and properties": {
     "vnodes": [
       {
         "tag": "input",

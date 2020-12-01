@@ -191,7 +191,7 @@ function setupFixtures(path) {
   return function(actual, msg) {
     const id = actual?.id;
     delete actual.id;
-    if (id == null) t.fail(msg, "actual value must have id property");
+    if (!id) t.fail(msg, "actual value must have id property");
     else if (!updatingFixtures) t.jsonEqual(actual, fixtures[id])
     else {
       if (updatedFixtures[id]) t.fail(`reassignment of fixture "${id}"`);
