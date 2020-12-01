@@ -14,7 +14,7 @@ bench:
 
 .PHONY: update-fixtures
 update-fixtures:
-	cli/xminus -e -r test/test.mjs update-fixtures 2> test/testcases/index.json
+	cli/xminus -e -r test/test.mjs update-fixtures 2> test/fixtures/test.json
 
 .PHONY: test
 test:

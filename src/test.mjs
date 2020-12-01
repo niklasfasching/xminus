@@ -1,5 +1,5 @@
-const root = newNode();
-let node = root, count = 0, countFailed = 0, started = false, resolve;
+const root = newNode(), updatingFixtures = window.args?.includes("update-fixtures");
+let node = root, count = 0, countFailed = 0, started = false, exitAfter = false, resolve;
 
 export const done = new Promise((r) => resolve = r);
 
@@ -22,6 +22,12 @@ Object.assign(t, {
   only(name, f) {
     node.children.push({name, f, selected: true});
     markNodes(node, "hasSelected");
+  },
+
+  setupFixtures,
+
+  exitAfter() {
+    exitAfter = true;
   },
 
   beforeEach(name, f) {
@@ -61,7 +67,7 @@ Object.assign(t, {
   },
 
   jsonEqual(x, y, msg) {
-    x = JSON.stringify(x), y = JSON.stringify(y);
+    x = json(x), y = json(y);
     if (x !== y) t.fail(msg, `${x} !== ${y}`);
   },
 
@@ -102,48 +108,49 @@ function group(name, f, selected) {
 
 async function run(lvl, node) {
   const time = timer(), selected = !root.hasSelected || node.selected || node.hasSelected;
-  if (selected && node !== root) log(lvl, "", node.name);
+  if (selected && node !== root) log(lvl, 0, "", node.name);
   for (let {name, f} of node.befores) await runWrapper(lvl+2, name, f, selected);
   for (let child of node.children) {
     if (child.children) await run(lvl+2, child);
     else await runTest(lvl+2, child);
   }
   for (let {name, f} of node.afters) await runWrapper(lvl+2, name, f, selected);
-  if (selected && node !== root) log(lvl, "color: grey", `(${time()}ms)\n`);
-  else if (node === root) log(lvl + 2, "color: grey", `${count} tests (${countFailed} failures)\n`);
+  if (selected && node !== root) log(lvl, 0, "color: grey", `(${time()}ms)\n`);
+  else if (node === root) log(lvl + 2, 0, "color: grey", `${count} tests (${countFailed} failures)\n`);
 }
 
 async function runWrapper(lvl, name, f, selected) {
   if (!selected) return;
-  const [ms, err] = await runFn(f);
-  if (err) log(lvl, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
+  const [ms, err] = await runFn(f, name);
+  if (err) log(lvl, 1, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
 }
 
 async function runTest(lvl, {name, f, selected, beforeEachs = [], afterEachs = []}) {
   if (root.hasSelected && !selected) return;
   count++;
   if (f) for (let {f, name} of beforeEachs) await runWrapper(lvl, name, f, true);
-  const [ms, err] = await runFn(f);
-  if (f && !err) log(lvl, "color: green", `✓ ${name} (${ms}ms)`);
-  else if (!err) log(lvl, "color: yellow", `✓ ${name}`);
+  const [ms, err] = await runFn(f, name);
+  if (f && !err) log(lvl, 0, "color: green", `✓ ${name} (${ms}ms)`);
+  else if (!err) log(lvl, 0, "color: yellow", `✓ ${name}`);
   else {
-    log(lvl, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
+    log(lvl, 1, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
     countFailed++;
   }
   if (f) for (let {f, name} of afterEachs) await runWrapper(lvl, name, f, true);
 }
 
-async function runFn(f) {
+async function runFn(f, name) {
   const time = timer();
   try {
-    if (f) await f();
+    if (f) await f(name);
     return [time(), null];
   } catch (err) {
     return [time(), err];
   }
 }
 
-function log(lvl, color, line, ...lines) {
+function log(lvl, isFailure, color, line, ...lines) {
+  if (updatingFixtures && !isFailure) return;
   console.info(" ".repeat(lvl) + "%c" + line, color);
   for (let l of lines) console.info(" ".repeat(lvl + 2) + "%c" + l, "color: grey");
 }
@@ -163,8 +170,39 @@ function timer() {
   return () => (performance.now() - start).toFixed();
 }
 
+function json(x, set = new WeakSet(), indent = 2) {
+  return JSON.stringify(x, (k, v) => {
+    if (Object(v) === v) {
+      if (set.has(v)) return "[circular]";
+      set.add(v);
+    }
+    return v;
+  }, indent);
+}
+
+function setupFixtures(path) {
+  let fixtures, updatedFixtures = {};
+  t.before(async () => {
+    fixtures = await fetch(path).then(r => r.json()).catch(() => ({}));
+  });
+  t.after(() => {
+    if (updatingFixtures) console.info(json(updatedFixtures));
+  });
+  return function(actual, msg) {
+    const id = actual?.id;
+    delete actual.id;
+    if (id == null) t.fail(msg, "actual value must have id property");
+    else if (!updatingFixtures) t.jsonEqual(actual, fixtures[id])
+    else {
+      if (updatedFixtures[id]) t.fail(`reassignment of fixture "${id}"`);
+      updatedFixtures[id] = actual;
+    }
+  }
+}
+
 setTimeout(async () => {
   started = true;
   await run(0, node);
   resolve({count, countFailed});
+  if (exitAfter) window.close(countFailed && 1);
 });

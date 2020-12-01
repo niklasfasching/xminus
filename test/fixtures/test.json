@@ -1,0 +1,5 @@
+{
+  "should test actual value against json fixture": {
+    "value": "hello world"
+  }
+}
