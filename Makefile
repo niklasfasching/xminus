@@ -14,13 +14,11 @@ bench:
 
 .PHONY: update-fixtures
 update-fixtures:
-	cli/xminus -e -r test/test.mjs update-fixtures 2> test/fixtures/test.json
-	cli/xminus -e -r test/parser.mjs update-fixtures 2> test/fixtures/parser.json
+	for f in test/*.mjs; do cli/xminus -e -r $$f update-fixtures > test/fixtures/$$(basename $$f .mjs).json; done
 
 .PHONY: test
 test:
-	cli/xminus -e -r test/test.mjs
-	cli/xminus -e -r test/parser.mjs
+	for f in test/*.mjs; do cli/xminus -e -r $$f; done
 
 .PHONY: setup
 setup:

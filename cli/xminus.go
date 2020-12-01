@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"mime"
@@ -186,7 +187,7 @@ func (r *Runner) Start() {
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
 			for event := range out {
-				log.Println(goheadless.Colorize(event))
+				fmt.Println(goheadless.Colorize(event))
 			}
 			close(done)
 		}()
