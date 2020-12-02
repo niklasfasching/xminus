@@ -79,6 +79,20 @@ t.describe("runtime", () => {
     });
   });
 
+  t.describe("replaceWith", () => {
+    t("should replace fragments correctly", () => {
+      const parent = document.createElement("div");
+      const fragment1 = fragment(`<p>foo</p> bar <p>baz</p>`);
+      const fragment2 = fragment(`<p>baz</p> bar <p>bam</p>`);
+      parent.append(fragment1);
+      t.equal(parent.innerText, "foo bar baz");
+      runtime.replaceWith(fragment1, fragment2);
+      t.equal(parent.innerText, "baz bar bam");
+      runtime.replaceWith(fragment2, fragment1);
+      t.equal(parent.innerText, "foo bar baz");
+    });
+  });
+
   t.describe("mount", () => {
     t("smoke test", async () => {
       document.head.innerHTML += `<script type="x-module" src="./fixtures/index.html"></script>`;

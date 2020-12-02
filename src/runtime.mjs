@@ -6,12 +6,17 @@ export function setProperty(node, k, v) {
   else node.setAttribute(k, v);
 }
 
+export function replaceWith(oldNode, newNode) {
+  if (newNode instanceof Fragment) newNode.refresh();
+  oldNode.replaceWith(newNode);
+}
+
 export function nodeIf(condition, ifNode, elseNode) {
   if (condition) {
-    if (elseNode.parentNode) elseNode.parentNode.replaceChild(ifNode, elseNode);
+    if (elseNode.parentNode) replaceWith(elseNode, ifNode);
     return ifNode;
   } else {
-    if (ifNode.parentNode) ifNode.parentNode.replaceChild(elseNode, ifNode);
+    if (ifNode.parentNode) replaceWith(ifNode, elseNode);
     return elseNode;
   }
 }
@@ -44,7 +49,7 @@ export function updateNodes(parent, anchor, nodes, values, updatedValues, $, cre
     } else {
       let oldNode = nodes[i], updatedValue = updatedValues[i];
       nodes[i] = oldNode.update ? oldNode.update(updatedValue) : create($, updatedValue);
-      if (oldNode !== nodes[i]) oldNode.replaceWith(nodes[i]);
+      if (oldNode !== nodes[i]) replaceWith(oldNode, nodes[i]);
     }
     values[i] = updatedValues[i];
   }
@@ -64,7 +69,8 @@ export async function mount(parentNode, name, $) {
 export class Fragment extends DocumentFragment {
   constructor(childNodes = []) {
     super();
-    this._childNodes = [...childNodes, document.createComment("fragment anchor")];
+    this._anchor = document.createComment("fragment anchor");
+    this._childNodes = [...childNodes, this._anchor];
     this.append(...this._childNodes);
   }
 
@@ -74,10 +80,14 @@ export class Fragment extends DocumentFragment {
 
   replaceWith(node) {
     for (let i = 0; i < this._childNodes.length - 1; i++) this._childNodes[i].remove();
-    this._childNodes[this._childNodes.length - 1].replaceWith(node);
+    replaceWith(this._anchor, node);
   }
 
   remove() {
     for (let node of this._childNodes) node.remove();
+  }
+
+  refresh() {
+    if (!this.childNodes.length) this.append(...this._childNodes);
   }
 }
