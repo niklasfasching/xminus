@@ -80,4 +80,63 @@ t.describe("compiler", () => {
     });
   });
 
+  t.describe("compile", () => {
+    t("should compile into a single html file (smoke test)", async (id) => {
+      const html = await compiler.compile("./fixtures/index.html");
+      assertFixture({id, html: html.split(/\n\s*/g)});
+    })
+  });
+
+
+  t.describe("loadModule", () => {
+    function dataUrl(string) {
+      return `data:text/javascript,${encodeURIComponent(string)}`;
+    }
+
+    const childModule = `<script type=x-template id=x-child>{child}</script>
+                         <script type=x-module>child</script>`;
+    const module = `<script type="x-template" id="x-parent">{parent}</script>
+                    <script type="x-module" src="${dataUrl(childModule)}"></script>
+                    <script type=x-module>parent</script>`;
+    t("should load modules recursively", async () => {
+      const loadedModules = await compiler.loadModule(dataUrl(module));
+      t.strictEqual(loadedModules.length, 2);
+      t.jsonEqual(loadedModules.map(m => m.code), ["parent", "child"]);
+      t.jsonEqual(loadedModules.map(m => m.templates), [
+        [{name: "x-parent", content: "{parent}"}],
+        [{name: "x-child", content: "{child}"}],
+      ]);
+    });
+
+    t("should deduplicate modules / load each module only once", async () => {
+      const duplicates = `${module}
+                          <script type="x-module" src="${dataUrl(childModule)}"></script>
+                          <script type="x-module" src="${dataUrl(childModule)}"></script>`;
+      const loadedModules = await compiler.loadModule(dataUrl(duplicates));
+      t.strictEqual(loadedModules.length, 2);
+    });
+
+    t("should allow only one non-src x-module script per module", async () => {
+      const module = `<script type="x-module"></script>
+                      <script type="x-module"></script>`;
+      await t.throws(async () => await compiler.loadModule(dataUrl(module)),
+                     /One x-module per file/);
+    });
+
+    t("should convert relative to absolute imports inside x-module scripts", async () => {
+      const module = `<script type="x-module">
+                      import "./foo.js";
+                      import "/bar.js";
+                      </script>`;
+      const loadedModules = await compiler.loadModule(dataUrl(module));
+      t.assert(loadedModules[0].code.includes("/test/foo.js"));
+      t.assert(loadedModules[0].code.includes("/bar.js"));
+    });
+
+    t("should remove xminus elements from document", async () => {
+      const loadedModules = await compiler.loadModule(dataUrl(module));
+      t.strictEqual(loadedModules[0].document.querySelectorAll("[type*=x-]").length, 0);
+    });
+  });
+
 });

@@ -18,7 +18,7 @@ export function nodeIf(condition, ifNode, elseNode) {
 
 export function createChildNode($, value) {
   let node = value, oldValue;
-  if (value instanceof DocumentFragment) node = new Fragment([...value.childNodes]);
+  if (value instanceof DocumentFragment) node = new Fragment(value.childNodes);
   else if (!(value instanceof Node)) node = document.createTextNode(value);
   if (node.update) throw new Error("unexpected closure node");
   node.update = (updatedValue) => {
@@ -30,19 +30,17 @@ export function createChildNode($, value) {
       return node;
     }
   }
-  return node
+  return node;
 }
 
 export function updateNodes(parent, anchor, nodes, values, updatedValues, $, create) {
-  if (updatedValues.length < values.length) {
-    for (let i = updatedValues.length; i < values.length; i++) nodes[i].remove();
-    values.length = updatedValues.length;
-    nodes.length = values.length;
-  }
+  for (let i = updatedValues.length; i < values.length; i++) nodes[i].remove();
+  values.length = updatedValues.length, nodes.length = updatedValues.length;
   for (let i = 0; i < updatedValues.length; i++) {
     if (!nodes[i]) {
-      nodes[i] = create($, updatedValues[i]);
-      parent.insertBefore(nodes[i], (nodes[nodes.length - 1] || anchor).nextSibling);
+      const node = create($, updatedValues[i]);
+      parent.insertBefore(node, anchor);
+      nodes[i] = node;
     } else {
       let oldNode = nodes[i], updatedValue = updatedValues[i];
       nodes[i] = oldNode.update ? oldNode.update(updatedValue) : create($, updatedValue);
@@ -52,15 +50,11 @@ export function updateNodes(parent, anchor, nodes, values, updatedValues, $, cre
   }
 }
 
-export async function mount(parentNode, name, $, ...componentURLs) {
-  const {compile} = await import("./compiler.mjs");
+export async function mount(parentNode, name, $) {
   window.xm = await import(import.meta.url);
-  for (const url of [...componentURLs, location.toString()]) {
-    try {
-      await import(`data:text/javascript,${encodeURIComponent(await compile(url))}`);
-    } catch (e) {
-      throw new Error(`eval: ${e.message}:\n${url}`);
-    }
+  if (document.querySelector("[type*=x-module], [type*=x-template]")) {
+    const {compile} = await import("./compiler.mjs");
+    await import(await compile(location, true));
   }
   if (!components[name]) throw new Error(`component ${name} does not exist`);
   parentNode.innerHTML = "";
@@ -68,10 +62,9 @@ export async function mount(parentNode, name, $, ...componentURLs) {
 }
 
 export class Fragment extends DocumentFragment {
-  constructor(childNodes = [] = () => {}) {
+  constructor(childNodes = []) {
     super();
-    this._anchor = document.createComment("fragment anchor");
-    this._childNodes = [this._anchor, ...childNodes];
+    this._childNodes = [...childNodes, document.createComment("fragment anchor")];
     this.append(...this._childNodes);
   }
 

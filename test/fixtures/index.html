@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script type="text/x-template" id="x-main">{main}</script>
+    <script type="x-module">
+     const main = {}
+    </script>
+    <script type="module">
+     import {mount} from "/src/runtime.mjs";
+     mount(document.body, "x-main", {});
+    </script>
+  </head>
+  <body></body>
+</html>

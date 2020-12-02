@@ -38,20 +38,41 @@ function forMacro(vnode, $, key, value) {
   $.update += `xm.updateNodes(${_}parent, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}create);\n`;
 }
 
-export async function compile(url) {
-  let code = `//# sourceURL=${url}.compiled.js\n`, d = document;
-  if (url !== location.toString()) {
-    d = await fetch(url).then(r => r.text()).then(html => new DOMParser().parseFromString(html, "text/html"));
-    const scripts = d.querySelectorAll(`script[type="module"]`);
-    if (scripts.length !== 1) throw new Error(`components must have one module script tag: ${url}`);
-    code += scripts[0].text.replaceAll(/^\s*(import.*from) ["'](.+)["']/g, (_, importFrom, importURL) =>
-      `${importFrom} "${new URL(importURL, new URL(url, location))}"`) + "\n";
-  }
+export async function compile(url, asDataUrl) {
+  const modules = await loadModule(url);
+  const module =  modules.map(m => `import "${generateModule(m, true)}";\n`).join("\n");
+  if (asDataUrl) return dataUrl(module);
+  const document = modules[0].document;
+  document.head.innerHTML = `<script type="module">${module}</script>\n` + document.head.innerHTML;
+  return new XMLSerializer().serializeToString(document);
+}
 
-  d.querySelectorAll(`script[type="text/x-template"][id^=x-]`).forEach(({id, text}) => {
-    code += `xm.components["${id}"] = ${generateComponent(id, text)}`;
-  });
-  return code;
+function generateModule({url, code, templates}, asDataUrl) {
+  const module = templates.reduce((module, {name, content}) => {
+    return module + `xm.components["${name}"] = ${generateComponent(name, content)};\n`;
+  }, `//# sourceURL=${new URL(url).pathname}.compiled.js\n${code}\n`);
+  return asDataUrl ? dataUrl(module) : module;
+}
+
+export async function loadModule(url, loaded = {}) {
+  if (loaded[url]) return [];
+  loaded[url] = true;
+  const d = url === location ? document : await loadDocument(url);
+  const templates = [...d.querySelectorAll(`[type*=x-template][id]`)],
+        imports = [...d.querySelectorAll(`[type*=x-module][src]`)],
+        scripts = [...d.querySelectorAll(`[type*=x-module]:not([src])`)];
+  [templates, imports, scripts].flat().forEach(el => el.remove());
+  if (scripts.length > 1) throw new Error(`One x-module per file - found ${scripts.length}`);
+  const code = (scripts[0]?.text || "").replaceAll(/^\s*(import\s+(.*from\s+)?)["'](.+)["']/g,
+                                                   (_, from, __, src) => `${from} "${resolveUrl(src, url)}"`)
+  const modules = await Promise.all(imports.map(({src}) => loadModule(resolveUrl(src, url), loaded)));
+  const module = {
+    url: resolveUrl(url),
+    document: d,
+    code,
+    templates: templates.map(({id, text}) => ({name: id, content: text})),
+  };
+  return [module, ...modules.flat()];
 }
 
 export function generateComponent(name, template) {
@@ -76,7 +97,7 @@ export function generateComponent(name, template) {
                 children?.update();
                 ${$.update}
               };
-              return [new xm.Fragment([..._node.childNodes]), _update];
+              return [new xm.Fragment(_node.childNodes), _update];
             };
           })()\n`;
 }
@@ -93,7 +114,7 @@ function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
                  let ${node} = ${_}node.cloneNode(true);
                  ${beforeCreate}
                  ${$$.create}
-                 const ${_}closureNode = ${vnode.tag === "template" ? `new xm.Fragment([...${node}.content.childNodes])` : node};
+                 const ${_}closureNode = ${vnode.tag === "template" ? `new xm.Fragment(${node}.content.childNodes)` : node};
                  ${_}closureNode.update = (..._args) => {
                    ${beforeUpdate}
                    ${$$.update}
@@ -102,8 +123,6 @@ function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
                  return ${_}closureNode;
                }\n`;
 }
-
-function isComponentTag(tag) { return tag.startsWith("x-"); }
 
 export function generateVnode(vnode, $) {
   for (const [predicate, macro] of macros) {
@@ -187,6 +206,9 @@ function generateChildren(vnode, $) {
   }
 }
 
+function isComponentTag(tag) {
+  return tag.startsWith("x-");
+}
 
 function generateNodeName($, vnode, force) {
   if (vnode.node.indexOf(".") === -1 && !force) return vnode.node;
@@ -195,4 +217,19 @@ function generateNodeName($, vnode, force) {
   return vnode.node = `${_}node`;
 }
 
-export function resetPrefixId() { prefixId = 0 }
+export function resetPrefixId() {
+  prefixId = 0;
+}
+
+function dataUrl(string) {
+  return `data:text/javascript,${encodeURIComponent(string)}`;
+}
+
+function resolveUrl(url, baseUrl) {
+  if (!baseUrl || baseUrl.toString().startsWith("data:text")) baseUrl = location;
+  return new URL(url, new URL(baseUrl, location));
+}
+
+function loadDocument(url) {
+  return fetch(url).then(async (r) => new DOMParser().parseFromString(await r.text(), "text/html"));
+}
