@@ -155,12 +155,12 @@
       "let _0_node = root;",
       "xm.setProperty(_0_node, \"key\", (dynamic value));",
       "const _1_node = _0_node, _1_placeholder = document.createComment(\"if\");",
-      "_0_node = xm.nodeIf(($.condition), _1_node, _1_placeholder);",
+      "if (!$.condition) _0_node = xm.replaceWith(_1_node, _1_placeholder);",
       ""
     ],
     "update": [
       "xm.setProperty(_0_node, \"key\", (dynamic value));",
-      "_0_node = xm.nodeIf(($.condition), _1_node, _1_placeholder);",
+      "xm.nodeIf(($.condition), _1_node, _1_placeholder);",
       ""
     ]
   },

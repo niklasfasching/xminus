@@ -9,16 +9,12 @@ export function setProperty(node, k, v) {
 export function replaceWith(oldNode, newNode) {
   if (newNode instanceof Fragment) newNode.refresh();
   oldNode.replaceWith(newNode);
+  return newNode;
 }
 
 export function nodeIf(condition, ifNode, elseNode) {
-  if (condition) {
-    if (elseNode.parentNode) replaceWith(elseNode, ifNode);
-    return ifNode;
-  } else {
-    if (ifNode.parentNode) replaceWith(ifNode, elseNode);
-    return elseNode;
-  }
+  if (condition && elseNode.parentNode) replaceWith(elseNode, ifNode);
+  else if (!condition && ifNode.parentNode)replaceWith(ifNode, elseNode);
 }
 
 export function createChildNode($, value) {

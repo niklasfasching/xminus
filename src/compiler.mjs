@@ -32,8 +32,8 @@ function ifMacro(vnode, $, key, value) {
   generateVnode(vnode, $);
   const _ = prefix();
   $.create += `const ${_}node = ${vnode.node}, ${_}placeholder = document.createComment("if");
-               ${vnode.node} = xm.nodeIf((${value}), ${_}node, ${_}placeholder);\n`;
-  $.update += `${vnode.node} = xm.nodeIf((${value}), ${_}node, ${_}placeholder);\n`
+               if (!${value}) ${vnode.node} = xm.replaceWith(${_}node, ${_}placeholder);\n`;
+  $.update += `xm.nodeIf((${value}), ${_}node, ${_}placeholder);\n`
 }
 
 function forMacro(vnode, $, key, value) {
