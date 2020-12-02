@@ -15,7 +15,7 @@
       "let _0_node = root;",
       "let _1_key = (dynamic key); setProperty(_0_node, _1_key, \"value\");",
       "xm.setProperty(_0_node, \"key\", (dynamic value));",
-      "let _2_node = _0_node.firstChild;",
+      "let _2_node = root.firstChild;",
       ""
     ],
     "update": [
@@ -31,13 +31,13 @@
     "html": "<div>hello <!----></div>",
     "create": [
       "let _0_node = root.firstChild;",
-      "const _1_node = root, _1_nodes = [_0_node], _1_values = [],",
-      "_1_anchor = _0_node.previousSibling;",
-      "xm.updateNodes(_1_node, _1_anchor, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
+      "let _2_node = root;",
+      "const _1_nodes = [_0_node], _1_values = [], _1_anchor = _0_node.previousSibling;",
+      "xm.updateNodes(_2_node, _1_anchor, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_1_node, _1_anchor, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
+      "xm.updateNodes(_2_node, _1_anchor, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
       ""
     ]
   },
@@ -46,13 +46,13 @@
     "create": [
       "let _0_node = root.firstChild;",
       "let _1_node = _0_node.nextSibling;",
-      "const _2_node = root, _2_nodes = [_1_node], _2_values = [],",
-      "_2_anchor = _1_node.previousSibling;",
-      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(not a child of input)], $, xm.createChildNode);",
+      "let _3_node = root;",
+      "const _2_nodes = [_1_node], _2_values = [], _2_anchor = _1_node.previousSibling;",
+      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(not a child of input)], $, xm.createChildNode);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(not a child of input)], $, xm.createChildNode);",
+      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(not a child of input)], $, xm.createChildNode);",
       ""
     ]
   },
@@ -65,12 +65,12 @@
       "function _0_create($, ..._args) {",
       "let root = _0_node.cloneNode(true);",
       "let _1_node = root.firstChild;",
-      "const _2_node = root, _2_nodes = [_1_node], _2_values = [],",
-      "_2_anchor = _1_node.previousSibling;",
-      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
+      "let _3_node = root;",
+      "const _2_nodes = [_1_node], _2_values = [], _2_anchor = _1_node.previousSibling;",
+      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
       "const _0_closureNode = new xm.Fragment(root.content.childNodes);",
       "_0_closureNode.update = (..._args) => {",
-      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
+      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
       "return _0_closureNode;",
       "};",
       "return _0_closureNode;",
@@ -90,18 +90,18 @@
     "create": [
       "let _0_node = root.firstChild;",
       "let _1_node = _0_node.firstChild;",
-      "const _2_node = _0_node, _2_nodes = [_1_node], _2_values = [],",
-      "_2_anchor = _1_node.previousSibling;",
-      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(foo bar)], $, xm.createChildNode);",
-      "let _3_node = _0_node.nextSibling;",
-      "const _4_node = root, _4_nodes = [_3_node], _4_values = [],",
-      "_4_anchor = _3_node.previousSibling;",
-      "xm.updateNodes(_4_node, _4_anchor, _4_nodes, _4_values, [(baz)], $, xm.createChildNode);",
+      "let _3_node = _0_node;",
+      "const _2_nodes = [_1_node], _2_values = [], _2_anchor = _1_node.previousSibling;",
+      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(foo bar)], $, xm.createChildNode);",
+      "let _4_node = _0_node.nextSibling;",
+      "let _6_node = root;",
+      "const _5_nodes = [_4_node], _5_values = [], _5_anchor = _4_node.previousSibling;",
+      "xm.updateNodes(_6_node, _5_anchor, _5_nodes, _5_values, [(baz)], $, xm.createChildNode);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_2_node, _2_anchor, _2_nodes, _2_values, [(foo bar)], $, xm.createChildNode);",
-      "xm.updateNodes(_4_node, _4_anchor, _4_nodes, _4_values, [(baz)], $, xm.createChildNode);",
+      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(foo bar)], $, xm.createChildNode);",
+      "xm.updateNodes(_6_node, _5_anchor, _5_nodes, _5_values, [(baz)], $, xm.createChildNode);",
       ""
     ]
   },
@@ -110,7 +110,7 @@
     "create": [
       "let _0_node = root;",
       "xm.setProperty(_0_node, \"key\", (dynamic value));",
-      "_0_node.addEventListener(\"click\", (event) => {",
+      "root.addEventListener(\"click\", (event) => {",
       "console.log('magic');",
       "$update();",
       "});",
@@ -154,8 +154,8 @@
     "create": [
       "let _0_node = root;",
       "xm.setProperty(_0_node, \"key\", (dynamic value));",
-      "const _1_node = _0_node, _1_placeholder = document.createComment(\"if\");",
-      "if (!$.condition) _0_node = xm.replaceWith(_1_node, _1_placeholder);",
+      "const _1_node = root, _1_placeholder = document.createComment(\"if\");",
+      "if (!$.condition) root = xm.replaceWith(_1_node, _1_placeholder);",
       ""
     ],
     "update": [
@@ -193,7 +193,7 @@
   },
   "compiler: compile: should compile into a single html file (smoke test)": {
     "html": [
-      "<!DOCTYPE html><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><script type=\"module\">import \"data:text/javascript,%2F%2F%23%20sourceURL%3D%2Ftest%2Ffixtures%2Findex.html.compiled.js%0A%0A%20%20%20%20%20const%20main%20%3D%20%7B%7D%0A%20%20%20%20%0Axm.components%5B%22x-main%22%5D%20%3D%20(function()%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20const%20_hooks%20%3D%20typeof%20main%20%3D%3D%3D%20%22undefined%22%20%3F%20%7B%7D%20%3A%20main%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20const%20_template%20%3D%20document.createElement(%22template%22)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20_template.innerHTML%20%3D%20%60%3C!----%3E%60%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20return%20function%20_mainComponent(%24%2C%20properties%2C%20_createChildren%2C%20%24update)%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20_node%20%3D%20_template.content.cloneNode(true)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(!%24update)%20%24update%20%3D%20()%20%3D%3E%20_update(%24)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%24%20%3D%20Object.create(%24)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%24%20%3D%20Object.assign(%24%2C%20_hooks.create%3F.(%24%2C%20properties%2C%20%24update))%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20children%20%3D%20_createChildren%3F.(%24)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20let%20_1_node%20%3D%20_node.firstChild%3B%0Aconst%20_2_node%20%3D%20_node%2C%20_2_nodes%20%3D%20%5B_1_node%5D%2C%20_2_values%20%3D%20%5B%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20_2_anchor%20%3D%20_1_node.previousSibling%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20xm.updateNodes(_2_node%2C%20_2_anchor%2C%20_2_nodes%2C%20_2_values%2C%20%5B(main)%5D%2C%20%24%2C%20xm.createChildNode)%3B%0A%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20_update%20%3D%20(%24%2C%20_properties)%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(_properties)%20properties%20%3D%20_properties%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20_hooks.update%3F.(%24%2C%20properties%2C%20%24update)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20children%3F.update()%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20xm.updateNodes(_2_node%2C%20_2_anchor%2C%20_2_nodes%2C%20_2_values%2C%20%5B(main)%5D%2C%20%24%2C%20xm.createChildNode)%3B%0A%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20return%20%5Bnew%20xm.Fragment(_node.childNodes)%2C%20_update%5D%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%20%20%20%20%20%20%7D)()%0A%3B%0A\";",
+      "<!DOCTYPE html><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><script type=\"module\">import \"data:text/javascript,%2F%2F%23%20sourceURL%3D%2Ftest%2Ffixtures%2Findex.html.compiled.js%0A%0A%20%20%20%20%20const%20main%20%3D%20%7B%7D%0A%20%20%20%20%0Axm.components%5B%22x-main%22%5D%20%3D%20(function()%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20const%20_hooks%20%3D%20typeof%20main%20%3D%3D%3D%20%22undefined%22%20%3F%20%7B%7D%20%3A%20main%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20const%20_template%20%3D%20document.createElement(%22template%22)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20_template.innerHTML%20%3D%20%60%3C!----%3E%60%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20return%20function%20_mainComponent(%24%2C%20properties%2C%20_createChildren%2C%20%24update)%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20_node%20%3D%20_template.content.cloneNode(true)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(!%24update)%20%24update%20%3D%20()%20%3D%3E%20_update(%24)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%24%20%3D%20Object.create(%24)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%24%20%3D%20Object.assign(%24%2C%20_hooks.create%3F.(%24%2C%20properties%2C%20%24update))%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20children%20%3D%20_createChildren%3F.(%24)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20let%20_1_node%20%3D%20_node.firstChild%3B%0Alet%20_3_node%20%3D%20_node%3B%0Aconst%20_2_nodes%20%3D%20%5B_1_node%5D%2C%20_2_values%20%3D%20%5B%5D%2C%20_2_anchor%20%3D%20_1_node.previousSibling%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20xm.updateNodes(_3_node%2C%20_2_anchor%2C%20_2_nodes%2C%20_2_values%2C%20%5B(main)%5D%2C%20%24%2C%20xm.createChildNode)%3B%0A%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20_update%20%3D%20(%24%2C%20_properties)%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(_properties)%20properties%20%3D%20_properties%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20_hooks.update%3F.(%24%2C%20properties%2C%20%24update)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20children%3F.update()%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20xm.updateNodes(_3_node%2C%20_2_anchor%2C%20_2_nodes%2C%20_2_values%2C%20%5B(main)%5D%2C%20%24%2C%20xm.createChildNode)%3B%0A%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20return%20%5Bnew%20xm.Fragment(_node.childNodes)%2C%20_update%5D%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%20%20%20%20%20%20%7D)()%0A%3B%0A\";",
       "</script>",
       "<meta charset=\"utf-8\" />",
       "<script type=\"module\">",

@@ -13,10 +13,8 @@ function onMacro(vnode, $, key, value) {
   generateVnode(vnode, $);
   const event = key.split(":")[1];
   if (event === "update" || event === "create") {
-    const _ = prefix();
-    $.create += `const ${_}node = ${vnode.node};\n`
     $[event] += `setTimeout(() => {
-                   let target = ${_}node;
+                   let target = ${generateLocalNodeName($, vnode)};
                    ${value}
                  })\n`;
   } else {
@@ -175,17 +173,17 @@ function generateProperties(vnode, $) {
     else dynamicProperties.push({key, value, isDynamicKey, isDynamicValue});
   }
   if (!dynamicProperties.length) return;
-  generateNodeName($, vnode, true);
+  const node = generateLocalNodeName($, vnode, true);
   for (let {key, value, isDynamicKey, isDynamicValue} of dynamicProperties) {
     if (!isDynamicKey) {
-      $.create += `xm.setProperty(${vnode.node}, ${key}, ${value});\n`;
-      $.update += `xm.setProperty(${vnode.node}, ${key}, ${value});\n`;
+      $.create += `xm.setProperty(${node}, ${key}, ${value});\n`;
+      $.update += `xm.setProperty(${node}, ${key}, ${value});\n`;
     } else {
       const _ = prefix();
-      $.create += `let ${_}key = ${key}; setProperty(${vnode.node}, ${_}key, ${value});\n`;
+      $.create += `let ${_}key = ${key}; setProperty(${node}, ${_}key, ${value});\n`;
       $.update += `let ${_}updatedKey = ${key};
-                   if (${_}key !== ${_}updatedKey) xm.setProperty(${vnode.node}, ${_}key, undefined);
-                   xm.setProperty(${vnode.node}, ${_}updatedKey, ${value});
+                   if (${_}key !== ${_}updatedKey) xm.setProperty(${node}, ${_}key, undefined);
+                   xm.setProperty(${node}, ${_}updatedKey, ${value});
                    ${_}key = ${_}updatedKey;\n`;
     }
   }
@@ -208,11 +206,12 @@ function generateChildren(vnode, $) {
     node = node + ".nextSibling";
   }
   if (dynamicChildren.length) {
-    const _ = prefix(), values = dynamicChildren.map(([_, v]) => v), nodes = dynamicChildren.map(([n]) => n);
-    $.create += `const ${_}node = ${vnode.node}, ${_}nodes = [${nodes}], ${_}values = [],
-                       ${_}anchor = ${nodes[0]}.previousSibling;
-                 xm.updateNodes(${_}node, ${_}anchor, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
-    $.update += `xm.updateNodes(${_}node, ${_}anchor, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
+    const _ = prefix(), values = dynamicChildren.map(([_, v]) => v), nodes = dynamicChildren.map(([n]) => n),
+          node = generateLocalNodeName($, vnode);
+
+    $.create += `const ${_}nodes = [${nodes}], ${_}values = [], ${_}anchor = ${nodes[0]}.previousSibling;
+                 xm.updateNodes(${node}, ${_}anchor, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
+    $.update += `xm.updateNodes(${node}, ${_}anchor, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
   }
 }
 
@@ -220,11 +219,15 @@ function isComponentTag(tag) {
   return tag.startsWith("x-");
 }
 
-function generateNodeName($, vnode, force) {
-  if (vnode.node.indexOf(".") === -1 && !force) return vnode.node;
+function generateNodeName($, vnode) {
+  if (vnode.node.indexOf(".") === -1) return vnode.node;
+  return vnode.node = generateLocalNodeName($, vnode);
+}
+
+function generateLocalNodeName($, vnode) {
   const _ = prefix();
   $.create += `let ${_}node = ${vnode.node};\n`;
-  return vnode.node = `${_}node`;
+  return `${_}node`;
 }
 
 export function resetPrefixId() {
