@@ -7,7 +7,18 @@ const macros = [
   [/^\.if$/, ifMacro],
   [/^\.for$/, forMacro],
   [/^\.on:/, onMacro],
+  [/^\.bind:/, bindMacro]
 ];
+
+function bindMacro(vnode, $, key, value) {
+  const [_, property] = key.split(":");
+  generateVnode(vnode, $);
+  const node = generateLocalNodeName($, vnode);
+  $.create += `${node}.addEventListener("keyup", ({target}) => {
+               ${value} = target.value;
+               });\n`;
+  $.update += `if (!${node}["${property}"]) ${node}["${property}"] = ${value};\n`;
+}
 
 function onMacro(vnode, $, key, value) {
   generateVnode(vnode, $);

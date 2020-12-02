@@ -60,6 +60,18 @@ t.describe("compiler", () => {
         test(id, `<div key={dynamic value} .on:click="console.log('magic')"></div>`);
       });
 
+      t("should generate .on:create macro", (id) => {
+        test(id, `<div .on:create="console.log('magic')"></div>`);
+      });
+
+      t("should generate .on:update macro", (id) => {
+        test(id, `<div .on:update="console.log('magic')"></div>`);
+      });
+
+      t("should generate .bind: macro", (id) => {
+        test(id, `<div .bind:value="$.value"></div>`);
+      });
+
       t("should generate .for macro", (id) => {
         test(id, `<div key={dynamic value} .for="item in $.items"></div>`);
       });

@@ -121,6 +121,45 @@
       ""
     ]
   },
+  "compiler: generateVnode: macro: should generate .on:create macro": {
+    "html": "<div></div>",
+    "create": [
+      "setTimeout(() => {",
+      "let target = _0_node;",
+      "console.log('magic')",
+      "})",
+      ""
+    ],
+    "update": ""
+  },
+  "compiler: generateVnode: macro: should generate .on:update macro": {
+    "html": "<div></div>",
+    "create": [
+      "let _0_node = root;",
+      ""
+    ],
+    "update": [
+      "setTimeout(() => {",
+      "let target = _0_node;",
+      "console.log('magic')",
+      "})",
+      ""
+    ]
+  },
+  "compiler: generateVnode: macro: should generate .bind: macro": {
+    "html": "<div></div>",
+    "create": [
+      "let _0_node = root;",
+      "_0_node.addEventListener(\"keyup\", ({target}) => {",
+      "$.value = target.value;",
+      "});",
+      ""
+    ],
+    "update": [
+      "if (!_0_node[\"value\"]) _0_node[\"value\"] = $.value;",
+      ""
+    ]
+  },
   "compiler: generateVnode: macro: should generate .for macro": {
     "html": "<div></div>",
     "create": [
