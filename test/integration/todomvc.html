@@ -8,28 +8,24 @@
           <h1>todos</h1>
           <input class="new-todo" placeholder="What needs to be done?" autofocus .on:keydown="$.onInput(event)"/>
         </header>
-
         <section class="main" .if="$.store.items.length">
           <input id="toggle-all" class="toggle-all" type="checkbox"
-                 .on:click="$.toggleAll()" checked="{!$.store.remaining().length}">
+                 .on:click="$.toggleAll(event)" checked="{!$.store.remaining.length}">
 		  <label for="toggle-all">Mark all as complete</label>
           <ul class="todo-list">
-            <li class="todo-item {$.item.completed ? 'completed' : ''}" .for="item in $.store.items">
-              <input class="toggle" type="checkbox"
-                     checked="{$.item.completed}"
-                     .on:click="$.store.toggleCompleted($.item)">
-              <label>{$.item.title}</label>
-            </li>
+            <x-todo-item .for="item in $.store.items"/>
           </ul>
 
           <footer class="footer" .if="$.store.items.length">
-            <span class="todo-count"></span>
+            <span class="todo-count">{$.store.items.length}</span>
             <ul class="filters">
 			  <li><a href="#/" class="selected">All</a></li>
 			  <li><a href="#/active">Active</a></li>
 			  <li><a href="#/completed">Completed</a></li>
 		    </ul>
-            <button class="clear-completed">Clear completed</button>
+            <button class="clear-completed"
+                    .if="$.store.remaining.length < $.store.items.length"
+                    .on:click="$.store.clearCompleted()">Clear completed</button>
           </footer>
         </section>
 
@@ -40,7 +36,34 @@
       </section>
 
     </script>
-    <script></script>
+
+    <script type="text/x-template" id="x-todo-item">
+      <li class="todo-item {$.item.completed ? 'completed' : ''}">
+        <input class="toggle" type="checkbox"
+               checked="{$.item.completed}"
+               .on:click="$.item.completed = !$.item.completed">
+        <label .on:dblclick="$.item.editing = true"
+               .if="!$.item.editing">{$.item.title}</label>
+        <input .if="$.item.editing" class="edit"
+               .bind:value="$.item.title"
+               .on:blur="$.onEditInput(event, $.item)"
+               .on:keydown="$.onEditInput(event, $.item)"
+               .on:update="if ($.item.editing) target.focus()">
+        <button class="destroy" .on:click="$.store.remove($.item)"></button>
+      </li>
+    </script>
+
+    <script type="x-module">
+     const todomvc = {
+       create($) {
+         $.store.items = JSON.parse(localStorage.getItem("items") || "[]");
+       },
+       update($) {
+         localStorage.setItem("items", JSON.stringify($.store.items));
+       }
+     }
+
+    </script>
     <script type="module">
 
      import {mount} from "/src/runtime.mjs";
@@ -62,14 +85,16 @@
          item.completed = !item.completed;
        }
 
-       remaining() {
+       clearCompleted() {
+         this.items = this.items.filter(_ => !_.completed);
+       }
+
+       get remaining() {
          return this.items.filter(_ => !_.completed);
        }
      }
 
      window.store = new Store();
-
-
 
      mount(document.body, "x-todomvc", {
        store,
@@ -79,13 +104,20 @@
          target.value = "";
        },
 
-       toggleAll() {
-         // TODO: set according to own state! toggle x = !x is not right
-         for (const item of this.store.items) this.store.toggleCompleted(item);
+       onEditInput({type, target, key}, item) {
+         if (key === 'Escape') {
+           item.editing = false;
+         } else if (key === "Enter" || type === "blur") {
+           item.title = target.value.trim();
+           item.editing = false;
+           if (!item.title) this.store.remove(item);
+         }
+       },
+
+       toggleAll({target}) {
+         for (const item of this.store.items) item.completed = target.checked;
        }
-
      });
-
     </script>
   </head>
   <body></body>

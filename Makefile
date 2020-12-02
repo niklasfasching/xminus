@@ -19,6 +19,7 @@ update-fixtures:
 .PHONY: test
 test:
 	for f in test/*.mjs; do cli/xminus -e -r $$f; done
+	cli/xminus -e -r test/integration/todomvc.mjs
 
 .PHONY: setup
 setup:

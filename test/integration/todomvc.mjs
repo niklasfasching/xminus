@@ -6,10 +6,13 @@ t.describe("TodoMVC", () => {
 
   let iframe, input;
   t.beforeEach(async () => {
+    localStorage.setItem("items", "[]");
     if (iframe?.parentElement) iframe.parentElement.removeChild(iframe);
     iframe = await openIframe("./todomvc.html");
     input = await first(iframe, "input");
   });
+
+
 
   t.describe("Initial load", () => {
     t("should focus todo input", async () => {
@@ -73,7 +76,11 @@ t.describe("TodoMVC", () => {
       for (let item of items) t.assert(!item.classList.contains("completed"));
       toggleAll.click()
       for (let item of items) t.assert(item.classList.contains("completed"));
-      // TODO: test not toggleComplete but real mark/unmark all
+      items[0].querySelector(".toggle").click()
+      t.assert(!items[0].classList.contains("completed"));
+      t.assert(!toggleAll.checked);
+      toggleAll.click();
+      for (let item of items) t.assert(item.classList.contains("completed"));
     });
 
     t("should allow un-marking all items as completed", () => {
@@ -110,31 +117,127 @@ t.describe("TodoMVC", () => {
       t.equal(item.querySelector(".toggle").checked, false);
     });
 
-    t("should allow editing items");
-    t("should show the remove item button on hover");
+    t("should allow editing items", () => {
+      item.querySelector("label").dispatchEvent(new MouseEvent("dblclick"));
+      t.assert(item.querySelector("input.edit"));
+    });
+
+    // :hover can't be triggered in js. also this is testing css. ignored
+    // t("should show the remove item button on hover");
   });
 
   t.describe("Editing", () => {
-    t("should hide other controls when editing");
-    t("should save edits on enter");
-    t("should save edits on blur");
-    t("should trim entered text");
-    t("should remove the item if an empty string is entered");
-    t("should cancel edits on ESC");
+    let item, editInput;
+    t.beforeEach(async () => {
+      input.value = "title";
+      enter(input);
+      item = await first(iframe, ".todo-item");
+      item.querySelector("label").dispatchEvent(new MouseEvent("dblclick"));
+      editInput = item.querySelector("input.edit");
+    });
+
+    t("should hide other controls when editing", () => {
+      t.assert(item.querySelector("input.edit"));
+      t.assert(!item.querySelector("label"));
+    });
+
+    t("should save edits on enter", () => {
+      editInput.value = "updated title";
+      enter(editInput);
+      t.equal(item.querySelector("label").textContent, "updated title");
+    });
+
+    t("should save edits on blur", () => {
+      editInput.value = "updated title";
+      editInput.dispatchEvent(new Event("blur"))
+      t.equal(item.querySelector("label").textContent, "updated title");
+    });
+
+    t("should trim entered text", () => {
+      editInput.value = "  updated title  ";
+      enter(editInput);
+      t.equal(item.querySelector("label").textContent, "updated title");
+    });
+
+    t("should remove the item if an empty string is entered", async () => {
+      editInput.value = "  ";
+      enter(editInput);
+      t.assert(!await first(iframe, ".todo-item"));
+    });
+
+    t("should cancel edits on ESC", () => {
+      const title = item.title;
+      editInput.value = "  ";
+      editInput.dispatchEvent(new KeyboardEvent("keydown", {key: "Escape"}));
+      t.assert(!item.querySelector("input.edit"))
+      t.assert(item.querySelector("label"))
+      t.equal(item.title, title);
+    });
   });
 
   t.describe("Counter", () => {
-    t("should display the current number of items");
+    t("should display the current number of items", async () => {
+      for (let i = 1; i <= 5; i++) {
+        input.value = `hello`;
+        enter(input);
+        let items = await all(iframe, ".todo-item");
+        let count = await first(iframe, ".todo-count");
+        t.equal(items.length, i);
+        t.equal(count.innerText, `${i}`);
+      }
+      for (let i = 1; i <= 4; i++) {
+        let button = await first(iframe, ".todo-item .destroy");
+        button.click();
+        let count = await first(iframe, ".todo-count");
+        t.equal(count.innerText, `${5 - i}`);
+      }
+    });
   });
 
   t.describe("Clear completed button", () => {
-    t("should display the number of completed items");
-    t("should remove completed items when clicked");
-    t("should be hidden when there are no completed items");
+
+    t.beforeEach(async () => {
+      for (let i = 0; i < 10; i++) {
+        input.value = `todo ${i+1}`;
+        enter(input);
+      }
+    });
+
+    // doesn't look like it's implemented in the actual todomvcs
+    // t("should display the number of completed items");
+
+    t("should remove completed items when clicked", async () => {
+      let items = await all(iframe, ".todo-item");
+      t.equal(items.length, 10);
+      items[0].querySelector(".toggle").click();
+      items[3].querySelector(".toggle").click();
+      const clearCompleted = await first(iframe, ".clear-completed");
+      clearCompleted.click();
+      items = await all(iframe, ".todo-item");
+      t.equal(items.length, 8);
+    });
+
+    t("should be hidden when there are no completed items", async () => {
+      let items = await all(iframe, ".todo-item");
+      t.assert(!await first(iframe, ".clear-completed"));
+      items[0].querySelector(".toggle").click();
+      t.assert(await first(iframe, ".clear-completed"));
+    });
   });
 
   t.describe("Persistence", () => {
-    t("should persist state across reloads");
+    t("should persist state across reloads", async () => {
+      for (let i = 0; i < 10; i++) {
+        input.value = `todo ${i+1}`;
+        enter(input);
+      }
+      const items = await all(iframe, ".todo-item");
+      t.equal(items.length, 10);
+
+      const iframe2 = await openIframe("./todomvc.html");
+      const items2 = await all(iframe2, ".todo-item");
+      t.equal(items2.length, 10);
+    });
   });
 
   t.describe("Routing", () => {
@@ -154,7 +257,7 @@ function all(iframe, selector, timeout) {
   return waitFor(iframe, selector, "All", timeout)
 }
 
-async function waitFor(iframe, selector, maybeAll, timeout = 500) {
+async function waitFor(iframe, selector, maybeAll, timeout = 100) {
     const now = Date.now();
     while (true) {
       const x = iframe.contentDocument["querySelector" + maybeAll](selector);
