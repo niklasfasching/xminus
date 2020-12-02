@@ -146,18 +146,16 @@ async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEac
     countFailed++;
   }
   if (f) for (let {f, name} of afterEachs) await runWrapper(lvl, node, name, f, true);
-  if (pendingAssertions.length) {
-    log(lvl+2, 1, "color: red", "did not await all assertions", pendingAssertions);
-    countFailed++, pendingAssertions = [];
-  }
 }
 
 async function runFn(node, f, name) {
   const time = timer();
   try {
     if (f) await f(id(node, name));
+    if (pendingAssertions.length) t.fail(`did not await all assertions: ${pendingAssertions}`);
     return [time(), null];
   } catch (err) {
+    pendingAssertions = [];
     return [time(), err];
   }
 }
