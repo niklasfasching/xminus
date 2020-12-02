@@ -196,7 +196,7 @@ func (r *Runner) Start() {
 			<-done
 			if r.Watcher == nil {
 				if err != nil {
-					panic(err)
+					log.Fatal(err)
 				}
 				os.Exit(exitCode)
 			} else {
