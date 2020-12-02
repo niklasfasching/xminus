@@ -94,9 +94,9 @@ export function generateComponent(name, template) {
             const _hooks = typeof ${name} === "undefined" ? {} : ${name};
             const _template = document.createElement("template");
             _template.innerHTML = \`${$.html.replaceAll("`", "\\`")}\`;
-            return function _${name}Component($, properties, _createChildren) {
+            return function _${name}Component($, properties, _createChildren, $update) {
               const _node = _template.content.cloneNode(true);
-              const $update = () => _update($);
+              if (!$update) $update = () => _update($);
               $ = Object.create($);
               $ = Object.assign($, _hooks.create?.($, properties, $update));
               const children = _createChildren?.($);
@@ -157,7 +157,7 @@ export function generateVnode(vnode, $) {
             `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
     generateClosure(Object.assign({}, vnode, {tag: "template", properties: {}}), $, _);
     $.html += "<!---->";
-    $.create += `const [${_}component, ${_}update] = xm.components["${rawTag}"]($, ${properties}, ${_}create);
+    $.create += `const [${_}component, ${_}update] = xm.components["${rawTag}"]($, ${properties}, ${_}create, $update);
                  ${vnode.node}.replaceWith(${_}component);
                  ${vnode.node} = ${_}component;\n`;
     $.update += `${_}update($, ${properties});\n`;
