@@ -40,7 +40,8 @@ export function parse(template) {
       (parents[0]?.children || vnodes).push(vchild);
       parents.unshift(vchild);
     } else if ($ === "close") {
-      parents.shift();
+      const vnode = parents.shift();
+      if (vnode && x !== "/" && x !== "/" + vnode.tag) throw new Error(`unexpected close ${x} for ${vnode.tag}`);
     } else if ($ === "child") {
       (parents[0]?.children || vnodes).push(x);
     } else if ($ === "key") {

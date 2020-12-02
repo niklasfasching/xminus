@@ -21,7 +21,7 @@ t.describe("parser", () => {
 
 
   t("should support dynamic tags and children", (id) => {
-    test(id, `<{foo bar}>{foo bar}</div>`);
+    test(id, `<{foo bar}>{foo bar}</>`);
   });
 
   t("should link the parent vnode from child vnodes", (id) => {
@@ -31,5 +31,9 @@ t.describe("parser", () => {
 
   t("should throw on unclosed tags", () => {
     t.throws(() => parse(`<div>`), /unclosed div/);
+  });
+
+  t("should throw on unexpected closing tags", () => {
+    t.throws(() => parse(`<div></foo>`), /unexpected close \/foo for div/);
   });
 });
