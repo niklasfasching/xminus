@@ -11,10 +11,20 @@ const macros = [
 
 function onMacro(vnode, $, key, value) {
   generateVnode(vnode, $);
-  $.create += `${vnode.node}.addEventListener("${key.split(":")[1]}", (event) => {
+  const event = key.split(":")[1];
+  if (event === "update" || event === "create") {
+    const _ = prefix();
+    $.create += `const ${_}node = ${vnode.node};\n`
+    $[event] += `setTimeout(() => {
+                   let target = ${_}node;
+                   ${value}
+                 })\n`;
+  } else {
+    $.create += `${vnode.node}.addEventListener("${event}", (event) => {
                  ${value};
                  $update();
                });\n`;
+  }
 }
 
 function ifMacro(vnode, $, key, value) {
