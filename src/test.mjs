@@ -1,5 +1,7 @@
 const root = newNode(), updatingFixtures = window.args?.includes("update-fixtures");
-let node = root, count = 0, countFailed = 0, started = false, exitAfter = false, resolve;
+let node = root, pendingAssertions = [],
+    count = 0, countFailed = 0,
+    started = false, exitAfter = false, resolve;
 
 export const done = new Promise((r) => resolve = r);
 
@@ -46,12 +48,15 @@ Object.assign(t, {
     wrapper(name, f, "after");
   },
 
-  throws(f, regexp = /.*/, msg) {
+  async throws(f, regexp = /.*/, msg) {
     if (typeof regexp === 'string') msg = regexp, regexp = /.*/;
     if (typeof f !== 'function') t.fail(`expected ${f} to be a function`);
+    const pop = pushPendingAssertion("throws", f.toString());
     try {
-      f();
+      await f();
+      pop();
     } catch(err) {
+      pop();
       if (!regexp.test(err.message)) t.fail(`expected ${f} to throw ${regexp}`, err.message);
       return;
     }
@@ -79,6 +84,14 @@ Object.assign(t, {
     throw new Error(`${msg ? msg + ": " : ""}${info}`);
   },
 });
+
+function pushPendingAssertion(key, value) {
+  const pending = `${key}: ${value}`;
+  pendingAssertions.push(pending);
+  return () => {
+    pendingAssertions = pendingAssertions.filter(_ => _ != pending);
+  };
+}
 
 function wrapper(name, f, key) {
   if (!f) f = name, name = `${key} ${node[key + "s"].length}`;
@@ -137,6 +150,10 @@ async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEac
     countFailed++;
   }
   if (f) for (let {f, name} of afterEachs) await runWrapper(lvl, node, name, f, true);
+  if (pendingAssertions.length) {
+    log(lvl+2, 1, "color: red", "did not await all assertions", pendingAssertions);
+    countFailed++, pendingAssertions = [];
+  }
 }
 
 async function runFn(node, f, name) {
