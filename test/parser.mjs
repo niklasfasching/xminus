@@ -26,7 +26,7 @@ t.describe("parser", () => {
 
   t("should link the parent vnode from child vnodes", (id) => {
     const [p] = parse(`<p>hello <b>world</b></p>`);
-    t.strictEqual(p.children[1].parent, p);
+    t.equal(p.children[1].parent, p);
   });
 
   t("should throw on unclosed tags", () => {

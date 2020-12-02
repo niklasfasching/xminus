@@ -61,15 +61,10 @@ t.describe("t", () => {
       t.throws(() => t.assert(false), /false == true/);
     });
 
-    t("should support equal", () => {
+    t("should support equal (strict equal!)", () => {
       t.equal(1, 1);
-      t.equal(null, undefined);
-      t.throws(() => t.equal(1, 2), /1 == 2/);
-    });
-
-    t("should support strictEqual", () => {
-      t.strictEqual(1, 1);
-      t.throws(() => t.strictEqual(null, undefined), /null === undefined/);
+      t.throws(() => t.equal(null, undefined), /null === undefined/);
+      t.throws(() => t.equal(1, 2), /1 === 2/);
     });
 
     t("should support fail", () => {

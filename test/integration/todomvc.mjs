@@ -13,7 +13,7 @@ t.describe("TodoMVC", () => {
 
   t.describe("Initial load", () => {
     t("should focus todo input", async () => {
-      t.strictEqual(iframe.contentDocument.activeElement, input);
+      t.equal(iframe.contentDocument.activeElement, input);
     });
   });
 

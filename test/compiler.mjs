@@ -25,7 +25,7 @@ t.describe("compiler", () => {
     function test(id, template) {
       const vnodes = parser.parse(template);
       const vnode = vnodes[0];
-      t.strictEqual(vnodes.length, 1);
+      t.equal(vnodes.length, 1);
       vnode.node = "root";
       vnode.parent = {children: [vnode]};
       assertFixture(run(id, "generateVnode", vnode, "$", "_x_"));
@@ -100,7 +100,7 @@ t.describe("compiler", () => {
                     <script type=x-module>parent</script>`;
     t("should load modules recursively", async () => {
       const loadedModules = await compiler.loadModule(dataUrl(module));
-      t.strictEqual(loadedModules.length, 2);
+      t.equal(loadedModules.length, 2);
       t.jsonEqual(loadedModules.map(m => m.code), ["parent", "child"]);
       t.jsonEqual(loadedModules.map(m => m.templates), [
         [{name: "x-parent", content: "{parent}"}],
@@ -113,7 +113,7 @@ t.describe("compiler", () => {
                           <script type="x-module" src="${dataUrl(childModule)}"></script>
                           <script type="x-module" src="${dataUrl(childModule)}"></script>`;
       const loadedModules = await compiler.loadModule(dataUrl(duplicates));
-      t.strictEqual(loadedModules.length, 2);
+      t.equal(loadedModules.length, 2);
     });
 
     t("should allow only one non-src x-module script per module", async () => {
@@ -135,7 +135,7 @@ t.describe("compiler", () => {
 
     t("should remove xminus elements from document", async () => {
       const loadedModules = await compiler.loadModule(dataUrl(module));
-      t.strictEqual(loadedModules[0].document.querySelectorAll("[type*=x-]").length, 0);
+      t.equal(loadedModules[0].document.querySelectorAll("[type*=x-]").length, 0);
     });
   });
 
