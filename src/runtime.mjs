@@ -1,4 +1,5 @@
 export const components = {};
+export const hooks = {};
 
 export function setProperty(node, k, v) {
   if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
@@ -52,6 +53,7 @@ export function updateNodes(parent, anchor, nodes, values, updatedValues, $, cre
 }
 
 export async function mount(parentNode, name, $) {
+  window.xm = {components, hooks};
   window.xm = await import(import.meta.url);
   if (document.querySelector("[type*=x-module], [type*=x-template]")) {
     const {compile} = await import("./compiler.mjs");

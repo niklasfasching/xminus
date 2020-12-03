@@ -106,15 +106,15 @@ t.describe("compiler", () => {
     }
 
     const childModule = `<script type=x-template id=x-child>{child}</script>
-                         <script type=x-module>child</script>`;
-    const module = `<script type="x-template" id="x-parent">{parent}</script>
-                    <script type="x-module" src="${dataUrl(childModule)}"></script>
-                    <script type=x-module>parent</script>`;
+                         <script type=module>child</script>`;
+    const module = `<script type=x-template id=x-parent>{parent}</script>
+                    <script type=x-module src="${dataUrl(childModule)}"></script>
+                    <script type=module>parent</script>`;
     t("should load modules recursively", async () => {
       const loadedModules = await compiler.loadModule(dataUrl(module));
       t.equal(loadedModules.length, 2);
       t.jsonEqual(loadedModules.map(m => m.code), ["parent", "child"]);
-      t.jsonEqual(loadedModules.map(m => m.templates), [
+      t.jsonEqual(loadedModules.map(m => m.componentTemplates), [
         [{name: "x-parent", content: "{parent}"}],
         [{name: "x-child", content: "{child}"}],
       ]);
@@ -122,21 +122,21 @@ t.describe("compiler", () => {
 
     t("should deduplicate modules / load each module only once", async () => {
       const duplicates = `${module}
-                          <script type="x-module" src="${dataUrl(childModule)}"></script>
-                          <script type="x-module" src="${dataUrl(childModule)}"></script>`;
+                          <script type=x-module src="${dataUrl(childModule)}"></script>
+                          <script type=x-module src="${dataUrl(childModule)}"></script>`;
       const loadedModules = await compiler.loadModule(dataUrl(duplicates));
       t.equal(loadedModules.length, 2);
     });
 
-    t("should allow only one non-src x-module script per module", async () => {
-      const module = `<script type="x-module"></script>
-                      <script type="x-module"></script>`;
+    t("should allow only one non-src module script per module", async () => {
+      const module = `<script type=module></script>
+                      <script type=module></script>`;
       await t.throws(async () => await compiler.loadModule(dataUrl(module)),
-                     /One x-module per file/);
+                     /One module per file/);
     });
 
-    t("should convert relative to absolute imports inside x-module scripts", async () => {
-      const module = `<script type="x-module">
+    t("should convert relative to absolute imports inside module scripts", async () => {
+      const module = `<script type=module>
                       import "./foo.js";
                       import "/bar.js";
                       </script>`;

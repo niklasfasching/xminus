@@ -53,20 +53,18 @@
       </li>
     </script>
 
-    <script type="x-module">
-     const todomvc = {
+    <script type="module">
+     import {mount, hooks} from "/src/runtime.mjs";
+
+
+     hooks["x-todomvc"] = {
        create($) {
          $.store.items = JSON.parse(localStorage.getItem("items") || "[]");
        },
        update($) {
          localStorage.setItem("items", JSON.stringify($.store.items));
        }
-     }
-
-    </script>
-    <script type="module">
-
-     import {mount} from "/src/runtime.mjs";
+     };
 
 
      class Store {

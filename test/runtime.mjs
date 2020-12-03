@@ -95,9 +95,10 @@ t.describe("runtime", () => {
 
   t.describe("mount", () => {
     t("smoke test", async () => {
-      document.head.innerHTML += `<script type="x-module" src="./fixtures/index.html"></script>`;
-      const parent = document.createElement("div");
-      await runtime.mount(parent, "x-main", {});
+      const iframe = await openIframe("./fixtures/index.html");
+      await new Promise(r => setTimeout(r, 100));
+      const p = iframe.contentDocument.querySelector("p");
+      t.equal(p.innerText, "bar");
     });
   });
 

@@ -1,8 +1,5 @@
 import {parse, parseValue, parseValueParts} from "./parser.mjs";
 
-const prefix = () => `_${prefixId++}_`;
-let prefixId = 0;
-
 const macros = [
   [/^\.if$/, ifMacro],
   [/^\.for$/, forMacro],
@@ -57,51 +54,52 @@ function forMacro(vnode, $, key, value) {
 
 export async function compile(url, asDataUrl) {
   const modules = await loadModule(url);
-  const module =  modules.map(m => `import "${generateModule(m, true)}";\n`).join("\n");
-  if (asDataUrl) return dataUrl(module);
+  if (asDataUrl) {
+    const imports = modules.slice(1)
+          .map(m => `//# sourceURL=${new URL(m.url).pathname}.js\n${m.code}`)
+          .concat(`//# sourceURL=xmComponents.js\n${generateComponents(modules)}`)
+          .map(src => `import "${dataUrl(src)}";`);
+    return dataUrl(imports.join("\n"));
+  }
   const document = modules[0].document;
-  document.head.innerHTML = `<script type="module">${module}</script>\n` + document.head.innerHTML;
-  return new XMLSerializer().serializeToString(document);
+  const scripts = modules.map(m => m.code).concat(generateComponents(modules)).map(code => {
+    return `<script type=module>\n${code}</script>`;
+  }).join("\n");
+  document.head.innerHTML = "\n" + scripts + document.head.innerHTML;
+  return "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
 }
 
-function generateModule({url, code, templates}, asDataUrl) {
-  const module = templates.reduce((module, {name, content}) => {
-    return module + `xm.components["${name}"] = ${generateComponent(name, content)};\n`;
-  }, `//# sourceURL=${new URL(url).pathname}.compiled.js\n${code}\n`);
-  return asDataUrl ? dataUrl(module) : module;
+function generateComponents(modules) {
+  return modules
+    .flatMap(({componentTemplates}) => componentTemplates)
+    .map(({name, content}) => generateComponent(name, content))
+    .join("\n");
 }
 
 export async function loadModule(url, loaded = {}) {
   if (loaded[url]) return [];
   loaded[url] = true;
-  const d = url === location ? document : await loadDocument(url);
-  const templates = [...d.querySelectorAll(`[type*=x-template][id]`)],
-        imports = [...d.querySelectorAll(`[type*=x-module][src]`)],
-        scripts = [...d.querySelectorAll(`[type*=x-module]:not([src])`)];
-  [templates, imports, scripts].flat().forEach(el => el.remove());
-  if (scripts.length > 1) throw new Error(`One x-module per file - found ${scripts.length}`);
-  const code = (scripts[0]?.text || "").replaceAll(/^\s*(import\s+(.*from\s+)?)["'](.+)["']/g,
-                                                   (_, from, __, src) => `${from} "${resolveUrl(src, url)}"`)
-  const modules = await Promise.all(imports.map(({src}) => loadModule(resolveUrl(src, url), loaded)));
-  const module = {
-    url: resolveUrl(url),
-    document: d,
-    code,
-    templates: templates.map(({id, text}) => ({name: id, content: text})),
-  };
-  return [module, ...modules.flat()];
+  const document = url === location ? window.document : await loadDocument(url);
+  const templates = [...document.querySelectorAll(`[type*=x-template][id]`)],
+        imports = [...document.querySelectorAll(`[type*=x-module][src]`)],
+        scripts = [...document.querySelectorAll(`[type*=module]:not([src])`)];
+  if (url !== location) [templates, imports, scripts].flat().forEach(el => el.remove());
+  if (scripts.length > 1) throw new Error(`One module per file - found ${scripts.length}`);
+  const modules = await Promise.all(imports.map(({src}) => loadModule(resolveUrl(src, url), loaded))),
+        code = rewriteRelativeImports((scripts[0]?.text || "")),
+        componentTemplates = templates.map(({id, text}) => ({name: id, content: text}));
+  return [{url: resolveUrl(url), document, code, componentTemplates}, ...modules.flat()];
 }
 
 export function generateComponent(name, template) {
   const vnode = {node: "_node", properties: {}, children: parse(template)},
         $ = {html: "", create: "", update: ""};
-  name = name.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase());
   generateChildren(vnode, $);
-  return `(function() {
-            const _hooks = typeof ${name} === "undefined" ? {} : ${name};
+  return `xm.components["${name}"] = (function() {
+            const _hooks = xm.hooks["${name}"] || {};
             const _template = document.createElement("template");
             _template.innerHTML = \`${$.html.replaceAll("`", "\\`")}\`;
-            return function _${name}Component($, properties, _createChildren, $update) {
+            return function($, properties, _createChildren, $update) {
               const _node = _template.content.cloneNode(true);
               if (!$update) $update = () => _update($);
               $ = Object.create($);
@@ -116,7 +114,7 @@ export function generateComponent(name, template) {
               };
               return [new xm.Fragment(_node.childNodes), _update];
             };
-          })()\n`;
+          })();\n`;
 }
 
 function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
@@ -239,19 +237,25 @@ function generateLocalNodeName($, vnode) {
   return `${_}node`;
 }
 
-export function resetPrefixId() {
-  prefixId = 0;
-}
-
 function dataUrl(string) {
   return `data:text/javascript,${encodeURIComponent(string)}`;
 }
 
+function rewriteRelativeImports(script, baseUrl) {
+  return script.replaceAll(/^\s*(import\s+(.*from\s+)?)["'](.+)["']/g,
+                         (_, from, __, src) => `${from} "${resolveUrl(src, baseUrl)}"`);
+}
+
 function resolveUrl(url, baseUrl) {
-  if (!baseUrl || baseUrl.toString().startsWith("data:text")) baseUrl = location;
-  return new URL(url, new URL(baseUrl, location));
+  if (!baseUrl) baseUrl = location;
+  else if (baseUrl.toString().startsWith("data:")) return url;
+  return new URL(url, new URL(baseUrl, location)).pathname;
 }
 
 function loadDocument(url) {
   return fetch(url).then(async (r) => new DOMParser().parseFromString(await r.text(), "text/html"));
 }
+
+export const resetPrefixId = () => prefixId = 0;
+const prefix = () => `_${prefixId++}_`;
+let prefixId = 0;
