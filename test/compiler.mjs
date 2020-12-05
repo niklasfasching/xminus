@@ -157,45 +157,48 @@ t.describe("compiler", () => {
   t.describe("integration", () => {
     function render($, template) {
       eval(compiler.generateComponent("x-component", template));
-      return xm.components["x-component"]($);
+      const [fragment, update] = xm.components["x-component"]($);
+      const div = document.createElement("div");
+      div.append(fragment);
+      return [div, update];
     }
 
     t("should update dynamic properties", () => {
-      const [fragment, update] = render({key1: "key1a", key2: "key2a", value: "value1"},
+      const [div, update] = render({key1: "key1a", key2: "key2a", value: "value1"},
                                         `<div key={$.value} {$.key1}=normal-value {$.key2}={$.value}/>`);
-      t.equal(fragment.firstChild.outerHTML, `<div key="value1" key1a="normal-value" key2a="value1"></div>`);
+      t.equal(div.firstChild.outerHTML, `<div key="value1" key1a="normal-value" key2a="value1"></div>`);
       update({key1: "key1b", key2: "key2b", value: "value2"});
-      t.equal(fragment.firstChild.outerHTML, `<div key="value2" key1b="normal-value" key2b="value2"></div>`);
+      t.equal(div.firstChild.outerHTML, `<div key="value2" key1b="normal-value" key2b="value2"></div>`);
     });
 
     t("should update dynamic children", () => {
-      const [fragment, update] = render({child1: "child1a", child2: "child2a"},
+      const [div, update] = render({child1: "child1a", child2: "child2a"},
                                         `<div>{$.child1} and {$.child2}</div>`);
-      t.equal(fragment.firstChild.outerHTML, `<div>child1a and child2a</div>`);
+      t.equal(div.firstChild.outerHTML, `<div>child1a and child2a</div>`);
       update({child1: "child1b", child2: "child2b"});
-      t.equal(fragment.firstChild.outerHTML, `<div>child1b and child2b</div>`);
+      t.equal(div.firstChild.outerHTML, `<div>child1b and child2b</div>`);
     });
 
     t("should update nested dynamic children", () => {
-      const [fragment, update] = render({child1: "child1a", child2: "child2a", child3: "child3a"},
+      const [div, update] = render({child1: "child1a", child2: "child2a", child3: "child3a"},
                                         `<div>{$.child1} and <b>{$.child2}</b> and {$.child3}</div>`);
-      t.equal(fragment.firstChild.outerHTML, `<div>child1a and <b>child2a</b> and child3a</div>`);
+      t.equal(div.firstChild.outerHTML, `<div>child1a and <b>child2a</b> and child3a</div>`);
       update({child1: "child1b", child2: "child2b", child3: "child3b"});
-      t.equal(fragment.firstChild.outerHTML, `<div>child1b and <b>child2b</b> and child3b</div>`);
+      t.equal(div.firstChild.outerHTML, `<div>child1b and <b>child2b</b> and child3b</div>`);
     });
 
     t("should update fragment children", () => {
       const childFragment = Object.assign(document.createElement('template'),
                                           {innerHTML: `<p>a</p> <p>b</p>`}).content;
-      const [fragment, update] = render({child1: "child1a", childFragment, child3: "child2a"},
+      const [div, update] = render({child1: "child1a", childFragment, child3: "child2a"},
                                         `<div>{$.child1}, {$.childFragment} and {$.child3}</div>`);
-      t.equal(fragment.firstChild.outerHTML, `<div>child1a, <p>a</p> <p>b</p><!--fragment anchor--> and child2a</div>`);
+      t.equal(div.firstChild.outerHTML, `<div>child1a, <p>a</p> <p>b</p><!--fragment anchor--> and child2a</div>`);
       update({child1: "child1b", childFragment, child3: "child2b"});
-      t.equal(fragment.firstChild.outerHTML, `<div>child1b, <p>a</p> <p>b</p><!--fragment anchor--> and child2b</div>`);
+      t.equal(div.firstChild.outerHTML, `<div>child1b, <p>a</p> <p>b</p><!--fragment anchor--> and child2b</div>`);
       const childFragment2 = Object.assign(document.createElement('template'),
                                            {innerHTML: `<p>a2</p> <p>b2</p>`}).content;
       update({child1: "child1b", childFragment: childFragment2, child3: "child2b"});
-      t.equal(fragment.firstChild.outerHTML, `<div>child1b, <p>a2</p> <p>b2</p><!--fragment anchor--> and child2b</div>`);
+      t.equal(div.firstChild.outerHTML, `<div>child1b, <p>a2</p> <p>b2</p><!--fragment anchor--> and child2b</div>`);
     });
   });
 
