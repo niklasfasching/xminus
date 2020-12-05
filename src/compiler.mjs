@@ -187,11 +187,8 @@ function generateProperties(vnode, $) {
       $.update += `xm.setProperty(${node}, ${key}, ${value});\n`;
     } else {
       const _ = prefix();
-      $.create += `let ${_}key = ${key}; setProperty(${node}, ${_}key, ${value});\n`;
-      $.update += `let ${_}updatedKey = ${key};
-                   if (${_}key !== ${_}updatedKey) xm.setProperty(${node}, ${_}key, undefined);
-                   xm.setProperty(${node}, ${_}updatedKey, ${value});
-                   ${_}key = ${_}updatedKey;\n`;
+      $.create += `let ${_}key = ${key}; xm.setProperty(${node}, ${_}key, ${value});\n`;
+      $.update += `${_}key = xm.setDynamicKeyProperty(${node}, ${_}key, ${key}, ${value});\n`;
     }
   }
 }

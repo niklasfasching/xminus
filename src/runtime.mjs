@@ -7,6 +7,12 @@ export function setProperty(node, k, v) {
   else node.setAttribute(k, v);
 }
 
+export function setDynamicKeyProperty(node, k, updatedK, v) {
+  if (k !== updatedK) setProperty(node, k, null);
+  setProperty(node, updatedK, v);
+  return updatedK;
+}
+
 export function replaceWith(oldNode, newNode) {
   if (newNode instanceof Fragment) newNode.refresh();
   oldNode.replaceWith(newNode);

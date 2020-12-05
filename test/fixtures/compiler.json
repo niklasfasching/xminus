@@ -13,16 +13,13 @@
     "html": "<div>hello world</div>",
     "create": [
       "let _0_node = root;",
-      "let _1_key = (dynamic key); setProperty(_0_node, _1_key, \"value\");",
+      "let _1_key = (dynamic key); xm.setProperty(_0_node, _1_key, \"value\");",
       "xm.setProperty(_0_node, \"key\", (dynamic value));",
       "let _2_node = root.firstChild;",
       ""
     ],
     "update": [
-      "let _1_updatedKey = (dynamic key);",
-      "if (_1_key !== _1_updatedKey) xm.setProperty(_0_node, _1_key, undefined);",
-      "xm.setProperty(_0_node, _1_updatedKey, \"value\");",
-      "_1_key = _1_updatedKey;",
+      "_1_key = xm.setDynamicKeyProperty(_0_node, _1_key, (dynamic key), \"value\");",
       "xm.setProperty(_0_node, \"key\", (dynamic value));",
       ""
     ]

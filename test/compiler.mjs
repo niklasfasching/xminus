@@ -1,6 +1,9 @@
 import {t, done} from "../src/test.mjs";
 import * as compiler from "../src/compiler.mjs";
+import * as runtime from "../src/runtime.mjs";
 import * as parser from "../src/parser.mjs";
+
+window.xm = runtime;
 
 t.describe("compiler", () => {
   t.exitAfter();
@@ -148,6 +151,21 @@ t.describe("compiler", () => {
     t("should remove xminus elements from document", async () => {
       const loadedModules = await compiler.loadModule(dataUrl(module));
       t.equal(loadedModules[0].document.querySelectorAll("[type*=x-]").length, 0);
+    });
+  });
+
+  t.describe("integration", () => {
+    function render($, template) {
+      eval(compiler.generateComponent("x-component", template));
+      return xm.components["x-component"]($);
+    }
+
+    t("should update dynamic properties", () => {
+      const [fragment, update] = render({key1: "key1a", key2: "key2a", value: "value1"},
+                                        `<div key={$.value} {$.key1}=normal-value {$.key2}={$.value}/>`);
+      t.equal(fragment.firstChild.outerHTML, `<div key="value1" key1a="normal-value" key2a="value1"></div>`);
+      update({key1: "key1b", key2: "key2b", value: "value2"});
+      t.equal(fragment.firstChild.outerHTML, `<div key="value2" key1b="normal-value" key2b="value2"></div>`);
     });
   });
 
