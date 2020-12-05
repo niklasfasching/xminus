@@ -201,13 +201,14 @@ function generateChildren(vnode, $) {
       vchild.node = node;
       generateVnode(vchild, $);
       node = vchild.node;
+      node = node + ".nextSibling";
     } else {
       for (let [value, rawValue, isDynamic] of parseValueParts(vchild)[0]) {
         $.html += isDynamic ? "<!---->" : rawValue;
         if (isDynamic) dynamicChildren.push([node, value]);
+        node = node + ".nextSibling";
       }
     }
-    node = node + ".nextSibling";
   }
   if (dynamicChildren.length) {
     const _ = prefix(), values = dynamicChildren.map(([_, v]) => v), nodes = dynamicChildren.map(([n]) => n),

@@ -29,7 +29,7 @@
     "create": [
       "let _0_node = root.firstChild;",
       "let _2_node = root;",
-      "const _1_nodes = [_0_node], _1_values = [], _1_anchor = _0_node.previousSibling;",
+      "const _1_nodes = [_0_node.nextSibling], _1_values = [], _1_anchor = _0_node.nextSibling.previousSibling;",
       "xm.updateNodes(_2_node, _1_anchor, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
       ""
     ],
@@ -63,7 +63,7 @@
       "let root = _0_node.cloneNode(true);",
       "let _1_node = root.firstChild;",
       "let _3_node = root;",
-      "const _2_nodes = [_1_node], _2_values = [], _2_anchor = _1_node.previousSibling;",
+      "const _2_nodes = [_1_node.nextSibling], _2_values = [], _2_anchor = _1_node.nextSibling.previousSibling;",
       "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
       "const _0_closureNode = new xm.Fragment(root.content.childNodes);",
       "_0_closureNode.update = (..._args) => {",
