@@ -108,12 +108,12 @@ export function generateComponent(name, template) {
             _template.innerHTML = \`${$.html.replaceAll("`", "\\`")}\`;
             return function($, properties, _createChildren, $update) {
               const _node = _template.content.cloneNode(true);
-              if (!$update) $update = () => _update($);
+              if (!$update) $update = () => _update();
               $ = Object.create($);
               $ = Object.assign($, _hooks.create?.($, properties, $update));
               const [children, _childrenUpdate] = _createChildren?.($) || [];
               ${$.create}
-              const _update = ($, _properties) => {
+              const _update = (_properties) => {
                 if (_properties) properties = _properties;
                 _hooks.update?.($, properties, $update);
                 _childrenUpdate?.();
@@ -168,9 +168,9 @@ export function generateVnode(vnode, $) {
     $.create += `let ${_}tag = ${tag};
                  ${vnode.node} = xm.createComponent(${vnode.node}, ${_}tag, $, ${properties}, ${_}create, $update);\n`;
     if (isComponentTag(rawTag)) {
-      $.update += `${vnode.node}.updateComponent($, ${properties});\n`;
+      $.update += `${vnode.node}.updateComponent(${properties});\n`;
     } else {
-      $.update += `if (${tag} === ${_}tag) ${vnode.node}.updateComponent($, ${properties});
+      $.update += `if (${tag} === ${_}tag) ${vnode.node}.updateComponent(${properties});
                    else ${_}tag = ${tag}, ${vnode.node} = xm.createComponent(${vnode.node}, ${tag}, $, ${properties}, ${_}create, $update);\n`;
     }
   }

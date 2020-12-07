@@ -74,7 +74,7 @@
       ""
     ],
     "update": [
-      "root.updateComponent($, { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), });",
+      "root.updateComponent({ [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), });",
       ""
     ]
   },
@@ -206,12 +206,12 @@
       "_template.innerHTML = `<div></div>`;",
       "return function($, properties, _createChildren, $update) {",
       "const _node = _template.content.cloneNode(true);",
-      "if (!$update) $update = () => _update($);",
+      "if (!$update) $update = () => _update();",
       "$ = Object.create($);",
       "$ = Object.assign($, _hooks.create?.($, properties, $update));",
       "const [children, _childrenUpdate] = _createChildren?.($) || [];",
       "let _0_node = _node.firstChild;",
-      "const _update = ($, _properties) => {",
+      "const _update = (_properties) => {",
       "if (_properties) properties = _properties;",
       "_hooks.update?.($, properties, $update);",
       "_childrenUpdate?.();",
@@ -241,7 +241,7 @@
       "_template.innerHTML = `<p><!----></p>`;",
       "return function($, properties, _createChildren, $update) {",
       "const _node = _template.content.cloneNode(true);",
-      "if (!$update) $update = () => _update($);",
+      "if (!$update) $update = () => _update();",
       "$ = Object.create($);",
       "$ = Object.assign($, _hooks.create?.($, properties, $update));",
       "const [children, _childrenUpdate] = _createChildren?.($) || [];",
@@ -250,7 +250,7 @@
       "let _4_node = _1_node;",
       "const _3_nodes = [_2_node], _3_values = [];",
       "xm.updateNodes(_4_node, null, _3_nodes, _3_values, [($.foo)], $, xm.createChildNode);",
-      "const _update = ($, _properties) => {",
+      "const _update = (_properties) => {",
       "if (_properties) properties = _properties;",
       "_hooks.update?.($, properties, $update);",
       "_childrenUpdate?.();",

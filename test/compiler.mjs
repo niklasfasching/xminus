@@ -160,7 +160,10 @@ t.describe("compiler", () => {
       const [fragment, update] = xm.components["x-component"]($);
       const div = document.createElement("div");
       div.append(fragment);
-      return [div, update];
+      return [div, $$ => {
+        Object.assign($, $$);
+        update();
+      }];
     }
 
     t("should update dynamic properties", () => {
@@ -206,7 +209,7 @@ t.describe("compiler", () => {
       const [div, update] = render({key: "key1", value: "key1-value1", child: "child1"},
                                    `<x-foo {$.key}={$.value} key=key-value1>{$.child}</>`);
       t.equal(div.innerHTML, `<p>a</p>key-value1 child1<!--fragment anchor--> key1-value1<p>c</p><!--fragment anchor--><!--fragment anchor-->`);
-      update({key: "key1", value: "key1-value2", child: "child1"})
+      update({key: "key1", value: "key1-value2", child: "child1"});
       t.equal(div.innerHTML, `<p>a</p>key-value1 child1<!--fragment anchor--> key1-value2<p>c</p><!--fragment anchor--><!--fragment anchor-->`);
     });
 
