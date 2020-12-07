@@ -47,9 +47,16 @@ function forMacro(vnode, $, key, value) {
   generateClosure(vnode, $, _,
                   `$ = Object.assign(Object.create($), {"${name}": _args[0]});`,
                   `$["${name}"] = _args[0];`);
-  $.create += `const ${_}values = [], ${_}nodes = [];
-               xm.updateNodes(${_}parent, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}create);\n`;
-  $.update += `xm.updateNodes(${_}parent, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}create);\n`;
+  $.create += `const ${_}values = [], ${_}nodes = [], ${_}createFor = ($, value) => {
+                 const [node, update] = ${_}create($, value);
+                 node.update = (value) => {
+                   update(value);
+                   return node;
+                 };
+                 return node;
+               };
+               xm.updateNodes(${_}parent, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}createFor);\n`;
+  $.update += `xm.updateNodes(${_}parent, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}createFor);\n`;
 }
 
 export async function compile(url, asDataUrl) {
@@ -104,12 +111,12 @@ export function generateComponent(name, template) {
               if (!$update) $update = () => _update($);
               $ = Object.create($);
               $ = Object.assign($, _hooks.create?.($, properties, $update));
-              const children = _createChildren?.($);
+              const [children, _childrenUpdate] = _createChildren?.($) || [];
               ${$.create}
               const _update = ($, _properties) => {
                 if (_properties) properties = _properties;
                 _hooks.update?.($, properties, $update);
-                children?.update();
+                _childrenUpdate?.();
                 ${$.update}
               };
               return [new xm.Fragment(_node.childNodes), _update];
@@ -118,7 +125,7 @@ export function generateComponent(name, template) {
 }
 
 function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
-  const $$ = {create: "", update: "", html: ""},
+  const $$ = {create: "", update: "", html: ""}, isTemplate = vnode.tag === "template",
         node = generateNodeName($, vnode);
   generateVnode(vnode, $$);
   $.html += $$.html;
@@ -126,16 +133,13 @@ function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
                ${_}node.replaceWith(${_}anchor);
                ${node} = ${_}anchor;
                function ${_}create($, ..._args) {
-                 let ${node} = ${_}node.cloneNode(true);
+                 let ${node} = ${isTemplate ? `${_}node.content` : `${_}node`}.cloneNode(true);
                  ${beforeCreate}
                  ${$$.create}
-                 const ${_}closureNode = ${vnode.tag === "template" ? `new xm.Fragment(${node}.content.childNodes)` : node};
-                 ${_}closureNode.update = (..._args) => {
+                 return [${isTemplate ? `new xm.Fragment(${node}.childNodes)` : node}, (..._args) => {
                    ${beforeUpdate}
                    ${$$.update}
-                   return ${_}closureNode;
-                 };
-                 return ${_}closureNode;
+                 }];
                }\n`;
 }
 
@@ -161,7 +165,6 @@ export function generateVnode(vnode, $) {
           properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
             `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
     generateClosure(Object.assign({}, vnode, {tag: "template", properties: {}}), $, _);
-    $.html += "<!---->";
     $.create += `const [${_}component, ${_}update] = xm.components["${rawTag}"]($, ${properties}, ${_}create, $update);
                  ${vnode.node}.replaceWith(${_}component);
                  ${vnode.node} = ${_}component;\n`;
@@ -221,7 +224,7 @@ function generateChildren(vnode, $) {
 }
 
 function isComponentTag(tag) {
-  return tag.startsWith("x-");
+  return tag && tag.startsWith("x-");
 }
 
 function generateNodeName($, vnode) {

@@ -26,7 +26,7 @@ export function nodeIf(condition, ifNode, elseNode) {
 
 export function createChildNode($, value) {
   let node = value, oldValue;
-  if (value instanceof DocumentFragment) node = new Fragment(value.childNodes);
+  if (value?.constructor === DocumentFragment) node = new Fragment(value.childNodes);
   else if (!(value instanceof Node)) node = document.createTextNode(value);
   if (node.update) throw new Error("unexpected closure node");
   node.update = (updatedValue) => {
