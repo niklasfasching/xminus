@@ -1,5 +1,5 @@
 import {t, done} from "../src/test.mjs";
-import {parse} from "../src/parser.mjs";
+import {parse, parseValue} from "../src/parser.mjs";
 
 t.describe("parser", () => {
   t.exitAfter();
@@ -36,4 +36,11 @@ t.describe("parser", () => {
   t("should throw on unexpected closing tags", () => {
     t.throws(() => parse(`<div></foo>`), /unexpected close \/foo for div/);
   });
+
+  t.describe("parseValue", () => {
+    t("should work", () => {
+      t.jsonEqual(parseValue("{$.foo + $.bar}"), ["($.foo + $.bar)", null, true]);
+      t.jsonEqual(parseValue("{ () => {return {};} }"), ["( () => {return {};} )", null, true]);
+    })
+  })
 });

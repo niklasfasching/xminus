@@ -16,18 +16,21 @@ export function parseValueParts(input) {
   return [parts, parts.some(p => p[2])];
 }
 
-export function lexValue(input, push) {
+export function lexValue(input, push, count = Infinity) {
   let part = "", lvl = 0;
   for (let c of input) {
-    if (c === "{" && lvl === 0) {
-      if (push(lvl, part)) return;
-      part = "", lvl++;
-    } else if (c === "}" && lvl === 1) {
-      if (push(lvl, part)) return;
-      part = "", lvl--;
+    if (c === "{") {
+      if (lvl === 0) push(lvl, part), part = "", count--;
+      else part += c;
+      lvl++;
+    } else if (c === "}") {
+      if (lvl === 1) push(lvl, part), part = "", count--;
+      else part += c;
+      lvl--;
     } else {
       part +=c;
     }
+    if (!count) return;
   }
   push(lvl, part);
 }
@@ -61,10 +64,8 @@ export function lex(template) {
   for (let i = 0, c = template[0]; i < template.length; i++, c = template[i]) {
     if (c === "{") {
       lexValue(template.slice(i), (lvl, part) => {
-        if (lvl === 0) return;
-        tmp += `{${part}}`, i += part.length + 1;
-        return true;
-      });
+        if (lvl) tmp += `{${part}}`, i += part.length + 1;
+      }, 2);
     } else if ($ === "child" && c === "<") {
       push(template[i+1] === "/" ? "close" : "open");
     } else if ($ !== "child" && (c === ">" || c === "/" && template[i+1] === ">")) {
