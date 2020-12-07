@@ -160,17 +160,19 @@ export function generateVnode(vnode, $) {
     if (vnode.void) return;
     generateChildren(vnode, $);
     $.html += `</${rawTag}>`;
-  } else if (isComponentTag(rawTag) && !isDynamicTag) {
+  } else {
     const _ = prefix(),
           properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
             `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
     generateClosure(Object.assign({}, vnode, {tag: "template", properties: {}}), $, _);
-    $.create += `const [${_}component, ${_}update] = xm.components["${rawTag}"]($, ${properties}, ${_}create, $update);
-                 ${vnode.node}.replaceWith(${_}component);
-                 ${vnode.node} = ${_}component;\n`;
-    $.update += `${_}update($, ${properties});\n`;
-  } else {
-    throw new Error("not impemented: dynamic tags");
+    $.create += `let ${_}tag = ${tag};
+                 ${vnode.node} = xm.createComponent(${vnode.node}, ${_}tag, $, ${properties}, ${_}create, $update);\n`;
+    if (isComponentTag(rawTag)) {
+      $.update += `${vnode.node}.updateComponent($, ${properties});\n`;
+    } else {
+      $.update += `if (${tag} === ${_}tag) ${vnode.node}.updateComponent($, ${properties});
+                   else ${_}tag = ${tag}, ${vnode.node} = xm.createComponent(${vnode.node}, ${tag}, $, ${properties}, ${_}create, $update);\n`;
+    }
   }
 }
 

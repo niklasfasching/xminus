@@ -41,6 +41,14 @@ export function createChildNode($, value) {
   return node;
 }
 
+export function createComponent(node, tag, $, properties, createChildren, $update) {
+  const Component = xm.components[tag];
+  if (!Component) throw new Error(`component not found: ${tag}`);
+  const [component, update] = Component($, properties, createChildren, $update);
+  component.updateComponent = update;
+  return replaceWith(node, component);
+}
+
 export function updateNodes(parent, anchor, nodes, values, updatedValues, $, create) {
   for (let i = updatedValues.length; i < values.length; i++) nodes[i].remove();
   values.length = updatedValues.length, nodes.length = updatedValues.length;

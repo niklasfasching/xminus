@@ -69,13 +69,12 @@
       "xm.updateNodes(_3_node, null, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
       "}];",
       "}",
-      "const [_0_component, _0_update] = xm.components[\"x-component\"]($, { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), }, _0_create, $update);",
-      "root.replaceWith(_0_component);",
-      "root = _0_component;",
+      "let _0_tag = \"x-component\";",
+      "root = xm.createComponent(root, _0_tag, $, { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), }, _0_create, $update);",
       ""
     ],
     "update": [
-      "_0_update($, { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), });",
+      "root.updateComponent($, { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), });",
       ""
     ]
   },

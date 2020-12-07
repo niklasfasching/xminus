@@ -201,13 +201,25 @@ t.describe("compiler", () => {
       t.equal(div.firstChild.outerHTML, `<div>child1b, <p>a2</p> <p>b2</p><!--fragment anchor--> and child2b</div>`);
     });
 
-    t("should update component tags", () => {
+    t("should update nested components", () => {
       eval(compiler.generateComponent("x-foo", `<p>a</p>{properties.key} {children} {properties.key1}<p>c</p>`));
       const [div, update] = render({key: "key1", value: "key1-value1", child: "child1"},
                                    `<x-foo {$.key}={$.value} key=key-value1>{$.child}</>`);
       t.equal(div.innerHTML, `<p>a</p>key-value1 child1<!--fragment anchor--> key1-value1<p>c</p><!--fragment anchor--><!--fragment anchor-->`);
       update({key: "key1", value: "key1-value2", child: "child1"})
       t.equal(div.innerHTML, `<p>a</p>key-value1 child1<!--fragment anchor--> key1-value2<p>c</p><!--fragment anchor--><!--fragment anchor-->`);
+    });
+
+    t("should update dynamic component tags", () => {
+      eval(compiler.generateComponent("x-foo", `<p>a</p>{properties.key}<p>c</p>`));
+      eval(compiler.generateComponent("x-bar", `<b>d</b>{properties.key}`));
+      const [div, update] = render({tag: "x-foo"}, `<{$.tag} key=value/>`);
+      t.equal(div.innerHTML, `<p>a</p>value<p>c</p><!--fragment anchor--><!--fragment anchor-->`);
+      update({tag: "x-bar"});
+      t.equal(div.innerHTML, `<b>d</b>value<!--fragment anchor--><!--fragment anchor-->`);
+      update({tag: "x-foo"});
+      t.equal(div.innerHTML, `<p>a</p>value<p>c</p><!--fragment anchor--><!--fragment anchor-->`);
+      t.throws(() => update({tag: "div"}), /component not found: div/)
     });
   });
 
