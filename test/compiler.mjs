@@ -157,7 +157,7 @@ t.describe("compiler", () => {
   t.describe("integration", () => {
     function render($, template) {
       eval(compiler.generateComponent("x-component", template));
-      const [fragment, update] = xm.components["x-component"]($);
+      const [fragment, update] = xm.components["x-component"]($, {}, null, {});
       const div = document.createElement("div");
       div.append(fragment);
       return [div, $$ => {

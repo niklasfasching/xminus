@@ -106,16 +106,17 @@ export function generateComponent(name, template) {
             const _hooks = xm.hooks["${name}"] || {};
             const _template = document.createElement("template");
             _template.innerHTML = \`${$.html.replaceAll("`", "\\`")}\`;
-            return function($, properties, _createChildren, $update) {
+            return function($, properties, _createChildren, $internal) {
+              let {$path, $query, $update} = $internal;
               const _node = _template.content.cloneNode(true);
-              if (!$update) $update = () => _update();
               $ = Object.create($);
-              $ = Object.assign($, _hooks.create?.($, properties, $update));
+              $ = Object.assign($, _hooks.create?.($, properties, $internal));
               const [$children, _childrenUpdate] = _createChildren?.($) || [];
               ${$.create}
               const _update = (_properties) => {
+                let {$path, $query, $update} = $internal;
                 if (_properties) properties = _properties;
-                _hooks.update?.($, properties, $update);
+                _hooks.update?.($, properties, $internal);
                 _childrenUpdate?.();
                 ${$.update}
               };
@@ -166,12 +167,12 @@ export function generateVnode(vnode, $) {
             `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
     generateClosure(Object.assign({}, vnode, {tag: "template", properties: {}}), $, _);
     $.create += `let ${_}tag = ${tag};
-                 ${vnode.node} = xm.createComponent(${vnode.node}, ${_}tag, $, ${properties}, ${_}create, $update);\n`;
+                 ${vnode.node} = xm.createComponent(${vnode.node}, ${_}tag, $, ${properties}, ${_}create, $internal);\n`;
     if (isComponentTag(rawTag)) {
       $.update += `${vnode.node}.updateComponent(${properties});\n`;
     } else {
       $.update += `if (${tag} === ${_}tag) ${vnode.node}.updateComponent(${properties});
-                   else ${_}tag = ${tag}, ${vnode.node} = xm.createComponent(${vnode.node}, ${tag}, $, ${properties}, ${_}create, $update);\n`;
+                   else ${_}tag = ${tag}, ${vnode.node} = xm.createComponent(${vnode.node}, ${tag}, $, ${properties}, ${_}create, $internal);\n`;
     }
   }
 }

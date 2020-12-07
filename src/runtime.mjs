@@ -66,7 +66,7 @@ export function updateNodes(parent, anchor, nodes, values, updatedValues, $, cre
   }
 }
 
-export async function mount(parentNode, name, $) {
+export async function mount(parentNode, name, $, properties) {
   window.xm = {components, hooks};
   window.xm = await import(import.meta.url);
   if (document.querySelector("[type*=x-module], [type*=x-template]")) {
@@ -74,8 +74,15 @@ export async function mount(parentNode, name, $) {
     await import(await compile(location, true));
   }
   if (!components[name]) throw new Error(`component ${name} does not exist`);
-  parentNode.innerHTML = "";
-  parentNode.appendChild(components[name]($, {})[0]);
+  const $internal = Object.assign({$update: () => update()}, parseHash());
+  const fragment = new Fragment(parentNode.childNodes);
+  parentNode.innerHTML = '';
+  var [component, update] = components[name]($, properties, () => [fragment], $internal);
+  window.onhashchange = () => {
+    Object.assign($internal, parseHash());
+    $internal.$update();
+  };
+  parentNode.appendChild(component);
 }
 
 export class Fragment extends DocumentFragment {
@@ -102,4 +109,10 @@ export class Fragment extends DocumentFragment {
   refresh() {
     if (!this.childNodes.length) this.append(...this._childNodes);
   }
+}
+
+function parseHash() {
+  if (!location.hash) location.hash = "#/";
+  const [$path, query] = location.hash.slice(1).split("?");
+  return {$path, $query: Object.fromEntries(new URLSearchParams(query).entries())};
 }
