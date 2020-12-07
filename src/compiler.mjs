@@ -214,9 +214,9 @@ function generateChildren(vnode, $) {
     const _ = prefix(), values = dynamicChildren.map(([_, v]) => v), nodes = dynamicChildren.map(([n]) => n),
           node = generateLocalNodeName($, vnode);
 
-    $.create += `const ${_}nodes = [${nodes}], ${_}values = [], ${_}anchor = ${nodes[0]}.previousSibling;
-                 xm.updateNodes(${node}, ${_}anchor, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
-    $.update += `xm.updateNodes(${node}, ${_}anchor, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
+    $.create += `const ${_}nodes = [${nodes}], ${_}values = [];
+                 xm.updateNodes(${node}, null, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
+    $.update += `xm.updateNodes(${node}, null, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
   }
 }
 

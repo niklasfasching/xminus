@@ -29,12 +29,12 @@
     "create": [
       "let _0_node = root.firstChild;",
       "let _2_node = root;",
-      "const _1_nodes = [_0_node.nextSibling], _1_values = [], _1_anchor = _0_node.nextSibling.previousSibling;",
-      "xm.updateNodes(_2_node, _1_anchor, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
+      "const _1_nodes = [_0_node.nextSibling], _1_values = [];",
+      "xm.updateNodes(_2_node, null, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_2_node, _1_anchor, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
+      "xm.updateNodes(_2_node, null, _1_nodes, _1_values, [(dynamic child)], $, xm.createChildNode);",
       ""
     ]
   },
@@ -44,12 +44,12 @@
       "let _0_node = root.firstChild;",
       "let _1_node = _0_node.nextSibling;",
       "let _3_node = root;",
-      "const _2_nodes = [_1_node], _2_values = [], _2_anchor = _1_node.previousSibling;",
-      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(not a child of input)], $, xm.createChildNode);",
+      "const _2_nodes = [_1_node], _2_values = [];",
+      "xm.updateNodes(_3_node, null, _2_nodes, _2_values, [(not a child of input)], $, xm.createChildNode);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(not a child of input)], $, xm.createChildNode);",
+      "xm.updateNodes(_3_node, null, _2_nodes, _2_values, [(not a child of input)], $, xm.createChildNode);",
       ""
     ]
   },
@@ -63,11 +63,11 @@
       "let root = _0_node.cloneNode(true);",
       "let _1_node = root.firstChild;",
       "let _3_node = root;",
-      "const _2_nodes = [_1_node.nextSibling], _2_values = [], _2_anchor = _1_node.nextSibling.previousSibling;",
-      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
+      "const _2_nodes = [_1_node.nextSibling], _2_values = [];",
+      "xm.updateNodes(_3_node, null, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
       "const _0_closureNode = new xm.Fragment(root.content.childNodes);",
       "_0_closureNode.update = (..._args) => {",
-      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
+      "xm.updateNodes(_3_node, null, _2_nodes, _2_values, [(baz)], $, xm.createChildNode);",
       "return _0_closureNode;",
       "};",
       "return _0_closureNode;",
@@ -88,17 +88,17 @@
       "let _0_node = root.firstChild;",
       "let _1_node = _0_node.firstChild;",
       "let _3_node = _0_node;",
-      "const _2_nodes = [_1_node], _2_values = [], _2_anchor = _1_node.previousSibling;",
-      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(foo bar)], $, xm.createChildNode);",
+      "const _2_nodes = [_1_node], _2_values = [];",
+      "xm.updateNodes(_3_node, null, _2_nodes, _2_values, [(foo bar)], $, xm.createChildNode);",
       "let _4_node = _0_node.nextSibling;",
       "let _6_node = root;",
-      "const _5_nodes = [_4_node], _5_values = [], _5_anchor = _4_node.previousSibling;",
-      "xm.updateNodes(_6_node, _5_anchor, _5_nodes, _5_values, [(baz)], $, xm.createChildNode);",
+      "const _5_nodes = [_4_node], _5_values = [];",
+      "xm.updateNodes(_6_node, null, _5_nodes, _5_values, [(baz)], $, xm.createChildNode);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_3_node, _2_anchor, _2_nodes, _2_values, [(foo bar)], $, xm.createChildNode);",
-      "xm.updateNodes(_6_node, _5_anchor, _5_nodes, _5_values, [(baz)], $, xm.createChildNode);",
+      "xm.updateNodes(_3_node, null, _2_nodes, _2_values, [(foo bar)], $, xm.createChildNode);",
+      "xm.updateNodes(_6_node, null, _5_nodes, _5_values, [(baz)], $, xm.createChildNode);",
       ""
     ]
   },
@@ -248,13 +248,13 @@
       "let _1_node = _node.firstChild;",
       "let _2_node = _1_node.firstChild;",
       "let _4_node = _1_node;",
-      "const _3_nodes = [_2_node], _3_values = [], _3_anchor = _2_node.previousSibling;",
-      "xm.updateNodes(_4_node, _3_anchor, _3_nodes, _3_values, [($.foo)], $, xm.createChildNode);",
+      "const _3_nodes = [_2_node], _3_values = [];",
+      "xm.updateNodes(_4_node, null, _3_nodes, _3_values, [($.foo)], $, xm.createChildNode);",
       "const _update = ($, _properties) => {",
       "if (_properties) properties = _properties;",
       "_hooks.update?.($, properties, $update);",
       "children?.update();",
-      "xm.updateNodes(_4_node, _3_anchor, _3_nodes, _3_values, [($.foo)], $, xm.createChildNode);",
+      "xm.updateNodes(_4_node, null, _3_nodes, _3_values, [($.foo)], $, xm.createChildNode);",
       "};",
       "return [new xm.Fragment(_node.childNodes), _update];",
       "};",
