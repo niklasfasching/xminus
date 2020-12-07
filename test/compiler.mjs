@@ -205,7 +205,7 @@ t.describe("compiler", () => {
     });
 
     t("should update nested components", () => {
-      eval(compiler.generateComponent("x-foo", `<p>a</p>{properties.key} {children} {properties.key1}<p>c</p>`));
+      eval(compiler.generateComponent("x-foo", `<p>a</p>{properties.key} {$children} {properties.key1}<p>c</p>`));
       const [div, update] = render({key: "key1", value: "key1-value1", child: "child1"},
                                    `<x-foo {$.key}={$.value} key=key-value1>{$.child}</>`);
       t.equal(div.innerHTML, `<p>a</p>key-value1 child1<!--fragment anchor--> key1-value1<p>c</p><!--fragment anchor--><!--fragment anchor-->`);

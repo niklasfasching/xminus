@@ -111,7 +111,7 @@ export function generateComponent(name, template) {
               if (!$update) $update = () => _update();
               $ = Object.create($);
               $ = Object.assign($, _hooks.create?.($, properties, $update));
-              const [children, _childrenUpdate] = _createChildren?.($) || [];
+              const [$children, _childrenUpdate] = _createChildren?.($) || [];
               ${$.create}
               const _update = (_properties) => {
                 if (_properties) properties = _properties;
