@@ -187,7 +187,12 @@ func (r *Runner) Start() {
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
 			for event := range out {
-				fmt.Println(goheadless.Colorize(event))
+				if event.Method == "info" {
+					fmt.Println(goheadless.Colorize(event))
+				} else {
+					fmt.Println(event.Args...)
+				}
+
 			}
 			close(done)
 		}()
