@@ -6,11 +6,11 @@
       <section class="todoapp">
         <header class="header">
           <h1>todos</h1>
-          <input class="new-todo" placeholder="What needs to be done?" autofocus .on:keydown="$.onInput(event)"/>
+          <input class="new-todo" placeholder="What needs to be done?" autofocus .on:keydown="$.onInput($event)"/>
         </header>
         <section class="main" .if="$.store.items.length">
           <input id="toggle-all" class="toggle-all" type="checkbox"
-                 .on:click="$.toggleAll(event)" checked="{!$.store.remaining.length}">
+                 .on:click="$.toggleAll($event)" checked="{!$.store.remaining.length}">
 		  <label for="toggle-all">Mark all as complete</label>
           <ul class="todo-list">
             <x-todo-item .for="item in $.store.items"/>
@@ -46,8 +46,8 @@
                .if="!$.item.editing">{$.item.title}</label>
         <input .if="$.item.editing" class="edit"
                .bind:value="$.item.title"
-               .on:blur="$.onEditInput(event, $.item)"
-               .on:keydown="$.onEditInput(event, $.item)"
+               .on:blur="$.onEditInput($event, $.item)"
+               .on:keydown="$.onEditInput($event, $.item)"
                .on:update="if ($.item.editing) target.focus()">
         <button class="destroy" .on:click="$.store.remove($.item)"></button>
       </li>

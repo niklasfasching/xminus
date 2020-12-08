@@ -24,7 +24,7 @@ function onMacro(vnode, $, key, value) {
                    ${value}
                  })\n`;
   } else {
-    $.create += `${vnode.node}.addEventListener("${event}", (event) => {
+    $.create += `${vnode.node}.addEventListener("${event}", ($event) => {
                  ${value};
                  $update();
                });\n`;
