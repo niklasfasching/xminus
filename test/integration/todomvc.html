@@ -6,22 +6,22 @@
       <section class="todoapp">
         <header class="header">
           <h1>todos</h1>
-          <input class="new-todo" placeholder="What needs to be done?" autofocus .on:keydown="$.onInput($event)"/>
+          <input class="new-todo" placeholder="What needs to be done?" .on:create="$target.focus()" .on:keydown="$.onInput($event)"/>
         </header>
         <section class="main" .if="$.store.items.length">
           <input id="toggle-all" class="toggle-all" type="checkbox"
                  .on:click="$.toggleAll($event)" checked="{!$.store.remaining.length}">
 		  <label for="toggle-all">Mark all as complete</label>
           <ul class="todo-list">
-            <x-todo-item .for="item in $.store.items"/>
+            <x-todo-item .for="item in $.store.routeItems($path)"/>
           </ul>
 
           <footer class="footer" .if="$.store.items.length">
             <span class="todo-count">{$.store.items.length}</span>
             <ul class="filters">
-			  <li><a href="#/" class="selected">All</a></li>
-			  <li><a href="#/active">Active</a></li>
-			  <li><a href="#/completed">Completed</a></li>
+			  <li><a class="{$path === '/' && 'selected'}" href="#/">All</a></li>
+			  <li><a class="{$path === '/active' && 'selected'}" href="#/active">Active</a></li>
+			  <li><a class="{$path === '/completed' && 'selected'}" href="#/completed">Completed</a></li>
 		    </ul>
             <button class="clear-completed"
                     .if="$.store.remaining.length < $.store.items.length"
@@ -75,6 +75,12 @@
          this.items.push({id: this.id++, title, completed: false});
        }
 
+       routeItems(path) {
+         if (path === "/") return this.items;
+         else if (path === "/active") return this.remaining;
+         else return this.completed;
+       }
+
        remove(item) {
          this.items = this.items.filter(_ => _ !== item);
        }
@@ -89,6 +95,10 @@
 
        get remaining() {
          return this.items.filter(_ => !_.completed);
+       }
+
+       get completed() {
+         return this.items.filter(_ => _.completed);
        }
      }
 

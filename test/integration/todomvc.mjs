@@ -241,10 +241,47 @@ t.describe("TodoMVC", () => {
   });
 
   t.describe("Routing", () => {
-    t("should allow filtering for active items");
-    t("should allow filtering for completed items");
-    t("should allow filtering for all items");
-    t("should highlight the currently active filter");
+    let items;
+    t.beforeEach(async () => {
+      for (let i = 0; i < 10; i++) {
+        input.value = `todo ${i+1} yolo`;
+        enter(input);
+      }
+      items = await all(iframe, ".todo-item");
+      items[0].querySelector(".toggle").click();
+      items[3].querySelector(".toggle").click();
+      items[5].querySelector(".toggle").click();
+    })
+
+    t("should allow filtering for active items", async () => {
+      iframe.contentWindow.location.hash = "#/active";
+      await new Promise(r => setTimeout(r));
+      items = await all(iframe, ".todo-item");
+      t.equal(items.length, 7);
+    });
+
+    t("should allow filtering for completed items", async () => {
+      iframe.contentWindow.location.hash = "#/completed";
+      await new Promise(r => setTimeout(r));
+      items = await all(iframe, ".todo-item");
+      t.equal(items.length, 3);
+    });
+
+    t("should allow filtering for all items", async () => {
+      iframe.contentWindow.location.hash = "#/";
+      await new Promise(r => setTimeout(r));
+      t.equal(items.length, 10);
+    });
+
+    t("should highlight the currently active filter", async () => {
+      for (let path of ["/active", "/completed", "/"]) {
+        iframe.contentWindow.location.hash = "#" + path;
+        await new Promise(r => setTimeout(r));
+        const selected = await all(iframe, ".filters a.selected");
+        t.equal(selected.length, 1)
+        t.equal(selected[0].getAttribute("href"), "#" + path);
+      }
+    });
   });
 });
 
