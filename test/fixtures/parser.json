@@ -2,25 +2,66 @@
   "parser: should support self closing tags and properties": {
     "vnodes": [
       {
-        "tag": "input",
-        "properties": {
-          "foo": "true"
-        },
-        "children": [],
-        "void": true
-      },
-      {
         "tag": "div",
         "properties": {},
-        "children": [],
-        "void": false
-      },
-      {
-        "tag": "div",
-        "properties": {
-          "foo": "true"
-        },
-        "children": [],
+        "children": [
+          {
+            "tag": "div",
+            "properties": {
+              "void": "true"
+            },
+            "children": [
+              {
+                "tag": "input",
+                "properties": {
+                  "implicit": "true"
+                },
+                "children": [],
+                "parent": "[circular]",
+                "void": true
+              },
+              {
+                "tag": "input",
+                "properties": {
+                  "explicit": "true"
+                },
+                "children": [],
+                "parent": "[circular]",
+                "void": true
+              }
+            ],
+            "parent": "[circular]",
+            "void": false
+          },
+          {
+            "tag": "div",
+            "properties": {
+              "non-void": "true"
+            },
+            "children": [
+              {
+                "tag": "div",
+                "properties": {
+                  "with-space": "true"
+                },
+                "children": [],
+                "parent": "[circular]",
+                "void": false
+              },
+              {
+                "tag": "div",
+                "properties": {
+                  "withou-space": "true"
+                },
+                "children": [],
+                "parent": "[circular]",
+                "void": false
+              }
+            ],
+            "parent": "[circular]",
+            "void": false
+          }
+        ],
         "void": false
       }
     ]

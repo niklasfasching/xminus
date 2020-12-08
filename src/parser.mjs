@@ -59,6 +59,7 @@ export function lex(template) {
   let $ = "child", tag = "", tmp = "", tokens = [], push = ($next) => {
     if (tmp.trim()) tokens.push([$, tmp]);
     if ($ === "open") tag = tmp;
+    else if ($ === "close") tag = "";
     $ = $next, tmp = "";
   };
   for (let i = 0, c = template[0]; i < template.length; i++, c = template[i]) {

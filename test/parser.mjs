@@ -10,9 +10,16 @@ t.describe("parser", () => {
   }
 
   t("should support self closing tags and properties", (id) => {
-    test(id, `<input foo>
-                <div/>
-                <div foo/>`);
+    test(id, `<div>
+                <div void>
+                  <input implicit>
+                  <input explicit/>
+                </div>
+                <div non-void>
+                  <div with-space />
+                  <div withou-space/>
+                </div>
+              </div>`);
   });
 
   t("should support dynamic keys and values", (id) => {
