@@ -179,7 +179,7 @@ func (r *Runner) Start() {
 		return
 	}
 	address := "localhost:" + goheadless.GetFreePort()
-	r.Server = goheadless.Serve(address, r.Paths, r.Args)
+	r.Server = goheadless.Serve(address, "", r.Paths, r.Args)
 	for {
 		out, done := make(chan goheadless.Event), make(chan struct{})
 		ctx, cancel := context.WithCancel(context.Background())
