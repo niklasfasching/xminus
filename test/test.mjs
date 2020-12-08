@@ -80,7 +80,7 @@ t.describe("t", () => {
   });
 
   t.describe("json fixtures", () => {
-    const assertFixture = t.setupFixtures("./fixtures/test.json");
+    const assertFixture = t.setupFixtures(new URL("./fixtures/test.json", import.meta.url));
 
     t("should test actual value against json fixture", (id) => {
       assertFixture({id, value: "hello world"});

@@ -8,7 +8,7 @@ window.xm = runtime;
 t.describe("compiler", () => {
   t.exitAfter();
 
-  const assertFixture = t.setupFixtures("./fixtures/compiler.json");
+  const assertFixture = t.setupFixtures(new URL("./fixtures/compiler.json", import.meta.url));
 
   function run(id, method, ...args) {
     compiler.resetPrefixId();
@@ -97,7 +97,7 @@ t.describe("compiler", () => {
 
   t.describe("compile", () => {
     t("should compile into a single html file (smoke test)", async (id) => {
-      const html = await compiler.compile("./fixtures/index.html");
+      const html = await compiler.compile(new URL("./fixtures/index.html", import.meta.url));
       assertFixture({id, html: html.split(/\n\s*/g)});
     })
   });
@@ -144,7 +144,7 @@ t.describe("compiler", () => {
                       import "/bar.js";
                       </script>`;
       const loadedModules = await compiler.loadModule(dataUrl(module));
-      t.assert(loadedModules[0].code.includes("/test/foo.js"));
+      t.assert(loadedModules[0].code.includes("/foo.js"));
       t.assert(loadedModules[0].code.includes("/bar.js"));
     });
 

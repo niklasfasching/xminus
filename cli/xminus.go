@@ -22,8 +22,8 @@ import (
 
 var listenAddress = flag.String("l", ":8000", "http listen address")
 var watchInterval = flag.Int("i", 500, "directory watch poll interval in ms")
-var runFile = flag.String("r", "", "script file to run in headless browser")
 var exitAfterRun = flag.Bool("e", false, "exit after run")
+var windowArgs = flag.String("a", "", "window.args available inside run (split into strings.Fields)")
 
 var reloadSnippet = `
 <script>
@@ -54,21 +54,22 @@ type Server struct {
 }
 
 type Runner struct {
-	Path string
+	Paths []string
+	Args  []string
 	*Watcher
 
-	servePath string
 	*http.Server
 }
 
 func main() {
 	log.SetFlags(0)
+	flag.Usage = func() {
+		fmt.Printf("Usage: %s [...runFiles]\n", os.Args[0])
+		flag.PrintDefaults()
+	}
 	flag.Parse()
-	flags := map[string]bool{}
-	flag.Visit(func(f *flag.Flag) { flags[f.Name] = true })
-
 	w := &Watcher{Path: "./", Interval: time.Duration(*watchInterval) * time.Millisecond}
-	r := &Runner{Path: *runFile, Watcher: w}
+	r := &Runner{Paths: flag.Args(), Watcher: w, Args: strings.Fields(*windowArgs)}
 	s := &Server{Address: *listenAddress, Watcher: w, Runner: r}
 
 	if *exitAfterRun {
@@ -126,6 +127,9 @@ func (w *Watcher) AwaitChange() {
 
 func (s *Server) Start() error {
 	mux := &http.ServeMux{}
+	if strings.HasPrefix(s.Address, ":") {
+		s.Address = "localhost" + s.Address
+	}
 	s.Server = &http.Server{Addr: s.Address, Handler: mux}
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" && r.Method == "POST" {
@@ -135,8 +139,9 @@ func (s *Server) Start() error {
 		}
 
 		bs := []byte{}
-		if r.URL.Path == s.Runner.servePath {
+		if r.URL.Path == "/run" {
 			tmp := httptest.NewRecorder()
+			r.URL.Path = "/"
 			s.Runner.Handler.ServeHTTP(tmp, r)
 			bs = tmp.Body.Bytes()
 		} else {
@@ -165,23 +170,16 @@ func (s *Server) Start() error {
 		}
 		w.Write(bs)
 	})
-
-	addr := s.Addr
-	if strings.HasPrefix(addr, ":") {
-		addr = "localhost" + addr
-	}
-	log.Println("Listening at http://" + addr)
+	log.Println("Listening at http://" + s.Address)
 	return s.Server.ListenAndServe()
 }
 
 func (r *Runner) Start() {
-	if r.Path == "" {
+	if len(r.Paths) == 0 {
 		return
 	}
 	address := "localhost:" + goheadless.GetFreePort()
-	servePath, fileName := goheadless.SplitPath(r.Path)
-	r.Server = goheadless.Serve(address, servePath, fileName, flag.Args())
-	r.servePath = servePath
+	r.Server = goheadless.Serve(address, r.Paths, r.Args)
 	for {
 		out, done := make(chan goheadless.Event), make(chan struct{})
 		ctx, cancel := context.WithCancel(context.Background())
@@ -197,7 +195,7 @@ func (r *Runner) Start() {
 			close(done)
 		}()
 		go func() {
-			exitCode, err := goheadless.Run(ctx, out, "http://"+address+servePath)
+			exitCode, err := goheadless.Run(ctx, out, "http://"+address)
 			<-done
 			if r.Watcher == nil {
 				if err != nil {

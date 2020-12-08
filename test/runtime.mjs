@@ -95,7 +95,7 @@ t.describe("runtime", () => {
 
   t.describe("mount", () => {
     t("smoke test", async () => {
-      const iframe = await openIframe("./fixtures/index.html#/foo?bar=baz");
+      const iframe = await openIframe(new URL("./fixtures/index.html#/foo?bar=baz", import.meta.url));
       await new Promise(r => setTimeout(r, 100));
       const p = iframe.contentDocument.querySelector("p"), div = iframe.contentDocument.querySelector("div");
       t.equal(p.innerText, "bar");

@@ -10,16 +10,15 @@ dev:
 
 .PHONY: bench
 bench:
-	cli/xminus -e -r test/integration/bench.mjs
+	cli/xminus -e test/integration/bench.mjs
 
 .PHONY: update-fixtures
 update-fixtures:
-	for f in test/*.mjs; do cli/xminus -e -r $$f update-fixtures > test/fixtures/$$(basename $$f .mjs).json; done
+	for f in test/*.mjs; do cli/xminus -e -a update-fixtures $$f > test/fixtures/$$(basename $$f .mjs).json; done
 
 .PHONY: test
 test:
-	for f in test/*.mjs; do cli/xminus -e -r $$f || exit 1; done
-	cli/xminus -e -r test/integration/todomvc.mjs
+	cli/xminus -e test/*.mjs test/integration/todomvc.mjs
 
 .PHONY: setup
 setup:

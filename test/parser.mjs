@@ -4,7 +4,7 @@ import {parse, parseValue} from "../src/parser.mjs";
 t.describe("parser", () => {
   t.exitAfter();
 
-  const assertFixture = t.setupFixtures("./fixtures/parser.json");
+  const assertFixture = t.setupFixtures(new URL("./fixtures/parser.json", import.meta.url));
   function test(id, input) {
     assertFixture({id, vnodes: parse(input)});
   }

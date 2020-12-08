@@ -8,7 +8,7 @@ t.describe("TodoMVC", () => {
   t.beforeEach(async () => {
     localStorage.setItem("items", "[]");
     if (iframe?.parentElement) iframe.parentElement.removeChild(iframe);
-    iframe = await openIframe("./todomvc.html");
+    iframe = await openIframe(new URL("./todomvc.html", import.meta.url));
     input = await first(iframe, "input");
   });
 
@@ -234,7 +234,7 @@ t.describe("TodoMVC", () => {
       const items = await all(iframe, ".todo-item");
       t.equal(items.length, 10);
 
-      const iframe2 = await openIframe("./todomvc.html");
+      const iframe2 = await openIframe(new URL("./todomvc.html", import.meta.url));
       const items2 = await all(iframe2, ".todo-item");
       t.equal(items2.length, 10);
     });
