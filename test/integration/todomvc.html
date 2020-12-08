@@ -15,9 +15,8 @@
           <ul class="todo-list">
             <x-todo-item .for="item in $.store.routeItems($path)"/>
           </ul>
-
           <footer class="footer" .if="$.store.items.length">
-            <span class="todo-count">{$.store.items.length}</span>
+            <span class="todo-count">{$.store.remaining.length} item{$.store.remaining.length === 1 ? '' : 's'} left</span>
             <ul class="filters">
 			  <li><a class="{$path === '/' && 'selected'}" href="#/">All</a></li>
 			  <li><a class="{$path === '/active' && 'selected'}" href="#/active">Active</a></li>
@@ -28,17 +27,15 @@
                     .on:click="$.store.clearCompleted()">Clear completed</button>
           </footer>
         </section>
-
-        <footer class="info">
-		  <p>Double-click to edit a todo</p>
-		  <p>Adapted from <a href="http://todomvc.com">TodoMVC</a></p>
-		</footer>
       </section>
-
+      <footer class="info">
+		<p>Double-click to edit a todo</p>
+		<p>Adapted from <a href="http://todomvc.com">TodoMVC</a></p>
+	  </footer>
     </script>
 
     <script type="text/x-template" id="x-todo-item">
-      <li class="todo-item {$.item.completed ? 'completed' : ''}">
+      <li class="todo-item {$.item.completed ? 'completed' : ''} {$.item.editing ? 'editing' : ''}">
         <input class="toggle" type="checkbox"
                checked="{$.item.completed}"
                .on:click="$.item.completed = !$.item.completed">
@@ -48,7 +45,7 @@
                .bind:value="$.item.title"
                .on:blur="$.onEditInput($event, $.item)"
                .on:keydown="$.onEditInput($event, $.item)"
-               .on:update="if ($.item.editing) target.focus()">
+               .on:update="if ($.item.editing) $target.focus()">
         <button class="destroy" .on:click="$.store.remove($.item)"></button>
       </li>
     </script>

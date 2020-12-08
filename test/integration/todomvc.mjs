@@ -183,13 +183,13 @@ t.describe("TodoMVC", () => {
         let items = await all(iframe, ".todo-item");
         let count = await first(iframe, ".todo-count");
         t.equal(items.length, i);
-        t.equal(count.innerText, `${i}`);
+        t.equal(count.innerText, `${i} item${i === 1 ? "" : "s"} left`);
       }
       for (let i = 1; i <= 4; i++) {
         let button = await first(iframe, ".todo-item .destroy");
         button.click();
         let count = await first(iframe, ".todo-count");
-        t.equal(count.innerText, `${5 - i}`);
+        t.equal(count.innerText, `${5 - i} item${5 - i === 1 ? "" : "s"} left`);
       }
     });
   });
