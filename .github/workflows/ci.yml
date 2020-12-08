@@ -8,8 +8,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - run: |
+    - name: git
+      run: |
         git clone --depth 1 "https://x-access-token:${{secrets.GITHUB_TOKEN}}@github.com/${GITHUB_REPOSITORY}" .
+        git config user.name "GitHub Action"
+        git config --local user.email "action@github.com"
         git log -1 --format="%H"
-    - run: |
+    - name: test
+      run: |
         GOHEADLESS_EXECUTABLE=google-chrome make install test
+    - name: gh-pages
+      run: |
+        git checkout -b gh-pages
+        cp test/integration/todomvc.html index.html
+        sed -i 's|/src/runtime.mjs|/xminus/src/runtime.mjs|' index.html
+        git add --all && git commit -m deploy
+        git push -f origin gh-pages
