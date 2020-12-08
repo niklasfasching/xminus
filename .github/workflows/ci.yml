@@ -3,15 +3,13 @@ name: CI
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      GOHEADLESS_EXECUTABLE: google-chrome
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-    - run: make install test
+    - run: |
+        git clone --depth 1 "https://x-access-token:${{secrets.GITHUB_TOKEN}}@github.com/${GITHUB_REPOSITORY}" .
+        git log -1 --format="%H"
+    - run: |
+        GOHEADLESS_EXECUTABLE=google-chrome make install test
