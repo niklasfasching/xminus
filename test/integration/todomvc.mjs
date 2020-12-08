@@ -12,10 +12,9 @@ t.describe("TodoMVC", () => {
     input = await first(iframe, "input");
   });
 
-
-
   t.describe("Initial load", () => {
     t("should focus todo input", async () => {
+      await new Promise(r => setTimeout(r));
       t.equal(iframe.contentDocument.activeElement, input);
     });
   });
