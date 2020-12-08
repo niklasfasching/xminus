@@ -117,8 +117,9 @@
   "compiler: generateVnode: macro: should generate .on:create macro": {
     "html": "<div></div>",
     "create": [
+      "let _0_node = root;",
       "setTimeout(() => {",
-      "let target = _0_node;",
+      "let $target = _0_node;",
       "console.log('magic')",
       "})",
       ""
@@ -133,7 +134,7 @@
     ],
     "update": [
       "setTimeout(() => {",
-      "let target = _0_node;",
+      "let $target = _0_node;",
       "console.log('magic')",
       "})",
       ""

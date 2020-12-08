@@ -19,8 +19,9 @@ function onMacro(vnode, $, key, value) {
   generateVnode(vnode, $);
   const event = key.split(":")[1];
   if (event === "update" || event === "create") {
+    const node = generateLocalNodeName($, vnode);
     $[event] += `setTimeout(() => {
-                   let target = ${generateLocalNodeName($, vnode)};
+                   let $target = ${node};
                    ${value}
                  })\n`;
   } else {
