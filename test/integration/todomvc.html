@@ -23,7 +23,7 @@
 			  <li><a class="{$path === '/completed' && 'selected'}" href="#/completed">Completed</a></li>
 		    </ul>
             <button class="clear-completed"
-                    .if="$.store.remaining.length < $.store.items.length"
+                    .if="$.store.completed.length"
                     .on:click="$.store.clearCompleted()">Clear completed</button>
           </footer>
         </section>
