@@ -54,6 +54,15 @@ t.describe("TodoMVC", () => {
       t.equal(iframe.contentWindow.store.items[0].title, title1);
     });
 
+    t("should not add empty todos", async () => {
+      const length = items.length
+      input.value = ``;
+      enter(input);
+      enter(input);
+      items = await all(iframe, ".todo-item");
+      t.equal(length, items.length)
+    });
+
     t("should show $main and $footer when there are todos", async () => {
       t.assert(!isHidden(await first(iframe, ".main")));
       t.assert(!isHidden(await first(iframe, ".footer")));

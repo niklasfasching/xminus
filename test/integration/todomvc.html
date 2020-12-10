@@ -11,7 +11,7 @@
         <section class="main" .if="$.store.items.length">
           <input id="toggle-all" class="toggle-all" type="checkbox"
                  .on:click="$.toggleAll($event)" checked="{!$.store.remaining.length}">
-		  <label for="toggle-all">Mark all as complete</label>
+		  <label for="toggle-all"></label>
           <ul class="todo-list">
             <x-todo-item .for="item in $.store.routeItems($path)"/>
           </ul>
@@ -69,7 +69,7 @@
        items = []
 
        add(title) {
-         this.items.push({id: this.id++, title, completed: false});
+         if (title) this.items.push({id: this.id++, title, completed: false});
        }
 
        routeItems(path) {
