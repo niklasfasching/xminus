@@ -74,6 +74,7 @@ export async function mount(parentNode, name, $, properties) {
     await import(await compile(location, true));
   }
   if (!components[name]) throw new Error(`component ${name} does not exist`);
+  if (!location.hash) history.replaceState(null, null, "#/");
   const $internal = Object.assign({$update: () => update()}, parseHash());
   const fragment = new Fragment(parentNode.childNodes);
   parentNode.innerHTML = '';
@@ -112,7 +113,6 @@ export class Fragment extends DocumentFragment {
 }
 
 function parseHash() {
-  if (!location.hash) location.hash = "#/";
   const [$path, query] = location.hash.slice(1).split("?");
   return {$path, $query: Object.fromEntries(new URLSearchParams(query).entries())};
 }
