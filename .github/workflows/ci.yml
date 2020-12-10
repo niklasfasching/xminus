@@ -26,3 +26,8 @@ jobs:
         sed -i 's|/src/base.css|/xminus/src/base.css|' todomvc.css
         git add --all && git commit -m deploy
         git push -f origin gh-pages
+    - name: notify
+      if: ${{ failure() }}
+      run: |
+        text="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} failed"
+        curl --silent --output /dev/null ${{secrets.TELEGRAM_URL}} -d "chat_id=${{secrets.TELEGRAM_CHAT_ID}}&text=${text}"
