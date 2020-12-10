@@ -12,7 +12,7 @@ jobs:
       run: |
         git clone --depth 1 "https://x-access-token:${{secrets.GITHUB_TOKEN}}@github.com/${GITHUB_REPOSITORY}" .
         git config user.name "GitHub Action"
-        git config --local user.email "action@github.com"
+        git config user.email "action@github.com"
         git log -1 --format="%H"
     - name: test
       run: |
