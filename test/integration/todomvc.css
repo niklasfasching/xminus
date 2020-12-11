@@ -181,3 +181,7 @@ label[for=toggle-all]::before {
     color: #bbb;
     font-size: 0.8em;
 }
+
+:focus {
+    outline: none;
+}
