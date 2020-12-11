@@ -1,10 +1,31 @@
 {
-  "bundler: loadModules: should bundle into a single html file (smoke test)": {
+  "bundler: rebaseModuleImports: should rewrite relative imports": {
+    "module": [
+      "import * from '/rebase/module.js';",
+      "import * from '/rebase/dir/module.js';",
+      "import * from '/rebase/base/module.js';",
+      "import * from '/rebase/base/dir/module.js';",
+      "import {foo, bar} from '/rebase/module.js';",
+      "import * as module from '/rebase/module.js';",
+      "import '/rebase/module.js';",
+      ""
+    ]
+  },
+  "bundler: rebaseModuleImports: should not modify absolute imports": {
+    "module": [
+      "import * from 'http://foo.bar/module.js';",
+      "import {foo, bar} from 'http://foo.bar/module.js';",
+      "import * as module from 'http://foo.bar/module.js';",
+      "import 'http://foo.bar/module.js';",
+      ""
+    ]
+  },
+  "bundler: bundle: should bundle into an html file": {
     "html": [
       "<!DOCTYPE html>",
       "<html><head>",
       "<script type=\"module\">",
-      "import {mount, hooks} from  \"/src/runtime.mjs\";",
+      "import {mount, hooks} from '/src/runtime.mjs';",
       "mount(document.body, \"x-main\", {foo: \"bar\"});",
       "hooks[\"x-main\"] = {};",
       "</script>",
@@ -45,6 +66,43 @@
       "</head>",
       "<body>",
       "</body></html>"
+    ]
+  },
+  "bundler: bundle: should bundle into a data url": {
+    "code": [
+      "data:text/javascript,import \"data:text/javascript,//# sourceURL=xmComponents.js",
+      "xm.components[\"x-main\"] = (function() {",
+      "const _hooks = xm.hooks[\"x-main\"] || {};",
+      "const _template = document.createElement(\"template\");",
+      "_template.innerHTML = `<p><!----></p><div><!---->: <!----></div>`;",
+      "return function($, properties, _createChildren, $internal) {",
+      "let {$path, $query, $update} = $internal;",
+      "const _node = _template.content.cloneNode(true);",
+      "$ = Object.create($);",
+      "$ = Object.assign($, _hooks.create?.($, properties, $internal));",
+      "const [$children, _childrenUpdate] = _createChildren?.($) || [];",
+      "let _0_node = _node.firstChild;",
+      "let _1_node = _0_node.firstChild;",
+      "let _3_node = _0_node;",
+      "const _2_nodes = [_1_node], _2_values = [];",
+      "xm.updateNodes(_3_node, null, _2_nodes, _2_values, [($.foo)], $, xm.createChildNode);",
+      "let _4_node = _0_node.nextSibling;",
+      "let _5_node = _4_node.firstChild;",
+      "let _7_node = _4_node;",
+      "const _6_nodes = [_5_node,_5_node.nextSibling.nextSibling], _6_values = [];",
+      "xm.updateNodes(_7_node, null, _6_nodes, _6_values, [($path),(\"{\" + Object.entries($query).map(([k,v]) => `${k}: ${v}`).join(\",\") + \"}\")], $, xm.createChildNode);",
+      "const _update = (_properties) => {",
+      "let {$path, $query, $update} = $internal;",
+      "if (_properties) properties = _properties;",
+      "_hooks.update?.($, properties, $internal);",
+      "_childrenUpdate?.();",
+      "xm.updateNodes(_3_node, null, _2_nodes, _2_values, [($.foo)], $, xm.createChildNode);",
+      "xm.updateNodes(_7_node, null, _6_nodes, _6_values, [($path),(\"{\" + Object.entries($query).map(([k,v]) => `${k}: ${v}`).join(\",\") + \"}\")], $, xm.createChildNode);",
+      "};",
+      "return [new xm.Fragment(_node.childNodes), _update];",
+      "};",
+      "})();",
+      "\";"
     ]
   }
 }

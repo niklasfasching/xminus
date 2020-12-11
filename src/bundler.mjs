@@ -1,54 +1,63 @@
 import {compile} from "./compiler.mjs";
 
-export async function bundle(url, asDataUrl) {
-  const modules = await loadModule(url);
-  const code = modules
-        .flatMap(({componentTemplates}) => componentTemplates)
-        .map(({name, content}) => compile(name, content))
-        .join("\n");
-  if (asDataUrl) {
-    const imports = modules.slice(1)
-          .map(m => `//# sourceURL=${new URL(m.url).pathname}.js\n${m.code}`)
-          .concat(`//# sourceURL=xmComponents.js\n${code}`)
-          .map(src => `import "${dataUrl(src)}";`);
-    return dataUrl(imports.join("\n"));
+export async function bundle(url, basePath = "/") {
+  const asDataURL = basePath === null,
+        xModules = await loadXModules(absoluteURL(url, location), basePath);
+  const xComponents = xModules.map(x => x.xComponents).join("\n");
+  const moduleCodeBlocks = xModules.flatMap(x => x.modules.map(m => [m.text, new URL(x.url, location).pathname]));
+  if (asDataURL) {
+    const imports = moduleCodeBlocks.slice(xModules[0].modules.length)
+          .map(([code, path], i) => `//# sourceURL=${path}.${i}.js\n${code}`)
+          .concat(`//# sourceURL=xmComponents.js\n${xComponents}`)
+          .map(src => `import "${dataURL(src)}";`);
+    return dataURL(imports.join("\n"));
   }
-  const document = modules[0].document;
-  const scripts = modules.map(m => m.code).concat(code).map(code => {
+  const {document, xImports, xTemplates, modules} = xModules[0];
+  for (let el of [...xImports, ...xTemplates, ...modules]) el.remove();
+  const html = moduleCodeBlocks.map(([code]) => code).concat(xComponents).map(code => {
     return `<script type=module>\n${code}</script>`;
   }).join("\n");
-  document.head.innerHTML = "\n" + scripts + document.head.innerHTML;
+  document.head.innerHTML = "\n" + html + document.head.innerHTML;
   return "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
 }
 
-export async function loadModule(url, loaded = {}) {
+export async function loadXModules(url, basePath, loaded = {}) {
   if (loaded[url]) return [];
-  loaded[url] = true;
-  const document = url === location ? window.document : await loadDocument(url);
-  const templates = [...document.querySelectorAll(`[type*=x-template][id]`)],
-        imports = [...document.querySelectorAll(`[type*=x-module][src]`)],
-        scripts = [...document.querySelectorAll(`[type*=module]:not([src])`)];
-  if (url !== location) [templates, imports, scripts].flat().forEach(el => el.remove());
-  if (scripts.length > 1) throw new Error(`One module per file - found ${scripts.length}`);
-  const modules = await Promise.all(imports.map(({src}) => loadModule(resolveUrl(src, url), loaded))),
-        code = rewriteRelativeImports((scripts[0]?.text || "")),
-        componentTemplates = templates.map(({id, text}) => ({name: id, content: text}));
-  return [{url: resolveUrl(url), document, code, componentTemplates}, ...modules.flat()];
+  else loaded[url] = true;
+  const document = url === location.href ? window.document : await loadDocument(url);
+  const styles = all(document, `link[rel="stylesheet]`),
+        modules = all(document, `[type*=module]:not([src])`),
+        xTemplates = all(document, `[type*=x-template][id]`),
+        xImports = all(document, `[type*=x-module][src]`);
+  const xComponents = xTemplates.map(({id, text}) => compile(id, text)).join("\n"),
+        xModules = await Promise.all(xImports.map(x => loadXModules(absoluteURL(x.src, url), basePath, loaded)));
+  for (let s of styles) s.src = rebaseURL(s.src, url, basePath);
+  for (let m of modules) m.text = rebaseModuleImports(m.text, url, basePath);
+  return [{url, document, modules, styles, xImports, xTemplates, xComponents}, ...xModules.flat()];
 }
 
-export function dataUrl(string) {
+export function rebaseModuleImports(code, moduleURL, basePath) {
+  const f = (_ , from, __, url) => `${from}'${rebaseURL(url, moduleURL, basePath)}'`;
+  return code.replaceAll(/^\s*(import\s+(.*from\s+)?)["'](.+)["']/gm, f);
+}
+
+export function dataURL(string) {
   return `data:text/javascript,${encodeURIComponent(string)}`;
 }
 
-function rewriteRelativeImports(script, baseUrl) {
-  return script.replaceAll(/^\s*(import\s+(.*from\s+)?)["'](.+)["']/g,
-                         (_, from, __, src) => `${from} "${resolveUrl(src, baseUrl)}"`);
+export function rebaseURL(url, baseURL, basePath) {
+  if (basePath?.endsWith("/")) basePath = basePath.slice(0, -1);
+  url = absoluteURL(url, baseURL);
+  return url.startsWith("/") && basePath ? basePath + url : url;
 }
 
-function resolveUrl(url, baseUrl) {
-  if (!baseUrl) baseUrl = location;
-  else if (baseUrl.toString().startsWith("data:")) return url;
-  return new URL(url, new URL(baseUrl, location)).pathname;
+function absoluteURL(url, baseURL) {
+  if (/^(https?|data):/.test(url)) return url.toString();
+  return new URL(url, new URL(baseURL, location)).pathname;
+}
+
+function all(document, selector) {
+  return [...document.querySelectorAll(selector)];
 }
 
 function loadDocument(url) {
