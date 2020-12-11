@@ -70,8 +70,8 @@ export async function mount(parentNode, name, $, properties) {
   window.xm = {components, hooks};
   window.xm = await import(import.meta.url);
   if (document.querySelector("[type*=x-module], [type*=x-template]")) {
-    const {compile} = await import("./compiler.mjs");
-    await import(await compile(location, true));
+    const {bundle} = await import("./bundler.mjs");
+    await import(await bundle(location, true));
   }
   if (!components[name]) throw new Error(`component ${name} does not exist`);
   if (!location.hash) history.replaceState(null, null, "#/");

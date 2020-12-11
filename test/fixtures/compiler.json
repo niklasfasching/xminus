@@ -199,7 +199,7 @@
       ""
     ]
   },
-  "compiler: generateComponent: should generate a component (smoke test)": {
+  "compiler: compile: should generate a component (smoke test)": {
     "result": [
       "xm.components[\"x-foo-component\"] = (function() {",
       "const _hooks = xm.hooks[\"x-foo-component\"] || {};",
@@ -226,53 +226,5 @@
     "html": "",
     "create": "",
     "update": ""
-  },
-  "compiler: compile: should compile into a single html file (smoke test)": {
-    "html": [
-      "<!DOCTYPE html>",
-      "<html><head>",
-      "<script type=\"module\">",
-      "import {mount, hooks} from  \"/src/runtime.mjs\";",
-      "mount(document.body, \"x-main\", {foo: \"bar\"});",
-      "hooks[\"x-main\"] = {};",
-      "</script>",
-      "<script type=\"module\">",
-      "xm.components[\"x-main\"] = (function() {",
-      "const _hooks = xm.hooks[\"x-main\"] || {};",
-      "const _template = document.createElement(\"template\");",
-      "_template.innerHTML = `<p><!----></p><div><!---->: <!----></div>`;",
-      "return function($, properties, _createChildren, $internal) {",
-      "let {$path, $query, $update} = $internal;",
-      "const _node = _template.content.cloneNode(true);",
-      "$ = Object.create($);",
-      "$ = Object.assign($, _hooks.create?.($, properties, $internal));",
-      "const [$children, _childrenUpdate] = _createChildren?.($) || [];",
-      "let _1_node = _node.firstChild;",
-      "let _2_node = _1_node.firstChild;",
-      "let _4_node = _1_node;",
-      "const _3_nodes = [_2_node], _3_values = [];",
-      "xm.updateNodes(_4_node, null, _3_nodes, _3_values, [($.foo)], $, xm.createChildNode);",
-      "let _5_node = _1_node.nextSibling;",
-      "let _6_node = _5_node.firstChild;",
-      "let _8_node = _5_node;",
-      "const _7_nodes = [_6_node,_6_node.nextSibling.nextSibling], _7_values = [];",
-      "xm.updateNodes(_8_node, null, _7_nodes, _7_values, [($path),(\"{\" + Object.entries($query).map(([k,v]) => `${k}: ${v}`).join(\",\") + \"}\")], $, xm.createChildNode);",
-      "const _update = (_properties) => {",
-      "let {$path, $query, $update} = $internal;",
-      "if (_properties) properties = _properties;",
-      "_hooks.update?.($, properties, $internal);",
-      "_childrenUpdate?.();",
-      "xm.updateNodes(_4_node, null, _3_nodes, _3_values, [($.foo)], $, xm.createChildNode);",
-      "xm.updateNodes(_8_node, null, _7_nodes, _7_values, [($path),(\"{\" + Object.entries($query).map(([k,v]) => `${k}: ${v}`).join(\",\") + \"}\")], $, xm.createChildNode);",
-      "};",
-      "return [new xm.Fragment(_node.childNodes), _update];",
-      "};",
-      "})();",
-      "</script>",
-      "<meta charset=\"utf-8\">",
-      "</head>",
-      "<body>",
-      "</body></html>"
-    ]
   }
 }

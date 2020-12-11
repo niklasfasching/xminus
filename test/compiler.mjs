@@ -85,9 +85,9 @@ t.describe("compiler", () => {
     });
   });
 
-  t.describe("generateComponent", () => {
+  t.describe("compile", () => {
     function test(id, template) {
-      assertFixture(run(id, "generateComponent", "x-foo-component", template));
+      assertFixture(run(id, "compile", "x-foo-component", template));
     }
 
     t("should generate a component (smoke test)", (id) => {
@@ -95,68 +95,9 @@ t.describe("compiler", () => {
     });
   });
 
-  t.describe("compile", () => {
-    t("should compile into a single html file (smoke test)", async (id) => {
-      const html = await compiler.compile(new URL("./fixtures/index.html", import.meta.url));
-      assertFixture({id, html: html.split(/\n\s*/g)});
-    })
-  });
-
-
-  t.describe("loadModule", () => {
-    function dataUrl(string) {
-      return `data:text/javascript,${encodeURIComponent(string)}`;
-    }
-
-    const childModule = `<script type=x-template id=x-child>{child}</script>
-                         <script type=module>child</script>`;
-    const module = `<script type=x-template id=x-parent>{parent}</script>
-                    <script type=x-module src="${dataUrl(childModule)}"></script>
-                    <script type=module>parent</script>`;
-    t("should load modules recursively", async () => {
-      const loadedModules = await compiler.loadModule(dataUrl(module));
-      t.equal(loadedModules.length, 2);
-      t.jsonEqual(loadedModules.map(m => m.code), ["parent", "child"]);
-      t.jsonEqual(loadedModules.map(m => m.componentTemplates), [
-        [{name: "x-parent", content: "{parent}"}],
-        [{name: "x-child", content: "{child}"}],
-      ]);
-    });
-
-    t("should deduplicate modules / load each module only once", async () => {
-      const duplicates = `${module}
-                          <script type=x-module src="${dataUrl(childModule)}"></script>
-                          <script type=x-module src="${dataUrl(childModule)}"></script>`;
-      const loadedModules = await compiler.loadModule(dataUrl(duplicates));
-      t.equal(loadedModules.length, 2);
-    });
-
-    t("should allow only one non-src module script per module", async () => {
-      const module = `<script type=module></script>
-                      <script type=module></script>`;
-      await t.throws(async () => await compiler.loadModule(dataUrl(module)),
-                     /One module per file/);
-    });
-
-    t("should convert relative to absolute imports inside module scripts", async () => {
-      const module = `<script type=module>
-                      import "./foo.js";
-                      import "/bar.js";
-                      </script>`;
-      const loadedModules = await compiler.loadModule(dataUrl(module));
-      t.assert(loadedModules[0].code.includes("/foo.js"));
-      t.assert(loadedModules[0].code.includes("/bar.js"));
-    });
-
-    t("should remove xminus elements from document", async () => {
-      const loadedModules = await compiler.loadModule(dataUrl(module));
-      t.equal(loadedModules[0].document.querySelectorAll("[type*=x-]").length, 0);
-    });
-  });
-
   t.describe("integration", () => {
     function render($, template) {
-      eval(compiler.generateComponent("x-component", template));
+      eval(compiler.compile("x-component", template));
       const [fragment, update] = xm.components["x-component"]($, {}, null, {});
       const div = document.createElement("div");
       div.append(fragment);
@@ -205,7 +146,7 @@ t.describe("compiler", () => {
     });
 
     t("should update nested components", () => {
-      eval(compiler.generateComponent("x-foo", `<p>a</p>{properties.key} {$children} {properties.key1}<p>c</p>`));
+      eval(compiler.compile("x-foo", `<p>a</p>{properties.key} {$children} {properties.key1}<p>c</p>`));
       const [div, update] = render({key: "key1", value: "key1-value1", child: "child1"},
                                    `<x-foo {$.key}={$.value} key=key-value1>{$.child}</>`);
       t.equal(div.innerHTML, `<p>a</p>key-value1 child1<!--fragment anchor--> key1-value1<p>c</p><!--fragment anchor--><!--fragment anchor-->`);
@@ -214,8 +155,8 @@ t.describe("compiler", () => {
     });
 
     t("should update dynamic component tags", () => {
-      eval(compiler.generateComponent("x-foo", `<p>a</p>{properties.key}<p>c</p>`));
-      eval(compiler.generateComponent("x-bar", `<b>d</b>{properties.key}`));
+      eval(compiler.compile("x-foo", `<p>a</p>{properties.key}<p>c</p>`));
+      eval(compiler.compile("x-bar", `<b>d</b>{properties.key}`));
       const [div, update] = render({tag: "x-foo"}, `<{$.tag} key=value/>`);
       t.equal(div.innerHTML, `<p>a</p>value<p>c</p><!--fragment anchor--><!--fragment anchor-->`);
       update({tag: "x-bar"});
