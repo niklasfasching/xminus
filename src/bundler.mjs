@@ -4,7 +4,7 @@ export async function bundle(url, basePath = "/") {
   const asDataURL = basePath === null,
         xModules = await loadXModules(absoluteURL(url, location), basePath);
   const xComponents = xModules.map(x => x.xComponents).join("\n");
-  const moduleCodeBlocks = xModules.flatMap(x => x.modules.map(m => [m.text, new URL(x.url, location).pathname]));
+  const moduleCodeBlocks = xModules.flatMap(x => x.modules.map(m => [m.text, x.url]));
   if (asDataURL) {
     const imports = moduleCodeBlocks.slice(xModules[0].modules.length)
           .map(([code, path], i) => `//# sourceURL=${path}.${i}.js\n${code}`)
@@ -25,13 +25,13 @@ export async function loadXModules(url, basePath, loaded = {}) {
   if (loaded[url]) return [];
   else loaded[url] = true;
   const document = url === location.href ? window.document : await loadDocument(url);
-  const styles = all(document, `link[rel="stylesheet]`),
+  const styles = all(document, `link[rel=stylesheet]`),
         modules = all(document, `[type*=module]:not([src])`),
         xTemplates = all(document, `[type*=x-template][id]`),
         xImports = all(document, `[type*=x-module][src]`);
   const xComponents = xTemplates.map(({id, text}) => compile(id, text)).join("\n"),
         xModules = await Promise.all(xImports.map(x => loadXModules(absoluteURL(x.src, url), basePath, loaded)));
-  for (let s of styles) s.src = rebaseURL(s.src, url, basePath);
+  for (let s of styles) s.href = rebaseURL(s.getAttribute("href"), url, basePath);
   for (let m of modules) m.text = rebaseModuleImports(m.text, url, basePath);
   return [{url, document, modules, styles, xImports, xTemplates, xComponents}, ...xModules.flat()];
 }
@@ -47,13 +47,14 @@ export function dataURL(string) {
 
 export function rebaseURL(url, baseURL, basePath) {
   if (basePath?.endsWith("/")) basePath = basePath.slice(0, -1);
-  url = absoluteURL(url, baseURL);
+  url = absoluteURL(url, baseURL, true);
   return url.startsWith("/") && basePath ? basePath + url : url;
 }
 
-function absoluteURL(url, baseURL) {
+function absoluteURL(url, baseURL, rootRelative) {
   if (/^(https?|data):/.test(url)) return url.toString();
-  return new URL(url, new URL(baseURL, location)).pathname;
+  const {href, pathname} = new URL(url, baseURL);
+  return rootRelative ? pathname : href;
 }
 
 function all(document, selector) {
