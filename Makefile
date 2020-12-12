@@ -23,3 +23,7 @@ test:
 .PHONY: setup
 setup:
 	git config core.hooksPath etc/githooks
+
+.PHONY: build
+build:
+	cli/xminus -e etc/build.mjs > index.html

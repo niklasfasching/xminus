@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GOHEADLESS_EXECUTABLE: google-chrome
     steps:
     - name: git
       run: |
@@ -16,15 +18,12 @@ jobs:
         git log -1 --format="%H"
     - name: test
       run: |
-        GOHEADLESS_EXECUTABLE=google-chrome make install test
+        make install test
     - name: gh-pages
       run: |
-        git checkout -b gh-pages
-        cp examples/todomvc/index.html index.html
-        sed -i 's|/src/runtime.mjs|/xminus/src/runtime.mjs|' index.html
-        cp examples/todomvc/todomvc.css todomvc.css
-        sed -i 's|/src/base.css|/xminus/src/base.css|' todomvc.css
-        git add --all && git commit -m deploy
+        git checkout --orphan gh-pages && git reset
+        make build
+        git add examples/ src/ index.html && git commit -m deploy
         git push -f origin gh-pages
     - name: notify
       if: ${{ failure() }}
