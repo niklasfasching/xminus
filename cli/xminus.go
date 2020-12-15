@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -179,37 +178,35 @@ func (r *Runner) Start() {
 		return
 	}
 	address := "localhost:" + goheadless.GetFreePort()
-	r.Server = goheadless.Serve(address, "", r.Paths, r.Args)
+	r.Server = goheadless.Serve(address, goheadless.HTML("", r.Paths, r.Args))
 	for {
-		out, done := make(chan goheadless.Event), make(chan struct{})
-		ctx, cancel := context.WithCancel(context.Background())
+		events, exit := goheadless.Run("http://" + address)
 		go func() {
-			for event := range out {
-				if event.Method == "info" {
-					fmt.Println(goheadless.Colorize(event))
-				} else {
-					fmt.Println(event.Args...)
-				}
+			go func() {
+				for event := range events {
+					if event.Method == "info" {
+						fmt.Println(goheadless.Colorize(event))
+					} else {
+						fmt.Println(event.Args...)
+					}
 
-			}
-			close(done)
-		}()
-		go func() {
-			exitCode, err := goheadless.Run(ctx, out, "http://"+address)
-			<-done
-			if r.Watcher == nil {
-				if err != nil {
-					log.Fatal(err)
 				}
-				os.Exit(exitCode)
-			} else {
-				log.Printf("\nRun: Finished with %d %v", exitCode, err)
-			}
+				exitCode, err := exit()
+				if r.Watcher == nil {
+					if err != nil {
+						log.Fatal(err)
+					}
+					os.Exit(exitCode)
+				} else {
+					log.Printf("\nRun: Finished with %d %v", exitCode, err)
+				}
+			}()
+
 		}()
 		if r.Watcher == nil {
 			select {} // wait for call to f()
 		}
 		r.Watcher.AwaitChange()
-		cancel()
+		exit()
 	}
 }
