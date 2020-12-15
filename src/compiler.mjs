@@ -11,7 +11,7 @@ function bindMacro(vnode, $, key, value) {
   const [_, property] = key.split(":");
   generateVnode(vnode, $);
   const node = generateLocalNodeName($, vnode);
-  $.create += `${node}.addEventListener("keyup", ({target}) => ${value} = target.value);\n`;
+  $.create += `${node}.addEventListener("keyup", () => ${value} = ${node}["${property}"]);\n`;
   $.update += `if (document.activeElement !== ${node}) ${node}["${property}"] = ${value};\n`;
 }
 
