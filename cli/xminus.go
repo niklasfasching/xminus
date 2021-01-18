@@ -2,13 +2,15 @@ package main
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,7 +18,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/niklasfasching/goheadless"
+	"github.com/niklasfasching/headless"
 )
 
 var listenAddress = flag.String("l", ":8000", "http listen address")
@@ -56,8 +58,8 @@ type Runner struct {
 	Paths []string
 	Args  []string
 	*Watcher
-
-	*http.Server
+	fs   fs.FS
+	html string
 }
 
 func main() {
@@ -138,11 +140,10 @@ func (s *Server) Start() error {
 		}
 
 		bs := []byte{}
-		if r.URL.Path == "/run" {
-			tmp := httptest.NewRecorder()
-			r.URL.Path = "/"
-			s.Runner.Handler.ServeHTTP(tmp, r)
-			bs = tmp.Body.Bytes()
+		if strings.HasPrefix(r.URL.Path, "/_headless/") {
+			bs, _ = fs.ReadFile(headless.Etc, strings.TrimPrefix(r.URL.Path, "/_headless/"))
+		} else if r.URL.Path == "/run" {
+			bs = []byte(s.Runner.html)
 		} else {
 			p, err := path.Join("./", path.Clean(r.URL.Path)), error(nil)
 			bs, err = ioutil.ReadFile(p)
@@ -177,36 +178,58 @@ func (r *Runner) Start() {
 	if len(r.Paths) == 0 {
 		return
 	}
-	address := "localhost:" + goheadless.GetFreePort()
-	r.Server = goheadless.Serve(address, goheadless.HTML("", r.Paths, r.Args))
+	h := headless.H{}
+	r.html = headless.HTML(setupHTML, headless.TemplateHTML("", r.Paths, r.Args))
+	if err := h.Start(); err != nil {
+		log.Fatal(err)
+	}
+	defer h.Stop()
 	for {
-		events, exit := goheadless.Run("http://" + address)
+		ctx, cancel := context.WithCancel(context.Background())
+		run := h.Run(ctx, r.html)
 		go func() {
-			go func() {
-				for event := range events {
-					if event.Method == "info" {
-						fmt.Println(goheadless.Colorize(event))
-					} else {
-						fmt.Println(event.Args...)
-					}
-
-				}
-				exitCode, err := exit()
-				if r.Watcher == nil {
-					if err != nil {
-						log.Fatal(err)
-					}
-					os.Exit(exitCode)
+			exitCode, err := 1, error(nil)
+			for m := range run.Messages {
+				if m.Method == "clear" {
+					cancel()
+					exitCode = int(m.Args[0].(float64))
+				} else if m.Method == "exception" {
+					cancel()
+					err = errors.New(m.Args[0].(string))
+				} else if m.Method == "info" {
+					fmt.Println(headless.Colorize(m))
 				} else {
-					log.Printf("\nRun: Finished with %d %v", exitCode, err)
+					fmt.Println(m.Args...)
 				}
-			}()
-
+			}
+			if r.Watcher == nil {
+				h.Stop()
+				if err != nil {
+					log.Fatal(err)
+				}
+				os.Exit(exitCode)
+			} else {
+				log.Printf("\nRun: Finished with %d %v", exitCode, err)
+			}
 		}()
 		if r.Watcher == nil {
-			select {} // wait for call to f()
+			select {}
 		}
 		r.Watcher.AwaitChange()
-		exit()
+		cancel()
 	}
 }
+
+var setupHTML = `
+<script type=module>
+window.isHeadless = navigator.webdriver;
+window.close = (code = 0) => isHeadless ? console.clear(code) : console.log("exit:", code);
+window.openIframe = (src) => {
+  return new Promise((resolve, reject) => {
+    const iframe = document.createElement("iframe");
+    const onerror = reject;
+    const onload = () => resolve(iframe);
+    document.body.appendChild(Object.assign(iframe, {onload, onerror, src}));
+  });
+};
+</script>`
