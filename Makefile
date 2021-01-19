@@ -23,6 +23,6 @@ test: cli/xminus
 setup:
 	git config core.hooksPath etc/githooks
 
-.PHONY: build
-build: cli/xminus
-	cli/xminus -e etc/build.mjs > index.html
+.PHONY: docs
+docs: cli/xminus
+	etc/build-docs

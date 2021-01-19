@@ -25,8 +25,8 @@ jobs:
     - name: gh-pages
       run: |
         git checkout --orphan gh-pages && git reset
-        make build
-        git add examples/ src/ index.html && git commit -m deploy
+        make docs
+        git add -f docs && git commit -m deploy
         git push -f origin gh-pages
     - name: notify
       if: ${{ failure() }}

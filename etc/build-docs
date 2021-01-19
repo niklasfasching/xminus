@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+rm -rf docs
+mkdir docs
+cp -r src examples docs/
+
+# github actions sets CI to true
+# We only need to set the base_path to xminus when built for production
+base_path="/"
+: "${CI:=false}"
+if [ "${CI}" = true ]; then
+    base_path="/xminus/"
+fi
+
+body=""
+
+for dir in $(ls -d examples/*/); do
+    name="$(basename $dir)"
+    src="${dir}index.html"
+    dst="docs/examples/${name}/index.html"
+    echo $src $base_path $dst
+    cli/xminus -a "${src} ${base_path}" -e etc/bundle.mjs > "${dst}"
+    body="${body}
+      <a href='examples/${name}/'><h1>${name}</h1></a>
+      <iframe src='examples/${name}/'></iframe>"
+done
+
+tee docs/index.html  <<EOF
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/src/base.css" rel="stylesheet"/>
+    <style>
+    html, body {
+      height: 100%;
+    }
+    h1 {
+      font-size: 3em;
+      margin-top: 1em;
+    }
+    iframe {
+      display: block;
+      margin: 0 auto;
+      width: 80%;
+      height: 100%;
+    }
+    </style>
+  </head>
+  <body>
+  ${body}
+  </body>
+</html>
+EOF
