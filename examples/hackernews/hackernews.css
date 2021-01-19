@@ -1,0 +1,79 @@
+/* header */
+
+nav {
+    top: 0;
+    position: sticky;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5em 1em;
+    margin-bottom: 1em;
+    box-shadow: 0 0 0.3em #888;
+    background-color: white;
+}
+
+#logo {
+    font-weight: bold;
+    font-family: var(--font-mono);
+}
+
+#settings {
+    display: flex;
+    gap: 0.25em;
+}
+
+#top-value, #top-unit {
+    border: none;
+    border-bottom: 1px solid black;
+    width: 3ch;
+    background-color: white;
+    appearance: none;
+}
+
+/* stories */
+main {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+}
+
+#header, .row {
+    display: contents;
+}
+
+.row:hover > * {
+    background-color: #eee;
+}
+
+.points, .comments, .title {
+    padding: 0.75em 0.5em;
+}
+
+#header {
+    font-family: var(--font-mono);
+    font-size: 0.75em;
+    color: #aaa;
+}
+
+.points {
+    text-align: right;
+}
+
+.comments {
+    text-align: right;
+    text-decoration: none;
+    color: inherit;
+}
+
+.title {
+    text-decoration: none;
+    color: inherit;
+}
+
+.title:visited, .comments:visited {
+    color: #888;
+}
+
+.row .points {
+    --saturation: 0%;
+    color: hsl(30, var(--saturation), 50%);
+}

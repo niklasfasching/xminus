@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="manifest" href="manifest.json">
+    <link href="/src/base.css" rel="stylesheet"/>
+    <link href="hackernews.css" rel="stylesheet"/>
+    <script type="text/x-template" id="x-front-page">
+      <nav>
+        <div id="logo">hackernews</div>
+        <div id="settings">
+          top
+          <input id="top-value" .bind:value="$.n" .on:change="$.updateStories($.n, $update)">
+          <select id="top-unit">
+            <option>n</option>
+          </select>
+        </div>
+      </nav>
+      <main>
+        <div id="header">
+          <div class="points">points</div>
+          <div class="comments">comments</div>
+          <div class="title"></div>
+        </div>
+        <div .for="story in $.stories" class="row">
+          <div class="points" style="--saturation: {($.story.points / $.maxPoints) * 100}%;">{$.story.points || 0}</div>
+          <a class="comments" href="https://news.ycombinator.com/item?id={$.story.objectID}">{$.story.num_comments || 0}</a>
+          <a class="title" href="{$.story.url}">{$.story.title}</a>
+        </div>
+      </main>
+    </script>
+
+    <script type="module">
+     import {mount, hooks} from "/src/runtime.mjs";
+
+     hooks["x-front-page"] = {
+       async create($, properties, {$update}) {
+         await $.updateStories($.n, $update);
+
+       },
+       async update($, properties, {$update}) {
+         localStorage.setItem("n", JSON.stringify($.n));
+       },
+     };
+
+     mount(document.body, "x-front-page", {
+       n: JSON.parse(localStorage.getItem("n") || "20"),
+       maxPoints: 0,
+       stories: [],
+       async updateStories(n, $update) {
+         const url = "https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=50";
+         const {hits} = await fetch(url).then(r => r.json());
+         this.stories = hits
+           .sort((a, b) => b.points - a.points)
+           .slice(0, n)
+           .sort((a, b) => b.created_at_i - a.created_at_i);
+         this.maxPoints = Math.max(...this.stories.map(s => s.points));
+         $update();
+       },
+     });
+    </script>
+  </head>
+  <body></body>
+</html>
