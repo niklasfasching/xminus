@@ -42,7 +42,6 @@ function ifMacro(vnode, $, key, value) {
 }
 
 function forMacro(vnode, $, key, value) {
-  if (!vnode.parent || vnode.parent.children.length > 1) throw new Error("for: must be only child node");
   const _ = prefix(),
         [name, inOrOf, values] = value.split(/ (of|in) /);
   generateClosure(vnode, $, _,
