@@ -1,23 +1,22 @@
-.PHONY: install
-install:
+cli/xminus: cli/*.go
 	go env -w GOPROXY=direct
 	cd cli && go get -u ./...
 	cd cli && go build *.go
 
 .PHONY: dev
-dev:
+dev: cli/xminus
 	cli/xminus
 
 .PHONY: bench
-bench:
+bench: cli/xminus
 	cli/xminus -e test/benchmark/bench.mjs
 
 .PHONY: update-fixtures
-update-fixtures:
+update-fixtures: cli/xminus
 	for f in test/*.mjs; do cli/xminus -e -a update-fixtures $$f > test/fixtures/$$(basename $$f .mjs).json; done
 
 .PHONY: test
-test:
+test: cli/xminus
 	cli/xminus -e test/*.mjs test/integration/todomvc.mjs
 
 .PHONY: setup
@@ -25,5 +24,5 @@ setup:
 	git config core.hooksPath etc/githooks
 
 .PHONY: build
-build:
+build: cli/xminus
 	cli/xminus -e etc/build.mjs > index.html

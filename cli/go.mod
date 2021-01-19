@@ -2,4 +2,7 @@ module github.com/niklasfasching/xminus/cli
 
 go 1.16
 
-require github.com/niklasfasching/headless v0.0.0-20210112224806-0b04d9afee92
+require (
+	github.com/niklasfasching/headless v0.0.0-20210118002734-b8e56c016e22
+	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
+)
