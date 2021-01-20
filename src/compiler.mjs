@@ -20,12 +20,10 @@ function onMacro(vnode, $, key, value) {
   const event = key.split(":")[1];
   if (event === "update" || event === "create") {
     const node = generateLocalNodeName($, vnode);
-    $[event] += `setTimeout(() => {
-                   let $target = ${node};
-                   ${value}
-                 })\n`;
+    $.create += `function ${node}_fn() { ${value} }\n`;
+    $[event] += `setTimeout(() => ${node}_fn.call(${node}));\n`;
   } else {
-    $.create += `${vnode.node}.addEventListener("${event}", ($event) => {
+    $.create += `${vnode.node}.addEventListener("${event}", function($event) {
                  ${value};
                  $update();
                });\n`;

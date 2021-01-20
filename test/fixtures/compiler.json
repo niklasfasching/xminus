@@ -103,7 +103,7 @@
     "create": [
       "let _0_node = root;",
       "xm.setProperty(_0_node, \"key\", (dynamic value));",
-      "root.addEventListener(\"click\", ($event) => {",
+      "root.addEventListener(\"click\", function($event) {",
       "console.log('magic');",
       "$update();",
       "});",
@@ -118,10 +118,8 @@
     "html": "<div></div>",
     "create": [
       "let _0_node = root;",
-      "setTimeout(() => {",
-      "let $target = _0_node;",
-      "console.log('magic')",
-      "})",
+      "function _0_node_fn() { console.log('magic') }",
+      "setTimeout(() => _0_node_fn.call(_0_node));",
       ""
     ],
     "update": ""
@@ -130,13 +128,11 @@
     "html": "<div></div>",
     "create": [
       "let _0_node = root;",
+      "function _0_node_fn() { console.log('magic') }",
       ""
     ],
     "update": [
-      "setTimeout(() => {",
-      "let $target = _0_node;",
-      "console.log('magic')",
-      "})",
+      "setTimeout(() => _0_node_fn.call(_0_node));",
       ""
     ]
   },

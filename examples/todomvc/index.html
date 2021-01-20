@@ -8,7 +8,7 @@
       <section class="todoapp">
         <header class="header">
           <h1>todos</h1>
-          <input class="new-todo" placeholder="What needs to be done?" .on:create="$target.focus()" .on:keydown="$.onInput($event)"/>
+          <input class="new-todo" placeholder="What needs to be done?" .on:create="this.focus()" .on:keydown="$.onInput($event)"/>
         </header>
         <section class="main" .if="$.store.items.length">
           <input id="toggle-all" class="toggle-all" type="checkbox"
@@ -47,7 +47,7 @@
                .bind:value="$.item.title"
                .on:blur="$.onEditInput($event, $.item)"
                .on:keydown="$.onEditInput($event, $.item)"
-               .on:update="if ($.item.editing) $target.focus()">
+               .on:update="if ($.item.editing) this.focus()">
         <button class="destroy" .on:click="$.store.remove($.item)"></button>
       </li>
     </script>
