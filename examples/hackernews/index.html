@@ -28,7 +28,7 @@
         <div .for="story in $.stories" class="row">
           <div class="points" style="--saturation: {($.story.points / $.maxPoints) * 100}%;">{$.story.points || 0}</div>
           <a class="comments" href="https://news.ycombinator.com/item?id={$.story.objectID}">{$.story.num_comments || 0}</a>
-          <a class="title" href="{$.story.url}">{$.story.title}</a>
+          <a class="title" href="{$.story.url}">{$.story.title} <small>({$.story.hostname})</small></a>
         </div>
       </main>
     </script>
@@ -56,7 +56,11 @@
          this.stories = hits
            .sort((a, b) => b.points - a.points)
            .slice(0, n)
-           .sort((a, b) => b.created_at_i - a.created_at_i);
+           .sort((a, b) => b.created_at_i - a.created_at_i)
+           .map(s => {
+             try { s.hostname = new URL(s.url).hostname; } catch (_) {}
+             return s
+           });
          this.maxPoints = Math.max(...this.stories.map(s => s.points));
          $update();
        },

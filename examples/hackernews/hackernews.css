@@ -69,6 +69,12 @@ main {
     color: inherit;
 }
 
+.title small {
+    font-size: 0.75em;
+    color: #888;
+    font-family: var(--font-mono);
+}
+
 .title:visited, .comments:visited {
     color: #888;
 }
