@@ -71,6 +71,10 @@ t.describe("compiler", () => {
         test(id, `<div .on:update="console.log('magic')"></div>`);
       });
 
+      t("should generate .on macro with no(update) modifier", (id) => {
+        test(id, `<div .on:update:no="console.log('magic')"></div>`);
+      });
+
       t("should generate .bind: macro", (id) => {
         test(id, `<div .bind:value="$.value"></div>`);
       });

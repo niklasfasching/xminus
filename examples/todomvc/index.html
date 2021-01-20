@@ -8,7 +8,9 @@
       <section class="todoapp">
         <header class="header">
           <h1>todos</h1>
-          <input class="new-todo" placeholder="What needs to be done?" .on:create="this.focus()" .on:keydown="$.onInput($event)"/>
+          <input class="new-todo" placeholder="What needs to be done?"
+                 .on:create="this.focus()"
+                 .on:keydown:no="$.onInput($event, $update)"/>
         </header>
         <section class="main" .if="$.store.items.length">
           <input id="toggle-all" class="toggle-all" type="checkbox"
@@ -45,8 +47,8 @@
                .if="!$.item.editing">{$.item.title}</label>
         <input .if="$.item.editing" class="edit"
                .bind:value="$.item.title"
-               .on:blur="$.onEditInput($event, $.item)"
-               .on:keydown="$.onEditInput($event, $.item)"
+               .on:blur:no="$.onEditInput($event, $.item, $update)"
+               .on:keydown:no="$.onEditInput($event, $.item, $update)"
                .on:update="if ($.item.editing) this.focus()">
         <button class="destroy" .on:click="$.store.remove($.item)"></button>
       </li>
@@ -105,19 +107,22 @@
 
      mount(document.body, "x-todomvc", {
        store,
-       onInput({target, key}) {
+       onInput({target, key}, $update) {
          if (key !== "Enter") return
          this.store.add(target.value.trim());
          target.value = "";
+         $update();
        },
 
-       onEditInput({type, target, key}, item) {
+       onEditInput({type, target, key}, item, $update) {
          if (key === 'Escape') {
            item.editing = false;
+           $update();
          } else if (key === "Enter" || type === "blur") {
            item.title = target.value.trim();
            item.editing = false;
            if (!item.title) this.store.remove(item);
+           $update();
          }
        },
 

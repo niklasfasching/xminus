@@ -17,15 +17,17 @@ function bindMacro(vnode, $, key, value) {
 
 function onMacro(vnode, $, key, value) {
   generateVnode(vnode, $);
-  const event = key.split(":")[1];
+  const [_on_, event, ...modifiers] = key.split(":")
   if (event === "update" || event === "create") {
     const node = generateLocalNodeName($, vnode);
     $.create += `function ${node}_fn() { ${value} }\n`;
     $[event] += `setTimeout(() => ${node}_fn.call(${node}));\n`;
   } else {
+    let after = "$update();";
+    if (modifiers.includes("no")) after = "";
     $.create += `${vnode.node}.addEventListener("${event}", function($event) {
                  ${value};
-                 $update();
+                 ${after}
                });\n`;
   }
 }

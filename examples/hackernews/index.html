@@ -11,7 +11,9 @@
         <div id="logo">hackernews</div>
         <div id="settings">
           top
-          <input id="top-value" .bind:value="$.n" .on:change="$.updateStories($.n, $update)">
+          <input id="top-value"
+                 .bind:value="$.n"
+                 .on:change:no="$.updateStories($.n, $update)">
           <select id="top-unit">
             <option>n</option>
           </select>

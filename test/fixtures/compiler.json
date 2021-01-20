@@ -136,6 +136,18 @@
       ""
     ]
   },
+  "compiler: generateVnode: macro: should generate .on macro with no(update) modifier": {
+    "html": "<div></div>",
+    "create": [
+      "let _0_node = root;",
+      "function _0_node_fn() { console.log('magic') }",
+      ""
+    ],
+    "update": [
+      "setTimeout(() => _0_node_fn.call(_0_node));",
+      ""
+    ]
+  },
   "compiler: generateVnode: macro: should generate .bind: macro": {
     "html": "<div></div>",
     "create": [
