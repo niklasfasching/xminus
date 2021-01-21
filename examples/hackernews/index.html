@@ -13,9 +13,20 @@
           top
           <input id="top-value"
                  .bind:value="$.n"
-                 .on:change:no="$.updateStories($.n, $update)">
-          <select id="top-unit">
+                 .on:change:no="$.updateStories($, $update)">
+          <select id="top-unit"
+                  .bind:value="$.unit"
+                  .on:change:no="$.updateStories($, $update)">
             <option>n</option>
+            <option>%</option>
+          </select>
+          sorted by
+          <select id="top-order"
+                  .bind:value="$.order"
+                  .on:change:no="$.updateStories($, $update)">
+            <option>date</option>
+            <option>points</option>
+            <option>comments</option>
           </select>
         </div>
       </nav>
@@ -48,13 +59,14 @@
 
      hooks["x-front-page"] = {
        async create($, properties, {$update}) {
-         const defaults = {n: 20, lastVisit: 0};
+         const defaults = {n: 20, unit: "n", order: "date", lastVisit: 0};
          Object.assign($, defaults, JSON.parse(localStorage.getItem("hackernews") || "{}"));
-         await $.updateStories($.n, $update);
+         await $.updateStories($, $update);
        },
        async update($, properties, {$update}) {
          localStorage.setItem("hackernews", JSON.stringify({
            n: $.n,
+           unit: $.unit,
            lastVisit: Date.now(),
          }));
        },
@@ -63,13 +75,15 @@
      mount(document.body, "x-front-page", {
        maxPoints: 0,
        stories: [],
-       async updateStories(n, $update) {
+       async updateStories({n, unit, order}, $update) {
          const url = "https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=50";
          const {hits} = await fetch(url).then(r => r.json());
+         const orderProperty = order === "date" ? "created_at_i" :
+                               order === "points" ? "points" : "num_comments"
          this.stories = hits
            .sort((a, b) => b.points - a.points)
-           .slice(0, n)
-           .sort((a, b) => b.created_at_i - a.created_at_i)
+           .slice(0, unit === "n" ? n : Math.ceil(hits.length * (n / 100)))
+           .sort((a, b) => b[orderProperty] - a[orderProperty])
            .map(s => {
              try { s.hostname = new URL(s.url).hostname; } catch (_) {}
              return s

@@ -22,12 +22,16 @@ nav {
     gap: 0.25em;
 }
 
-#top-value, #top-unit {
+#top-value, #top-unit, #top-order {
     border: none;
     border-bottom: 1px solid black;
     width: 3ch;
     background-color: white;
     appearance: none;
+}
+
+#top-order {
+    width: auto;
 }
 
 /* stories */
