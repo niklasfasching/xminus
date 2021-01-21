@@ -79,6 +79,14 @@ t.describe("compiler", () => {
         test(id, `<div .bind:value="$.value"></div>`);
       });
 
+      t("should generate .bind: macro for input elements", (id) => {
+        test(id, `<div>
+                    <input .bind:value="$.value">
+                    <textarea .bind:value="$.value"></textarea>
+                    <select .bind:value="$.value"><option>foo</option></select>
+                  </div>`);
+      });
+
       t("should generate .for macro", (id) => {
         test(id, `<div key={dynamic value} .for="item in $.items"></div>`);
       });

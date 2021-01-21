@@ -152,11 +152,34 @@
     "html": "<div></div>",
     "create": [
       "let _0_node = root;",
-      "_0_node.addEventListener(\"keyup\", () => $.value = _0_node[\"value\"]);",
+      "_0_node.addEventListener(\"change\", () => $.value = _0_node[\"value\"]);",
       ""
     ],
     "update": [
       "if (document.activeElement !== _0_node) _0_node[\"value\"] = $.value;",
+      ""
+    ]
+  },
+  "compiler: generateVnode: macro: should generate .bind: macro for input elements": {
+    "html": "<div><input><textarea></textarea><select><option>foo</option></select></div>",
+    "create": [
+      "let _0_node = root.firstChild;",
+      "let _1_node = _0_node;",
+      "_1_node.addEventListener(\"keyup\", () => $.value = _1_node[\"value\"]);",
+      "let _2_node = _0_node.nextSibling;",
+      "let _3_node = _2_node;",
+      "_3_node.addEventListener(\"keyup\", () => $.value = _3_node[\"value\"]);",
+      "let _4_node = _2_node.nextSibling;",
+      "let _5_node = _4_node.firstChild;",
+      "let _6_node = _5_node.firstChild;",
+      "let _7_node = _4_node;",
+      "_7_node.addEventListener(\"change\", () => $.value = _7_node[\"value\"]);",
+      ""
+    ],
+    "update": [
+      "if (document.activeElement !== _1_node) _1_node[\"value\"] = $.value;",
+      "if (document.activeElement !== _3_node) _3_node[\"value\"] = $.value;",
+      "if (document.activeElement !== _7_node) _7_node[\"value\"] = $.value;",
       ""
     ]
   },

@@ -10,8 +10,9 @@ const macros = [
 function bindMacro(vnode, $, key, value) {
   const [_, property] = key.split(":");
   generateVnode(vnode, $);
+  const event = ["input", "textarea"].includes(vnode.tag) ? "keyup" : "change";
   const node = generateLocalNodeName($, vnode);
-  $.create += `${node}.addEventListener("keyup", () => ${value} = ${node}["${property}"]);\n`;
+  $.create += `${node}.addEventListener("${event}", () => ${value} = ${node}["${property}"]);\n`;
   $.update += `if (document.activeElement !== ${node}) ${node}["${property}"] = ${value};\n`;
 }
 
