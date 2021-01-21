@@ -31,27 +31,32 @@ nav {
 }
 
 /* stories */
-main {
-    display: grid;
-    grid-template-columns: auto auto 1fr;
+
+table {
+    border-spacing: 0;
 }
 
-#header, .row {
-    display: contents;
-}
-
-.row:hover > * {
-    background-color: #eee;
-}
-
-.points, .comments, .title {
-    padding: 0.75em 0.5em;
-}
-
-#header {
+thead {
     font-family: var(--font-mono);
     font-size: 0.75em;
     color: #aaa;
+}
+
+tbody a {
+    text-decoration: none;
+    color: inherit;
+}
+
+tbody a:visited {
+    color: #888;
+}
+
+td {
+    padding: 0.75em 0.5em;
+}
+
+tr:hover {
+    background-color: #eee;
 }
 
 .points {
@@ -60,13 +65,6 @@ main {
 
 .comments {
     text-align: right;
-    text-decoration: none;
-    color: inherit;
-}
-
-.title {
-    text-decoration: none;
-    color: inherit;
 }
 
 .title small {
@@ -75,11 +73,7 @@ main {
     font-family: var(--font-mono);
 }
 
-.title:visited, .comments:visited {
-    color: #888;
-}
-
-.row .points {
+.points {
     --saturation: 0%;
     color: hsl(30, var(--saturation), 50%);
 }

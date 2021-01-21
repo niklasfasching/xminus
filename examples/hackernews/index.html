@@ -19,18 +19,26 @@
           </select>
         </div>
       </nav>
-      <main>
-        <div id="header">
-          <div class="points">points</div>
-          <div class="comments">comments</div>
-          <div class="title"></div>
-        </div>
-        <div .for="story in $.stories" class="row">
-          <div class="points" style="--saturation: {($.story.points / $.maxPoints) * 100}%;">{$.story.points || 0}</div>
-          <a class="comments" href="https://news.ycombinator.com/item?id={$.story.objectID}">{$.story.num_comments || 0}</a>
-          <a class="title" href="{$.story.url}">{$.story.title} <small>({$.story.hostname})</small></a>
-        </div>
-      </main>
+
+      <table>
+        <thead>
+          <tr>
+            <th class="points">pts</th>
+            <th class="comments">cmnts</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr .for="story in $.stories">
+            <td class="points" style="--saturation: {($.story.points / $.maxPoints) * 100}%;">{$.story.points || 0}</td>
+            <td class="comments">
+              <a href="https://news.ycombinator.com/item?id={$.story.objectID}">{$.story.num_comments || 0}</a>
+            </td>
+            <td class="title">
+              <a href="{$.story.url}">{$.story.title} <small>({$.story.hostname})</small></a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </script>
 
     <script type="module">
