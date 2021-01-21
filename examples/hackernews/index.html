@@ -29,8 +29,10 @@
         </thead>
         <tbody>
           <tr .for="story in $.stories">
-            <td class="points" style="--saturation: {($.story.points / $.maxPoints) * 100}%;">{$.story.points || 0}</td>
-            <td class="comments">
+            <td class="points" style="--alpha: {($.story.points / $.maxPoints) * 100}%;">
+              <p class="{$.story.created_at_i * 1000 > $.lastVisit || 'old'}">{$.story.points || 0}</p>
+            </td>
+            <td class="comments" style="--alpha: {($.story.num_comments / $.maxComments) * 100}%;">
               <a href="https://news.ycombinator.com/item?id={$.story.objectID}">{$.story.num_comments || 0}</a>
             </td>
             <td class="title">
@@ -46,16 +48,19 @@
 
      hooks["x-front-page"] = {
        async create($, properties, {$update}) {
+         const defaults = {n: 20, lastVisit: 0};
+         Object.assign($, defaults, JSON.parse(localStorage.getItem("hackernews") || "{}"));
          await $.updateStories($.n, $update);
-
        },
        async update($, properties, {$update}) {
-         localStorage.setItem("n", JSON.stringify($.n));
+         localStorage.setItem("hackernews", JSON.stringify({
+           n: $.n,
+           lastVisit: Date.now(),
+         }));
        },
      };
 
      mount(document.body, "x-front-page", {
-       n: JSON.parse(localStorage.getItem("n") || "20"),
        maxPoints: 0,
        stories: [],
        async updateStories(n, $update) {
@@ -70,6 +75,7 @@
              return s
            });
          this.maxPoints = Math.max(...this.stories.map(s => s.points));
+         this.maxComments = Math.max(...this.stories.map(s => s.num_comments));
          $update();
        },
      });

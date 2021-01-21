@@ -47,7 +47,7 @@ tbody a {
     color: inherit;
 }
 
-tbody a:visited {
+tbody a:visited, .old {
     color: #888;
 }
 
@@ -73,7 +73,7 @@ tr:hover {
     font-family: var(--font-mono);
 }
 
-.points {
-    --saturation: 0%;
-    color: hsl(30, var(--saturation), 50%);
+.points, .comments {
+    --alpha: 0%;
+    background-color: hsla(30, 100%, 80%, var(--alpha));
 }
