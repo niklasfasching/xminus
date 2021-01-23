@@ -5,12 +5,14 @@
         "tag": "div",
         "properties": {},
         "children": [
+          "\n",
           {
             "tag": "div",
             "properties": {
               "void": "true"
             },
             "children": [
+              "\n",
               {
                 "tag": "input",
                 "properties": {
@@ -20,6 +22,7 @@
                 "parent": "[circular]",
                 "void": true
               },
+              "\n",
               {
                 "tag": "input",
                 "properties": {
@@ -28,17 +31,20 @@
                 "children": [],
                 "parent": "[circular]",
                 "void": true
-              }
+              },
+              "\n"
             ],
             "parent": "[circular]",
             "void": false
           },
+          "\n",
           {
             "tag": "div",
             "properties": {
               "non-void": "true"
             },
             "children": [
+              "\n",
               {
                 "tag": "div",
                 "properties": {
@@ -48,6 +54,7 @@
                 "parent": "[circular]",
                 "void": false
               },
+              "\n",
               {
                 "tag": "div",
                 "properties": {
@@ -56,11 +63,13 @@
                 "children": [],
                 "parent": "[circular]",
                 "void": false
-              }
+              },
+              "\n"
             ],
             "parent": "[circular]",
             "void": false
-          }
+          },
+          "\n"
         ],
         "void": false
       }

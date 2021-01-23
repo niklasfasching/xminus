@@ -57,7 +57,7 @@ export function parse(template) {
 
 export function lex(template) {
   let $ = "child", tag = "", tmp = "", tokens = [], push = ($next) => {
-    if (tmp.trim()) tokens.push([$, tmp]);
+    if (tmp) tokens.push([$, tmp.trim() ? tmp : "\n"]);
     if ($ === "open") tag = tmp;
     else if ($ === "close") tag = "";
     $ = $next, tmp = "";
