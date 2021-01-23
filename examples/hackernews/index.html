@@ -47,7 +47,8 @@
               <a href="https://news.ycombinator.com/item?id={$.story.objectID}">{$.story.num_comments || 0}</a>
             </td>
             <td class="title">
-              <a href="{$.story.url}">{$.story.title} <small>({$.story.hostname})</small></a>
+              <a href="{$.story.url}">{$.story.title}</a>
+              <small>(<a href="https://news.ycombinator.com/from?site={$.story.hostname}">{$.story.hostname}</a>)</small>
               <div class="author">
                 {$.timeSince($.story)} ago by
                 <a href="https://news.ycombinator.com/user?id={$.story.author}">{$.story.author}</a>
@@ -113,7 +114,7 @@
            .map(s => {
              if (!this.seen[s.objectID]) this.seen[s.objectID] = Date.now();
              if (!s.url) s.url = `https://news.ycombinator.com/item?id=${s.objectID}`;
-             s.hostname = new URL(s.url).hostname;
+             s.hostname = new URL(s.url).hostname.replace(/^(www\.)/, "");
              return s
            });
          this.maxPoints = Math.max(...this.stories.map(s => s.points));
