@@ -31,7 +31,7 @@
         </div>
       </nav>
 
-      <table>
+      <table id="stories">
         <thead>
           <tr>
             <th class="points">pts</th>
@@ -41,13 +41,17 @@
         <tbody>
           <tr .for="story in $.stories">
             <td class="points" style="--alpha: {($.story.points / $.maxPoints) * 100}%;">
-              <p class="{$.story.created_at_i * 1000 > $.lastVisit || 'old'}">{$.story.points || 0}</p>
+              <p class="{$.isOld($.story) ? 'old' : ''}">{$.story.points || 0}</p>
             </td>
             <td class="comments" style="--alpha: {($.story.num_comments / $.maxComments) * 100}%;">
               <a href="https://news.ycombinator.com/item?id={$.story.objectID}">{$.story.num_comments || 0}</a>
             </td>
             <td class="title">
               <a href="{$.story.url}">{$.story.title} <small>({$.story.hostname})</small></a>
+              <div class="author">
+                {$.timeSince($.story)} ago by
+                <a href="https://news.ycombinator.com/user?id={$.story.author}">{$.story.author}</a>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -59,22 +63,44 @@
 
      hooks["x-front-page"] = {
        async create($, properties, {$update}) {
-         const defaults = {n: 20, unit: "n", order: "date", lastVisit: 0};
+         const defaults = {n: 20, unit: "n", order: "date", seen: {}};
          Object.assign($, defaults, JSON.parse(localStorage.getItem("hackernews") || "{}"));
          await $.updateStories($, $update);
        },
        async update($, properties, {$update}) {
+         for (const id in $.seen) if (Date.now() - $.seen[id] > 2 * 24 * 60 * 60 * 1000) delete $.seen[id];
          localStorage.setItem("hackernews", JSON.stringify({
            n: $.n,
            unit: $.unit,
-           lastVisit: Date.now(),
+           order: $.order,
+           seen: $.seen
          }));
        },
      };
 
      mount(document.body, "x-front-page", {
-       maxPoints: 0,
        stories: [],
+
+       timeSince(story) {
+         const fmt = (n, unit) => `${n} ${unit}${n === 1 ? "" : "s"}`;
+         const s = Date.now() / 1000 - story.created_at_i;
+         if (s < 60 * 60) return fmt(Math.floor(s / 60), "minute");
+         else if (s < 60 * 60 * 24) return fmt(Math.floor(s / 60 / 60), "hour");
+         else return fmt(Math.floor(s / 60 / 60 / 24), "day");
+       },
+
+       isOld(story) {
+         return Date.now() - this.seen[story.objectID] > 60 * 60 * 1000;
+       },
+
+       seen(story) {
+         const fmt = (n, unit) => `${n} ${unit}${n === 1 ? "" : "s"}`;
+         const s = Date.now() / 1000 - story.created_at_i;
+         if (s < 60 * 60) return fmt(Math.floor(s / 60), "minute");
+         else if (s < 60 * 60 * 24) return fmt(Math.floor(s / 60 / 60), "hour");
+         else return fmt(Math.floor(seconds / 60 / 60 / 24), "day");
+       },
+
        async updateStories({n, unit, order}, $update) {
          const url = "https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=50";
          const {hits} = await fetch(url).then(r => r.json());
@@ -85,7 +111,9 @@
            .slice(0, unit === "n" ? n : Math.ceil(hits.length * (n / 100)))
            .sort((a, b) => b[orderProperty] - a[orderProperty])
            .map(s => {
-             try { s.hostname = new URL(s.url).hostname; } catch (_) {}
+             if (!this.seen[s.objectID]) this.seen[s.objectID] = Date.now();
+             if (!s.url) s.url = `https://news.ycombinator.com/item?id=${s.objectID}`;
+             s.hostname = new URL(s.url).hostname;
              return s
            });
          this.maxPoints = Math.max(...this.stories.map(s => s.points));

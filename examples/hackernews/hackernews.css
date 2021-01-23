@@ -36,48 +36,48 @@ nav {
 
 /* stories */
 
-table {
+#stories {
     border-spacing: 0;
 }
 
-thead {
+#stories thead {
     font-family: var(--font-mono);
     font-size: 0.75em;
     color: #aaa;
 }
 
-tbody a {
+#stories a {
     text-decoration: none;
     color: inherit;
 }
 
-tbody a:visited, .old {
+#stories a:visited, #stories .old {
     color: #888;
 }
 
-td {
+#stories td {
     padding: 0.75em 0.5em;
 }
 
-tr:hover {
+#stories tr:hover {
     background-color: #eee;
 }
 
-.points {
+#stories tbody .points, #stories tbody .comments {
     text-align: right;
 }
 
-.comments {
-    text-align: right;
-}
-
-.title small {
+#stories .title small, #stories .author {
     font-size: 0.75em;
     color: #888;
     font-family: var(--font-mono);
 }
 
-.points, .comments {
+#stories .author {
+    margin-top: 0.75em;
+}
+
+#stories .points, #stories .comments {
     --alpha: 0%;
     background-color: hsla(30, 100%, 80%, var(--alpha));
 }
