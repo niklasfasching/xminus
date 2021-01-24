@@ -21,7 +21,7 @@ jobs:
         git log -1 --format="%H"
     - name: test
       run: |
-        GOROOT=/snap/go/current make test
+        GOROOT=/snap/go/current make test bench
     - name: gh-pages
       run: |
         git checkout --orphan gh-pages && git reset

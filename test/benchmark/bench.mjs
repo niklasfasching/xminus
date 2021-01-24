@@ -1,21 +1,14 @@
-function benchmark(name) {
-  return new Promise((resolve) => {
-    const iframe = document.createElement("iframe");
-    iframe.onload = async () => {
-      const results = await runTests(iframe.contentWindow);
-      document.body.removeChild(iframe);
-      resolve(results);
-    };
-    iframe.src = `./frameworks/${name}.html`;
-    document.body.appendChild(iframe);
-  });
+async function benchmark(name) {
+  const iframe = await openIframe(`/test/benchmark/frameworks/${name}.html`);
+  const results = await runTests(iframe.contentWindow);
+  document.body.removeChild(iframe);
+  return results;
 }
 
 async function runTests(window) {
-  await new Promise(resolve => setTimeout(resolve, 1000));
   const {document, store} = window;
   store.callback = () => {};
-  const clear = document.querySelector("#clear"), results = {};
+  const clear = await waitFor(document, "#clear"), results = {}
   await runTest(results, store, document.querySelector("#run"), clear);
   return results;
 }
@@ -44,10 +37,20 @@ function click(elem, store, timeoutMs = 10000) {
   });
 }
 
+async function waitFor(document, selector, timeout = 100) {
+  const now = Date.now();
+  while (true) {
+    const el = document.querySelector(selector);
+    if (el) return el;
+    else if (Date.now() - now > timeout) return null;
+    else await new Promise(r => requestAnimationFrame(r));
+  }
+}
+
 async function main() {
   setTimeout(() => {
     console.log("Timeout after 120s");
-    window.close(1);
+    close(1);
   }, 120 * 1000);
 
   const results = {}, frameworks = [
@@ -61,12 +64,12 @@ async function main() {
       results[framework] = await benchmark(framework);
     } catch (err) {
       console.log(`${framework}: ${err.message}`);
-      window.close(1);
+      close(1);
     }
   }
   console.log(JSON.stringify(results, null, 2));
   console.log("Finished!");
-  window.close(0);
+  close(0);
 }
 
 main();
