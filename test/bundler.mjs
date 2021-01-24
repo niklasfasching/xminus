@@ -9,19 +9,23 @@ t.describe("bundler", () => {
 
   const assertFixture = t.setupFixtures(new URL("./fixtures/bundler.json", import.meta.url));
 
-    t.describe("rebaseURL", () => {
-    t("should rebase (root) relative urls", () => {
-      t.equal(rebaseURL("foo", baseURL), "/foo");
-      t.equal(rebaseURL("bar", `${baseURL}/foo/index.html`), "/foo/bar");
-      t.equal(rebaseURL("./bar", `${baseURL}/foo/index.html`), "/foo/bar");
-      t.equal(rebaseURL("/bar", `${baseURL}/foo/index.html`), "/bar");
+  t.describe("rebaseURL", () => {
+    t("should rebase (root) relative urls given a basePath", () => {
+      t.equal(rebaseURL("foo", baseURL, "/"), "/foo");
+      t.equal(rebaseURL("bar", `${baseURL}/foo/index.html`, "/"), "/foo/bar");
+      t.equal(rebaseURL("./bar", `${baseURL}/foo/index.html`, "/"), "/foo/bar");
+      t.equal(rebaseURL("/bar", `${baseURL}/foo/index.html`, "/"), "/bar");
 
       t.equal(rebaseURL("baz", `${baseURL}/bar/index.html`, "/foo"), "/foo/bar/baz");
       t.equal(rebaseURL("./baz", `${baseURL}/bar/index.html`, "/foo"), "/foo/bar/baz");
       t.equal(rebaseURL("/baz", `${baseURL}/bar/index.html`, "/foo"), "/foo/baz");
     });
 
-    t("should not modify full / absolute urls", () => {
+    t("should turn (root) relative urls into full urls when no basePath is given", () => {
+      t.equal(rebaseURL("foo", baseURL), baseURL + "/foo");
+    });
+
+    t("should never modify full / absolute urls", () => {
       t.equal(rebaseURL("http://foo.bar", baseURL, "/foo"), "http://foo.bar");
       t.equal(rebaseURL("data:text/javascript,1", baseURL, "/foo"), "data:text/javascript,1");
     });

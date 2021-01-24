@@ -47,7 +47,7 @@ export function dataURL(string) {
 
 export function rebaseURL(url, baseURL, basePath) {
   if (basePath?.endsWith("/")) basePath = basePath.slice(0, -1);
-  url = absoluteURL(url, baseURL, true);
+  url = absoluteURL(url, baseURL, typeof basePath === "string");
   return url.startsWith("/") && basePath ? basePath + url : url;
 }
 
