@@ -232,15 +232,23 @@
   "compiler: generateVnode: macro: should generate .if macro": {
     "html": "<div></div>",
     "create": [
-      "let _properties_0_node = root;",
-      "xm.setProperty(_properties_0_node, \"key\", (dynamic value));",
-      "const _if_1_node = root, _if_1_placeholder = document.createComment(\"if\");",
-      "if (!$.condition) root = xm.replaceWith(_if_1_node, _if_1_placeholder);",
+      "let _if_0_node = root, _if_0_parent = root.parentNode, _if_0_anchor = document.createComment(\"closure anchor\");",
+      "_if_0_node.replaceWith(_if_0_anchor);",
+      "root = _if_0_anchor;",
+      "function _if_0_create($, ..._args) {",
+      "let root = _if_0_node.cloneNode(true);",
+      "let _properties_1_node = root;",
+      "xm.setProperty(_properties_1_node, \"key\", (dynamic value));",
+      "return [root, (..._args) => {",
+      "xm.setProperty(_properties_1_node, \"key\", (dynamic value));",
+      "}];",
+      "}",
+      "let [_if_0_connected, _if_0_update] = xm.nodeIf(($.condition), _if_0_anchor, _if_0_anchor, $, _if_0_create);",
+      "root = _if_0_connected;",
       ""
     ],
     "update": [
-      "xm.setProperty(_properties_0_node, \"key\", (dynamic value));",
-      "xm.nodeIf(($.condition), _if_1_node, _if_1_placeholder);",
+      "[_if_0_connected, _if_0_update] = xm.nodeIf(($.condition), _if_0_connected, _if_0_anchor, $, _if_0_create, _if_0_update);",
       ""
     ]
   },
@@ -258,7 +266,7 @@
       "const [$children, _childrenUpdate] = _createChildren?.($) || [];",
       "let _children_0_node = _node.firstChild;",
       "const _update = (_properties) => {",
-      "let {$path, $query, $update} = $internal;",
+      "({$path, $query, $update} = $internal);",
       "if (_properties) properties = _properties;",
       "_hooks.update?.($, properties, $internal);",
       "_childrenUpdate?.();",

@@ -35,12 +35,11 @@ function onMacro(vnode, $, key, value) {
 }
 
 function ifMacro(vnode, $, key, value) {
-  generateNodeName($, vnode, "if");
-  generateVnode(vnode, $);
   const _ = prefix("if");
-  $.create += `const ${_}node = ${vnode.node}, ${_}placeholder = document.createComment("if");
-               if (!${value}) ${vnode.node} = xm.replaceWith(${_}node, ${_}placeholder);\n`;
-  $.update += `xm.nodeIf((${value}), ${_}node, ${_}placeholder);\n`
+  generateClosure(vnode, $, _);
+  $.create += `let [${_}connected, ${_}update] = xm.nodeIf((${value}), ${_}anchor, ${_}anchor, $, ${_}create);
+               ${vnode.node} = ${_}connected;\n`;
+  $.update += `[${_}connected, ${_}update] = xm.nodeIf((${value}), ${_}connected, ${_}anchor, $, ${_}create, ${_}update);\n`;
 }
 
 function forMacro(vnode, $, key, value) {
@@ -77,7 +76,7 @@ export function compile(name, template) {
               const [$children, _childrenUpdate] = _createChildren?.($) || [];
               ${$.create}
               const _update = (_properties) => {
-                let {$path, $query, $update} = $internal;
+                ({$path, $query, $update} = $internal);
                 if (_properties) properties = _properties;
                 _hooks.update?.($, properties, $internal);
                 _childrenUpdate?.();

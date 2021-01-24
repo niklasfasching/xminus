@@ -19,9 +19,16 @@ export function replaceWith(oldNode, newNode) {
   return newNode;
 }
 
-export function nodeIf(condition, ifNode, elseNode) {
-  if (condition && elseNode.parentNode) replaceWith(elseNode, ifNode);
-  else if (!condition && ifNode.parentNode)replaceWith(ifNode, elseNode);
+export function nodeIf(condition, connectedNode, elseNode, $, create, update) {
+  if (!condition) {
+    if (connectedNode === elseNode) return [elseNode, null];
+    return [replaceWith(connectedNode, elseNode), null];
+  } else if (condition && connectedNode !== elseNode) {
+    update();
+    return [connectedNode, update];
+  }
+  const [node, _update] = create($);
+  return [replaceWith(elseNode, node), _update];
 }
 
 export function createChildNode($, value) {

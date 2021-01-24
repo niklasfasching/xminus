@@ -49,7 +49,7 @@
                .bind:value="$.item.title"
                .on:blur:no="$.onEditInput($event, $.item, $update)"
                .on:keydown:no="$.onEditInput($event, $.item, $update)"
-               .on:update="if ($.item.editing) this.focus()">
+               .on:create="if ($.item.editing) this.focus()">
         <button class="destroy" .on:click="$.store.remove($.item)"></button>
       </li>
     </script>
