@@ -2,6 +2,5 @@
   "name": "hackernews",
   "short_name": "hn",
   "display": "browser",
-  "icons": [{"src": ".png","type": "image/png","sizes": "400x400"}],
-  "start_url": "/xminus/examples/hackernews/",
+  "start_url": "/xminus/examples/hackernews/"
 }

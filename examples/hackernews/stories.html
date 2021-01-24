@@ -36,7 +36,7 @@
           <p class="{$.isOld($.story) ? 'old' : ''}">{$.story.points || 0}</p>
         </td>
         <td class="comments" style="--alpha: {($.story.num_comments / $.maxComments) * 100}%;">
-          <a href="https://news.ycombinator.com/item?id={$.story.objectID}">{$.story.num_comments || 0}</a>
+          <a href="#/story?id={$.story.objectID}">{$.story.num_comments || 0}</a>
         </td>
         <td class="title">
           <a href="{$.story.url}">{$.story.title}</a>

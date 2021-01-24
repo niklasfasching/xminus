@@ -14,6 +14,8 @@ nav {
 
 #logo {
     font-weight: bold;
+    text-decoration: none;
+    color: inherit;
     font-family: var(--font-mono);
 }
 
@@ -80,4 +82,55 @@ nav {
 #stories .points, #stories .comments {
     --alpha: 0%;
     background-color: hsla(30, 100%, 80%, var(--alpha));
+}
+
+/* story */
+
+#story {
+    margin: 1em;
+}
+#story #title {
+    font-size: 2em;
+}
+
+#story #title small {
+    font-size: 0.75em;
+    color: #888;
+    font-family: var(--font-mono);
+}
+
+#story #title a, #story #meta a, #story .header a {
+    text-decoration: none;
+    color: inherit;
+}
+
+#story #meta {
+    color: #888;
+    margin-bottom: 2em;
+    border-bottom: 1px dashed #888;
+}
+
+#story .comment {
+    margin: 1.25em 0;
+}
+
+#story .comment .header {
+    margin-left: -0.5em;
+    padding: 0.5em;
+    color: #888;
+    --alpha: 0%;
+    background-color: hsla(30, 100%, 80%, var(--alpha));
+}
+
+#story .comment p {
+    margin: 0.5em 0 0.5em 0;
+}
+
+#story .comment .count {
+    font-size: 0.75em;
+    color: #888
+}
+
+#story .comment > .comments {
+    margin-left: 1em;
 }
