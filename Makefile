@@ -17,7 +17,7 @@ update-fixtures: cli/xminus
 
 .PHONY: test
 test: cli/xminus
-	cli/xminus -e test/*.mjs test/integration/todomvc.mjs
+	cli/xminus -e test/*.mjs test/integration/*.mjs
 
 .PHONY: setup
 setup:
