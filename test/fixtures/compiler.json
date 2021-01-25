@@ -56,7 +56,7 @@
   "compiler: generateVnode: should generate component tags": {
     "html": "<template>foo bar <!----></template>",
     "create": [
-      "let _vnode_0_node = root, _vnode_0_parent = root.parentNode, _vnode_0_anchor = document.createComment(\"closure anchor\");",
+      "let _vnode_0_node = root, _vnode_0_anchor = document.createComment(\"closure anchor\");",
       "_vnode_0_node.replaceWith(_vnode_0_anchor);",
       "root = _vnode_0_anchor;",
       "function _vnode_0_create($, ..._args) {",
@@ -200,7 +200,7 @@
   "compiler: generateVnode: macro: should generate .for macro": {
     "html": "<div></div>",
     "create": [
-      "let _for_0_node = root, _for_0_parent = root.parentNode, _for_0_anchor = document.createComment(\"closure anchor\");",
+      "let _for_0_node = root, _for_0_anchor = document.createComment(\"closure anchor\");",
       "_for_0_node.replaceWith(_for_0_anchor);",
       "root = _for_0_anchor;",
       "function _for_0_create($, ..._args) {",
@@ -221,18 +221,18 @@
       "};",
       "return node;",
       "};",
-      "xm.updateNodes(_for_0_parent, _for_0_anchor, _for_0_nodes, _for_0_values, $.items, $, _for_0_createFor);",
+      "xm.updateNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, $.items, $, _for_0_createFor);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_for_0_parent, _for_0_anchor, _for_0_nodes, _for_0_values, $.items, $, _for_0_createFor);",
+      "xm.updateNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, $.items, $, _for_0_createFor);",
       ""
     ]
   },
   "compiler: generateVnode: macro: should generate .if macro": {
     "html": "<div></div>",
     "create": [
-      "let _if_0_node = root, _if_0_parent = root.parentNode, _if_0_anchor = document.createComment(\"closure anchor\");",
+      "let _if_0_node = root, _if_0_anchor = document.createComment(\"closure anchor\");",
       "_if_0_node.replaceWith(_if_0_anchor);",
       "root = _if_0_anchor;",
       "function _if_0_create($, ..._args) {",

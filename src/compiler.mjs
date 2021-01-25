@@ -56,8 +56,8 @@ function forMacro(vnode, $, key, value) {
                  };
                  return node;
                };
-               xm.updateNodes(${_}parent, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}createFor);\n`;
-  $.update += `xm.updateNodes(${_}parent, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}createFor);\n`;
+               xm.updateNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}createFor);\n`;
+  $.update += `xm.updateNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}createFor);\n`;
 }
 
 export function compile(name, template) {
@@ -92,7 +92,7 @@ function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
         node = generateNodeName($, vnode, "closure");
   generateVnode(vnode, $$);
   $.html += $$.html;
-  $.create += `let ${_}node = ${node}, ${_}parent = ${node}.parentNode, ${_}anchor = document.createComment("closure anchor");
+  $.create += `let ${_}node = ${node}, ${_}anchor = document.createComment("closure anchor");
                ${_}node.replaceWith(${_}anchor);
                ${node} = ${_}anchor;
                function ${_}create($, ..._args) {
