@@ -131,7 +131,7 @@ async function run(lvl, node) {
 async function runWrapper(lvl, node, name, f, selected) {
   if (!selected) return;
   const [ms, err] = await runFn(node, f, name);
-  if (err) log(lvl, 1, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
+  if (err) log(lvl, 1, "color: red", `x ${name} (${ms}ms)`, err);
 }
 
 async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEachs = []}) {
@@ -142,7 +142,7 @@ async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEac
   if (f && !err) log(lvl, 0, "color: green", `✓ ${name} (${ms}ms)`);
   else if (!err) log(lvl, 0, "color: yellow", `✓ ${name}`);
   else {
-    log(lvl, 1, "color: red", `x ${name} (${ms}ms)`, ...err.stack.split("\n"));
+    log(lvl, 1, "color: red", `x ${name} (${ms}ms)`, err);
     countFailed++;
   }
   if (f) for (let {f, name} of afterEachs) await runWrapper(lvl, node, name, f, true);
@@ -166,10 +166,13 @@ function id(node, name) {
   return names.reverse().filter(Boolean).join(": ");
 }
 
-function log(lvl, isFailure, color, line, ...lines) {
+function log(lvl, isFailure, color, line, err) {
   if (updatingFixtures && !isFailure) return;
   console.info(" ".repeat(lvl) + "%c" + line, color);
-  for (let l of lines) console.info(" ".repeat(lvl + 2) + "%c" + l, "color: grey");
+  if (err) {
+    if (!navigator.webdriver) console.error(err);
+    else for (let l of err.stack.split("\n")) console.info(" ".repeat(lvl + 2) + "%c" + l, "color: grey");
+  }
 }
 
 function newNode(name, parent, selected) {
