@@ -25,7 +25,7 @@ function onMacro(vnode, $, key, value) {
     $.create += `function ${node}_fn() { ${value} }\n`;
     $[event] += `setTimeout(() => ${node}_fn.call(${node}));\n`;
   } else {
-    let after = "$update();";
+    let after = "$.$update();";
     if (modifiers.includes("no")) after = "";
     $.create += `${vnode.node}.addEventListener("${event}", function($event) {
                  ${value};
@@ -64,42 +64,26 @@ export function compile(name, template) {
   const vnode = {node: "_node", properties: {}, children: parse(template)},
         $ = {html: "", create: "", update: ""};
   generateChildren(vnode, $);
-  return `xm.components["${name}"] = (function() {
-            const _hooks = xm.hooks["${name}"] || {};
-            const _template = document.createElement("template");
-            _template.innerHTML = \`${$.html.replaceAll("`", "\\`")}\`;
-            return function($, properties, _createChildren, $internal) {
-              let {$path, $query, $update} = $internal;
-              const _node = _template.content.cloneNode(true);
-              $ = Object.create($);
-              $ = Object.assign($, _hooks.create?.($, properties, $internal));
-              const [$children, _childrenUpdate] = _createChildren?.($) || [];
-              ${$.create}
-              const _update = (_properties) => {
-                ({$path, $query, $update} = $internal);
-                if (_properties) properties = _properties;
-                _hooks.update?.($, properties, $internal);
-                _childrenUpdate?.();
-                ${$.update}
-              };
-              return [new xm.Fragment(_node.childNodes), _update];
-            };
-          })();\n`;
+  return `xm.register("${name}", \`${$.html.replaceAll("`", "\\`")}\`, function(_node, slot, $, props) {
+    ${$.create}
+    return (props) => {
+      ${$.update}
+    };
+  });\n`;
 }
 
 function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
-  const $$ = {create: "", update: "", html: ""}, isTemplate = vnode.tag === "template",
-        node = generateNodeName($, vnode, "closure");
+  const $$ = {create: "", update: "", html: ""}, node = generateNodeName($, vnode, "closure");
   generateVnode(vnode, $$);
   $.html += $$.html;
   $.create += `let ${_}node = ${node}, ${_}anchor = document.createComment("closure anchor");
                ${_}node.replaceWith(${_}anchor);
                ${node} = ${_}anchor;
                function ${_}create($, ..._args) {
-                 let ${node} = ${isTemplate ? `${_}node.content` : `${_}node`}.cloneNode(true);
+                 let ${node} = ${_}node.cloneNode(true);
                  ${beforeCreate}
                  ${$$.create}
-                 return [${isTemplate ? `new xm.Fragment(${node}.childNodes)` : node}, (..._args) => {
+                 return [${node}, (..._args) => {
                    ${beforeUpdate}
                    ${$$.update}
                  }];
@@ -123,19 +107,17 @@ export function generateVnode(vnode, $) {
     if (vnode.void) return;
     generateChildren(vnode, $);
     $.html += `</${rawTag}>`;
+  } else if (isComponentTag(rawTag)) {
+    $.html += `<${rawTag}>`;
+    generateChildren(vnode, $);
+    $.html += `</${rawTag}>`;
+    const properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
+      `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
+    $.create += `${vnode.node}._props = ${properties}, ${vnode.node}._$ = $;\n`;
+    $.update += `${vnode.node}._props = ${properties};
+                 ${vnode.node}.updateCallback();\n`;
   } else {
-    const _ = prefix("vnode"),
-          properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
-            `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
-    generateClosure(Object.assign({}, vnode, {tag: "template", properties: {}}), $, _);
-    $.create += `let ${_}tag = ${tag};
-                 ${vnode.node} = xm.createComponent(${vnode.node}, ${_}tag, $, ${properties}, ${_}create, $internal);\n`;
-    if (isComponentTag(rawTag)) {
-      $.update += `${vnode.node}.updateComponent(${properties});\n`;
-    } else {
-      $.update += `if (${tag} === ${_}tag) ${vnode.node}.updateComponent(${properties});
-                   else ${_}tag = ${tag}, ${vnode.node} = xm.createComponent(${vnode.node}, ${tag}, $, ${properties}, ${_}create, $internal);\n`;
-    }
+    throw new Error("dynamic tags are currently not supported");
   }
 }
 

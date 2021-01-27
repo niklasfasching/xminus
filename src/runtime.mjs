@@ -1,5 +1,4 @@
-export const components = {};
-export const hooks = {};
+const classes = {};
 
 export function setProperty(node, k, v) {
   if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
@@ -14,7 +13,6 @@ export function setDynamicKeyProperty(node, k, updatedK, v) {
 }
 
 export function replaceWith(oldNode, newNode) {
-  if (newNode instanceof Fragment) newNode.refresh();
   oldNode.replaceWith(newNode);
   return newNode;
 }
@@ -33,7 +31,7 @@ export function nodeIf(condition, connectedNode, elseNode, $, create, update) {
 
 export function createChildNode($, value) {
   let node = value, oldValue;
-  if (value?.constructor === DocumentFragment) node = new Fragment(value.childNodes);
+  if (value instanceof DocumentFragment) throw new Error("Cannot use DocumentFragment as child");
   else if (!(value instanceof Node)) node = document.createTextNode(value);
   if (node.update) throw new Error("unexpected closure node");
   node.update = (updatedValue) => {
@@ -46,14 +44,6 @@ export function createChildNode($, value) {
     }
   }
   return node;
-}
-
-export function createComponent(node, tag, $, properties, createChildren, $update) {
-  const Component = xm.components[tag];
-  if (!Component) throw new Error(`component not found: ${tag}`);
-  const [component, update] = Component($, properties, createChildren, $update);
-  component.updateComponent = update;
-  return replaceWith(node, component);
 }
 
 export function updateNodes(parent, anchor, nodes, values, updatedValues, $, create) {
@@ -73,53 +63,65 @@ export function updateNodes(parent, anchor, nodes, values, updatedValues, $, cre
   }
 }
 
-export async function mount(parentNode, name, $, properties) {
-  window.xm = {components, hooks};
+export async function mount(parentNode, name, _$, _props) {
+  window.xm = {register};
   window.xm = await import(import.meta.url);
   if (document.querySelector("[type*=x-module], [type*=x-template]")) {
     const {bundle} = await import("./bundler.mjs");
     await import(await bundle(location, null));
   }
-  if (!components[name]) throw new Error(`component ${name} does not exist`);
   if (!location.hash) history.replaceState(null, null, "#/");
-  const $internal = Object.assign({$update: () => update()}, parseHash());
-  const fragment = new Fragment(parentNode.childNodes);
-  parentNode.innerHTML = '';
-  var [component, update] = components[name]($, properties, () => [fragment], $internal);
+  const component = document.createElement(name);
+  Object.assign(_$, {$update: () => component.updateCallback()}, parseHash());
+  Object.assign(component, {_props, _$})
   window.onhashchange = () => {
-    Object.assign($internal, parseHash());
-    $internal.$update();
+    Object.assign(_$, parseHash());
+    _$.$update();
   };
+  parentNode.innerHTML = '';
   parentNode.appendChild(component);
-}
-
-export class Fragment extends DocumentFragment {
-  constructor(childNodes = []) {
-    super();
-    this._anchor = document.createComment("fragment anchor");
-    this._childNodes = [...childNodes, this._anchor];
-    this.append(...this._childNodes);
-  }
-
-  get nextSibling() {
-    return this._childNodes[this._childNodes.length - 1].nextSibling;
-  }
-
-  replaceWith(node) {
-    for (let i = 0; i < this._childNodes.length - 1; i++) this._childNodes[i].remove();
-    replaceWith(this._anchor, node);
-  }
-
-  remove() {
-    for (let node of this._childNodes) node.remove();
-  }
-
-  refresh() {
-    if (!this.childNodes.length) this.append(...this._childNodes);
-  }
 }
 
 function parseHash() {
   const [$path, query] = location.hash.slice(1).split("?");
   return {$path, $query: Object.fromEntries(new URLSearchParams(query).entries())};
+}
+
+export function define(name, c) {
+  if (!(c.prototype instanceof Component)) throw new Error("class must inherit from Component");
+  classes[name] = c;
+}
+
+export function register(name, html, f) {
+  const template = document.createElement("template");
+  template.innerHTML = `<div class=slot></div>`;
+  const slotTemplate = template.content.firstChild;
+  template.innerHTML = html;
+  customElements.define(name, class extends (classes[name] || Component) {
+    connectedCallback() {
+      this.$update
+      this._slot = slotTemplate.cloneNode(true);
+      for (let child of this.childNodes) this._slot.append(child);
+      let {_$: $, _props: props, _slot: slot} = this;
+      this.onInit($, props, slot);
+      const fragment = template.content.cloneNode(true);
+      this._updateComponent = f.call(this, fragment, slot, $, props);
+      this.append(fragment);
+      this.onCreate($, props, slot);
+    }
+    updateCallback() {
+      this.onUpdate(this._$, this._props, this._slot);
+      this._updateComponent(this._props);
+    }
+    detachedCallback() {
+      this.onRemove(this._$, this._props, this._slot);
+    }
+  });
+}
+
+export class Component extends HTMLElement {
+  onInit($, props, slot) {}
+  onCreate($, props, slot) {}
+  onUpdate($, props, slot) {}
+  onRemove($, props, slot) {}
 }

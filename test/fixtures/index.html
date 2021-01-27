@@ -4,12 +4,11 @@
     <meta charset="utf-8">
     <script type="text/x-template" id="x-main">
       <p>{$.foo}</p>
-      <div>{$path}: {"{" + Object.entries($query).map(([k,v]) => `${k}: ${v}`).join(",") + "}"}</div>
+      <div>{$.$path}: {"{" + Object.entries($.$query).map(([k,v]) => `${k}: ${v}`).join(",") + "}"}</div>
     </script>
     <script type="module">
-     import {mount, hooks} from "/src/runtime.mjs";
+     import {mount} from "/src/runtime.mjs";
      mount(document.body, "x-main", {foo: "bar"});
-     hooks["x-main"] = {};
     </script>
   </head>
   <body></body>

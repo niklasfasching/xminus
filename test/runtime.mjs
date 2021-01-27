@@ -7,8 +7,8 @@ t.describe("runtime", () => {
 
   function fragment(html = "") {
     const template = document.createElement("template");
-    template.innerHTML = html;
-    return new runtime.Fragment(template.content.childNodes);
+    template.innerHTML = "<!-- anchor -->" + html;
+    return template.content;
   }
 
   t.describe("updateNodes", () => {
@@ -50,46 +50,6 @@ t.describe("runtime", () => {
       runtime.updateNodes(parent, anchor, nodes, values, updatedValues, "$", create);
       t.assert(updated);
       t.assert(node1 !== nodes[1]);
-    });
-  });
-
-  t.describe("fragment", () => {
-    let parent, fragment1, fragment2, p1, p2;
-    t.beforeEach(() => {
-      parent = document.createElement("div");
-      p1 = document.createElement("p");
-      p2 = document.createElement("p");
-      fragment1 = fragment("<p>foo</p>bar<p>baz</p>");
-      fragment2 = fragment("foo<p>bar</p>baz");
-    })
-
-    t("should support nextSibling when containing multiple child nodes", () => {
-      parent.append(fragment1, p1);
-      t.equal(fragment1.nextSibling, p1);
-      parent.insertBefore(p2, fragment1.nextSibling);
-      t.equal(fragment1.nextSibling, p2);
-    });
-
-    t("should support nextSibling and insertAfter when empty (i.e. be anchored)", () => {
-      const emptyFragment = fragment();
-      parent.append(emptyFragment, p1);
-      t.equal(emptyFragment.nextSibling, p1);
-      parent.insertBefore(p2, emptyFragment.nextSibling);
-      t.equal(emptyFragment.nextSibling, p2);
-    });
-  });
-
-  t.describe("replaceWith", () => {
-    t("should replace fragments correctly", () => {
-      const parent = document.createElement("div");
-      const fragment1 = fragment(`<p>foo</p> bar <p>baz</p>`);
-      const fragment2 = fragment(`<p>baz</p> bar <p>bam</p>`);
-      parent.append(fragment1);
-      t.equal(parent.innerText, "foo bar baz");
-      runtime.replaceWith(fragment1, fragment2);
-      t.equal(parent.innerText, "baz bar bam");
-      runtime.replaceWith(fragment2, fragment1);
-      t.equal(parent.innerText, "foo bar baz");
     });
   });
 

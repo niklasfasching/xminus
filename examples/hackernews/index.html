@@ -60,15 +60,16 @@
     </script>
 
     <script type="module">
-     import {mount, hooks} from "/src/runtime.mjs";
+     import {mount, define, Component} from "/src/runtime.mjs";
 
-     hooks["x-front-page"] = {
-       async create($, properties, {$update}) {
+     define("x-front-page", class extends Component {
+       async onInit($) {
          const defaults = {n: 20, unit: "n", order: "date", seen: {}};
          Object.assign($, defaults, JSON.parse(localStorage.getItem("hackernews") || "{}"));
-         await $.updateStories($, $update);
-       },
-       async update($, properties, {$update}) {
+         await $.updateStories($);
+       }
+
+       async onUpdate($) {
          for (const id in $.seen) if (Date.now() - $.seen[id] > 2 * 24 * 60 * 60 * 1000) delete $.seen[id];
          localStorage.setItem("hackernews", JSON.stringify({
            n: $.n,
@@ -76,8 +77,8 @@
            order: $.order,
            seen: $.seen
          }));
-       },
-     };
+       }
+     });
 
      mount(document.body, "x-front-page", {
        stories: [],
@@ -102,7 +103,7 @@
          else return fmt(Math.floor(seconds / 60 / 60 / 24), "day");
        },
 
-       async updateStories({n, unit, order}, $update) {
+       async updateStories({n, unit, order, $update}) {
          const url = "https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=50";
          const {hits} = await fetch(url).then(r => r.json());
          const orderProperty = order === "date" ? "created_at_i" :
