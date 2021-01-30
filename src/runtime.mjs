@@ -1,4 +1,4 @@
-const classes = {};
+const classes = {}, compilerTemplate = document.createElement("template");
 
 export function setProperty(node, k, v) {
   if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
@@ -80,6 +80,11 @@ export async function mount(parentNode, name, _$, _props) {
   };
   parentNode.innerHTML = '';
   parentNode.appendChild(component);
+}
+
+export function fragment(html) {
+  compilerTemplate.innerHTML = html;
+  return compilerTemplate.content;
 }
 
 function parseHash() {

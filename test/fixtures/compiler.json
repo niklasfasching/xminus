@@ -190,11 +190,9 @@
     ]
   },
   "compiler: generateVnode: macro: should generate .for macro": {
-    "html": "<div></div>",
+    "html": "<!---->",
     "create": [
-      "let _for_0_node = root, _for_0_anchor = document.createComment(\"closure anchor\");",
-      "_for_0_node.replaceWith(_for_0_anchor);",
-      "root = _for_0_anchor;",
+      "let _for_0_anchor = root, _for_0_node = xm.fragment(`<div></div>`).firstChild;",
       "function _for_0_create($, ..._args) {",
       "let root = _for_0_node.cloneNode(true);",
       "$ = Object.assign(Object.create($), {\"item\": _args[0]});",
@@ -222,11 +220,9 @@
     ]
   },
   "compiler: generateVnode: macro: should generate .if macro": {
-    "html": "<div></div>",
+    "html": "<!---->",
     "create": [
-      "let _if_0_node = root, _if_0_anchor = document.createComment(\"closure anchor\");",
-      "_if_0_node.replaceWith(_if_0_anchor);",
-      "root = _if_0_anchor;",
+      "let _if_0_anchor = root, _if_0_node = xm.fragment(`<div></div>`).firstChild;",
       "function _if_0_create($, ..._args) {",
       "let root = _if_0_node.cloneNode(true);",
       "let _properties_1_node = root;",

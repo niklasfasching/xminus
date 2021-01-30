@@ -75,10 +75,8 @@ export function compile(name, template) {
 function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
   const $$ = {create: "", update: "", html: ""}, node = generateNodeName($, vnode, "closure");
   generateVnode(vnode, $$);
-  $.html += $$.html;
-  $.create += `let ${_}node = ${node}, ${_}anchor = document.createComment("closure anchor");
-               ${_}node.replaceWith(${_}anchor);
-               ${node} = ${_}anchor;
+  $.html += "<!---->";
+  $.create += `let ${_}anchor = ${node}, ${_}node = xm.fragment(\`${$$.html.replaceAll("`", "\\`")}\`).firstChild;
                function ${_}create($, ..._args) {
                  let ${node} = ${_}node.cloneNode(true);
                  ${beforeCreate}
