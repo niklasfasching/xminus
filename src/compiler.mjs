@@ -111,7 +111,7 @@ export function generateVnode(vnode, $) {
     $.html += `</${rawTag}>`;
     const properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
       `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
-    $.create += `${vnode.node}._props = ${properties}, ${vnode.node}._$ = $;\n`;
+    $.create += `${vnode.node}._props = ${properties}, ${vnode.node}._$ = Object.create($);\n`;
     $.update += `${vnode.node}._props = ${properties};
                  ${vnode.node}.updateCallback();\n`;
   } else {
