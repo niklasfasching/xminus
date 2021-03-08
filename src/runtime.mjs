@@ -104,7 +104,6 @@ export function register(name, html, f) {
   template.innerHTML = html;
   customElements.define(name, class extends (classes[name] || Component) {
     connectedCallback() {
-      this.$update
       this._slot = slotTemplate.cloneNode(true);
       for (let child of this.childNodes) this._slot.append(child);
       let {_$: $, _props: props, _slot: slot} = this;
