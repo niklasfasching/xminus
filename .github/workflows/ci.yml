@@ -12,7 +12,7 @@ jobs:
     steps:
     - name: go
       run: |
-        sudo snap install go --edge --classic
+        sudo snap install go --classic
     - name: git
       run: |
         git clone --depth 1 "https://x-access-token:${{secrets.GITHUB_TOKEN}}@github.com/${GITHUB_REPOSITORY}" .
@@ -21,7 +21,7 @@ jobs:
         git log -1 --format="%H"
     - name: test
       run: |
-        GOROOT=/snap/go/current make test bench
+        make test bench
     - name: gh-pages
       run: |
         git checkout --orphan gh-pages && git reset
