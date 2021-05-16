@@ -1,5 +1,11 @@
 const classes = {}, compilerTemplate = document.createElement("template");
 
+export const symbols = {
+  updateChildNode: Symbol("updateChildNode"),
+  updateIfNode: Symbol("updateIfNode"),
+  updateComponent: Symbol("updateComponent"),
+};
+
 export function setProperty(node, k, v) {
   if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
@@ -19,34 +25,31 @@ export function replaceWith(oldNode, newNode) {
 
 export function nodeIf(condition, connectedNode, elseNode, $, create, update) {
   if (!condition) {
-    if (connectedNode === elseNode) return [elseNode, null];
-    return [replaceWith(connectedNode, elseNode), null];
+    if (connectedNode === elseNode) return elseNode;
+    return replaceWith(connectedNode, elseNode);
   } else if (condition && connectedNode !== elseNode) {
-    update();
-    return [connectedNode, update];
+    connectedNode[symbols.updateIfNode]();
+    return connectedNode;
   }
-  const [node, _update] = create($);
-  return [replaceWith(elseNode, node), _update];
+  return replaceWith(elseNode, create($));
 }
 
 export function createChildNode($, value) {
   let node = value, oldValue;
   if (value instanceof DocumentFragment) throw new Error("Cannot use DocumentFragment as child");
-  else if (!(value instanceof Node)) node = document.createTextNode(value);
-  if (node.update) throw new Error("unexpected closure node");
-  node.update = (updatedValue) => {
+  else if (value instanceof Node) return value;
+  node = document.createTextNode(value);
+  node[symbols.updateChildNode] = (updatedValue) => {
     oldValue = value, value = updatedValue;
     if (oldValue === updatedValue) return node;
-    else if ((updatedValue instanceof Node)) return createChildNode($, updatedValue);
-    else {
-      node.textContent = updatedValue;
-      return node;
-    }
-  }
+    else if ((updatedValue instanceof Node)) return updatedValue;
+    node.textContent = updatedValue;
+    return node;
+  };
   return node;
 }
 
-export function updateNodes(parent, anchor, nodes, values, updatedValues, $, create) {
+export function updateChildNodes(parent, anchor, nodes, values, updatedValues, $, create) {
   for (let i = updatedValues.length; i < values.length; i++) nodes[i].remove();
   values.length = updatedValues.length, nodes.length = updatedValues.length;
   for (let i = 0; i < updatedValues.length; i++) {
@@ -54,9 +57,9 @@ export function updateNodes(parent, anchor, nodes, values, updatedValues, $, cre
       const node = create($, updatedValues[i]);
       parent.insertBefore(node, anchor);
       nodes[i] = node;
-    } else {
+    } else if (nodes[i] !== updatedValues[i]) {
       let oldNode = nodes[i], updatedValue = updatedValues[i];
-      nodes[i] = oldNode.update ? oldNode.update(updatedValue) : create($, updatedValue);
+      nodes[i] = oldNode[symbols.updateChildNode] ? oldNode[symbols.updateChildNode](updatedValue) : create($, updatedValue);
       if (oldNode !== nodes[i]) replaceWith(oldNode, nodes[i]);
     }
     values[i] = updatedValues[i];
@@ -109,13 +112,13 @@ export function register(name, html, f) {
       let {_$: $, _props: props, _slot: slot} = this;
       this.onInit($, props, slot);
       const fragment = template.content.cloneNode(true);
-      this._updateComponent = f.call(this, fragment, slot, $, props);
+      this[symbols.updateComponent] = f.call(this, fragment, slot, $, props);
       this.append(fragment);
       this.onCreate($, props, slot);
     }
     updateCallback() {
       this.onUpdate(this._$, this._props, this._slot);
-      this._updateComponent(this._props);
+      this[symbols.updateComponent](this._props);
     }
     detachedCallback() {
       this.onRemove(this._$, this._props, this._slot);

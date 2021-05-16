@@ -30,11 +30,11 @@
       "let _children_0_node = root.firstChild;",
       "let _children_2_node = root;",
       "const _children_1_nodes = [_children_0_node.nextSibling], _children_1_values = [];",
-      "xm.updateNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(dynamic child)], $, xm.createChildNode);",
+      "xm.updateChildNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(dynamic child)], $, xm.createChildNode);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(dynamic child)], $, xm.createChildNode);",
+      "xm.updateChildNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(dynamic child)], $, xm.createChildNode);",
       ""
     ]
   },
@@ -45,11 +45,11 @@
       "let _children_1_node = _children_0_node.nextSibling;",
       "let _children_3_node = root;",
       "const _children_2_nodes = [_children_1_node], _children_2_values = [];",
-      "xm.updateNodes(_children_3_node, null, _children_2_nodes, _children_2_values, [(not a child of input)], $, xm.createChildNode);",
+      "xm.updateChildNodes(_children_3_node, null, _children_2_nodes, _children_2_values, [(not a child of input)], $, xm.createChildNode);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_children_3_node, null, _children_2_nodes, _children_2_values, [(not a child of input)], $, xm.createChildNode);",
+      "xm.updateChildNodes(_children_3_node, null, _children_2_nodes, _children_2_values, [(not a child of input)], $, xm.createChildNode);",
       ""
     ]
   },
@@ -59,12 +59,12 @@
       "let _children_0_node = root.firstChild;",
       "let _children_2_node = root;",
       "const _children_1_nodes = [_children_0_node.nextSibling], _children_1_values = [];",
-      "xm.updateNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(baz)], $, xm.createChildNode);",
+      "xm.updateChildNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(baz)], $, xm.createChildNode);",
       "root._props = { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), }, root._$ = Object.create($);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(baz)], $, xm.createChildNode);",
+      "xm.updateChildNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(baz)], $, xm.createChildNode);",
       "root._props = { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), };",
       "root.updateCallback();",
       ""
@@ -77,16 +77,16 @@
       "let _children_1_node = _children_0_node.firstChild;",
       "let _children_3_node = _children_0_node;",
       "const _children_2_nodes = [_children_1_node], _children_2_values = [];",
-      "xm.updateNodes(_children_3_node, null, _children_2_nodes, _children_2_values, [(foo bar)], $, xm.createChildNode);",
+      "xm.updateChildNodes(_children_3_node, null, _children_2_nodes, _children_2_values, [(foo bar)], $, xm.createChildNode);",
       "let _children_4_node = _children_0_node.nextSibling;",
       "let _children_6_node = root;",
       "const _children_5_nodes = [_children_4_node], _children_5_values = [];",
-      "xm.updateNodes(_children_6_node, null, _children_5_nodes, _children_5_values, [(baz)], $, xm.createChildNode);",
+      "xm.updateChildNodes(_children_6_node, null, _children_5_nodes, _children_5_values, [(baz)], $, xm.createChildNode);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_children_3_node, null, _children_2_nodes, _children_2_values, [(foo bar)], $, xm.createChildNode);",
-      "xm.updateNodes(_children_6_node, null, _children_5_nodes, _children_5_values, [(baz)], $, xm.createChildNode);",
+      "xm.updateChildNodes(_children_3_node, null, _children_2_nodes, _children_2_values, [(foo bar)], $, xm.createChildNode);",
+      "xm.updateChildNodes(_children_6_node, null, _children_5_nodes, _children_5_values, [(baz)], $, xm.createChildNode);",
       ""
     ]
   },
@@ -198,24 +198,19 @@
       "$ = Object.assign(Object.create($), {\"item\": _args[0]});",
       "let _properties_1_node = root;",
       "xm.setProperty(_properties_1_node, \"key\", (dynamic value));",
-      "return [root, (..._args) => {",
+      "root[xm.symbols.updateChildNode] = (..._args) => {",
       "$[\"item\"] = _args[0];",
       "xm.setProperty(_properties_1_node, \"key\", (dynamic value));",
-      "}];",
+      "return root;",
+      "};",
+      "return root;",
       "}",
-      "const _for_0_values = [], _for_0_nodes = [], _for_0_createFor = ($, value) => {",
-      "const [node, update] = _for_0_create($, value);",
-      "node.update = (value) => {",
-      "update(value);",
-      "return node;",
-      "};",
-      "return node;",
-      "};",
-      "xm.updateNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, $.items, $, _for_0_createFor);",
+      "const _for_0_values = [], _for_0_nodes = [];",
+      "xm.updateChildNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, $.items, $, _for_0_create);",
       ""
     ],
     "update": [
-      "xm.updateNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, $.items, $, _for_0_createFor);",
+      "xm.updateChildNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, $.items, $, _for_0_create);",
       ""
     ]
   },
@@ -227,16 +222,18 @@
       "let root = _if_0_node.cloneNode(true);",
       "let _properties_1_node = root;",
       "xm.setProperty(_properties_1_node, \"key\", (dynamic value));",
-      "return [root, (..._args) => {",
+      "root[xm.symbols.updateIfNode] = (..._args) => {",
       "xm.setProperty(_properties_1_node, \"key\", (dynamic value));",
-      "}];",
+      "return root;",
+      "};",
+      "return root;",
       "}",
-      "let [_if_0_connected, _if_0_update] = xm.nodeIf(($.condition), _if_0_anchor, _if_0_anchor, $, _if_0_create);",
+      "let _if_0_connected = xm.nodeIf(($.condition), _if_0_anchor, _if_0_anchor, $, _if_0_create);",
       "root = _if_0_connected;",
       ""
     ],
     "update": [
-      "[_if_0_connected, _if_0_update] = xm.nodeIf(($.condition), _if_0_connected, _if_0_anchor, $, _if_0_create, _if_0_update);",
+      "_if_0_connected = xm.nodeIf(($.condition), _if_0_connected, _if_0_anchor, $, _if_0_create);",
       ""
     ]
   },

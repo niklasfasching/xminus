@@ -36,28 +36,22 @@ function onMacro(vnode, $, key, value) {
 
 function ifMacro(vnode, $, key, value) {
   const _ = prefix("if");
-  generateClosure(vnode, $, _);
-  $.create += `let [${_}connected, ${_}update] = xm.nodeIf((${value}), ${_}anchor, ${_}anchor, $, ${_}create);
+  generateClosure(vnode, $, _, "xm.symbols.updateIfNode",);
+  $.create += `let ${_}connected = xm.nodeIf((${value}), ${_}anchor, ${_}anchor, $, ${_}create);
                ${vnode.node} = ${_}connected;\n`;
-  $.update += `[${_}connected, ${_}update] = xm.nodeIf((${value}), ${_}connected, ${_}anchor, $, ${_}create, ${_}update);\n`;
+  $.update += `${_}connected = xm.nodeIf((${value}), ${_}connected, ${_}anchor, $, ${_}create);\n`;
 }
 
 function forMacro(vnode, $, key, value) {
   const _ = prefix("for"),
         [name, inOrOf, values] = value.split(/ (of|in) /);
   generateClosure(vnode, $, _,
+                  "xm.symbols.updateChildNode",
                   `$ = Object.assign(Object.create($), {"${name}": _args[0]});`,
                   `$["${name}"] = _args[0];`);
-  $.create += `const ${_}values = [], ${_}nodes = [], ${_}createFor = ($, value) => {
-                 const [node, update] = ${_}create($, value);
-                 node.update = (value) => {
-                   update(value);
-                   return node;
-                 };
-                 return node;
-               };
-               xm.updateNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}createFor);\n`;
-  $.update += `xm.updateNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}createFor);\n`;
+  $.create += `const ${_}values = [], ${_}nodes = [];
+               xm.updateChildNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}create);\n`;
+  $.update += `xm.updateChildNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}create);\n`;
 }
 
 export function compile(name, template) {
@@ -72,7 +66,7 @@ export function compile(name, template) {
   });\n`;
 }
 
-function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
+function generateClosure(vnode, $, _, updateKey, beforeCreate = "", beforeUpdate = "") {
   const $$ = {create: "", update: "", html: ""}, node = generateNodeName($, vnode, "closure");
   generateVnode(vnode, $$);
   $.html += "<!---->";
@@ -81,10 +75,12 @@ function generateClosure(vnode, $, _, beforeCreate = "", beforeUpdate = "") {
                  let ${node} = ${_}node.cloneNode(true);
                  ${beforeCreate}
                  ${$$.create}
-                 return [${node}, (..._args) => {
+                 ${node}[${updateKey}] = (..._args) => {
                    ${beforeUpdate}
                    ${$$.update}
-                 }];
+                   return ${node};
+                 };
+                 return ${node};
                }\n`;
 }
 
@@ -163,8 +159,8 @@ function generateChildren(vnode, $) {
           node = generateLocalNodeName($, vnode, "children");
 
     $.create += `const ${_}nodes = [${nodes}], ${_}values = [];
-                 xm.updateNodes(${node}, null, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
-    $.update += `xm.updateNodes(${node}, null, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
+                 xm.updateChildNodes(${node}, null, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
+    $.update += `xm.updateChildNodes(${node}, null, ${_}nodes, ${_}values, [${values}], $, xm.createChildNode);\n`;
   }
 }
 
