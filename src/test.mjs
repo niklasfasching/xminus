@@ -1,7 +1,7 @@
 const root = newNode(), updatingFixtures = window.args?.includes("update-fixtures");
 let currentNode = root, pendingAssertions = [],
     count = 0, countFailed = 0,
-    exitAfter = false, resolve;
+    dynamicOnly = false, exitAfter = false, resolve = null;
 
 export const done = new Promise((r) => resolve = r);
 
@@ -19,11 +19,13 @@ Object.assign(t, {
   describeOnly(name, f) {
     group(name, f, true);
     markNodes(currentNode, "hasSelected");
+    if (count || countFailed) dynamicOnly = true;
   },
 
   only(name, f) {
     currentNode.children.push({name, f, selected: true});
     markNodes(currentNode, "hasSelected");
+    if (count || countFailed) dynamicOnly = true;
   },
 
   setupFixtures,
@@ -127,14 +129,17 @@ async function run(lvl, node) {
     else await runTest(lvl+2, node, child);
   }
   for (let {name, f} of node.afters) await runWrapper(lvl+2, node, name, f, selected);
-  if (selected && node !== root) log(lvl, 0, "color: grey", `(${time()}ms)\n`);
-  else if (node === root) log(lvl + 2, 0, "color: grey", `${count} tests (${countFailed} failures)\n`);
+  if (selected && node !== root) log(lvl, 0, "grey", `(${time()}ms)\n`);
+  else if (node === root) {
+    const details = dynamicOnly ? " - exit after dynamic only" : ""
+    log(lvl + 2, 0, dynamicOnly ? "yellow" : "grey", `${count} tests (${countFailed} failures)${details}\n`);
+  }
 }
 
 async function runWrapper(lvl, node, name, f, selected) {
   if (!selected) return;
   const [ms, err] = await runFn(node, f, name);
-  if (err) log(lvl, 1, "color: red", `x ${name} (${ms}ms)`, err);
+  if (err) log(lvl, 1, "red", `x ${name} (${ms}ms)`, err);
 }
 
 async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEachs = []}) {
@@ -142,10 +147,10 @@ async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEac
   count++;
   if (f) for (let {f, name} of beforeEachs) await runWrapper(lvl, node, name, f, true);
   const [ms, err] = await runFn(node, f, name);
-  if (f && !err) log(lvl, 0, "color: green", `✓ ${name} (${ms}ms)`);
-  else if (!err) log(lvl, 0, "color: yellow", `✓ ${name}`);
+  if (f && !err) log(lvl, 0, "green", `✓ ${name} (${ms}ms)`);
+  else if (!err) log(lvl, 0, "yellow", `✓ ${name}`);
   else {
-    log(lvl, 1, "color: red", `x ${name} (${ms}ms)`, err);
+    log(lvl, 1, "red", `x ${name} (${ms}ms)`, err);
     countFailed++;
   }
   if (f) for (let {f, name} of afterEachs) await runWrapper(lvl, node, name, f, true);
@@ -171,10 +176,10 @@ function id(node, name) {
 
 function log(lvl, isFailure, color, line, err) {
   if (updatingFixtures && !isFailure) return;
-  console.info(" ".repeat(lvl) + "%c" + line, color);
+  console.info(" ".repeat(lvl) + "%c" + line, "color: " + color);
   if (err) {
     if (!navigator.webdriver) console.error(err);
-    else for (let l of err.stack.split("\n")) console.info(" ".repeat(lvl + 2) + "%c" + l, "color: grey");
+    else for (let l of err.stack.split("\n")) log(lvl + 2, false, "grey", l);
   }
 }
 
