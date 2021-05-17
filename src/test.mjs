@@ -1,29 +1,29 @@
 const root = newNode(), updatingFixtures = window.args?.includes("update-fixtures");
-let node = root, pendingAssertions = [],
+let currentNode = root, pendingAssertions = [],
     count = 0, countFailed = 0,
-    started = false, exitAfter = false, resolve;
+    exitAfter = false, resolve;
 
 export const done = new Promise((r) => resolve = r);
 
 export function t(name, f) {
-  if (started) throw new Error("t() must not be called async");
-  node.children.push({name, f, selected: node.selected});
+  if (!currentNode) throw new Error("t() must not be called async");
+  currentNode.children.push({name, f, selected: currentNode.selected});
 }
 
 Object.assign(t, {
   describe(name, f) {
-    if (started) throw new Error("t.describe() must not be called async");
+    if (!currentNode) throw new Error("t.describe() must not be called async");
     group(name, f);
   },
 
   describeOnly(name, f) {
     group(name, f, true);
-    markNodes(node, "hasSelected");
+    markNodes(currentNode, "hasSelected");
   },
 
   only(name, f) {
-    node.children.push({name, f, selected: true});
-    markNodes(node, "hasSelected");
+    currentNode.children.push({name, f, selected: true});
+    markNodes(currentNode, "hasSelected");
   },
 
   setupFixtures,
@@ -90,8 +90,8 @@ function pushPendingAssertion(key, value) {
 }
 
 function wrapper(name, f, key) {
-  if (!f) f = name, name = `${key} ${node[key + "s"].length}`;
-  node[key + "s"].push({name, f});
+  if (!f) f = name, name = `${key} ${currentNode[key + "s"].length}`;
+  currentNode[key + "s"].push({name, f});
 }
 
 function getEachWrappers(node) {
@@ -104,21 +104,24 @@ function getEachWrappers(node) {
 }
 
 function group(name, f, selected) {
-  node = newNode(name, node, selected);
+  currentNode = newNode(name, currentNode, selected);
   const result = f?.();
   if (result) throw new Error(`unexpected return value from describe: ${result}`);
-  const [beforeEachs, afterEachs] = getEachWrappers(node);
-  for (let child of node.children) {
+  const [beforeEachs, afterEachs] = getEachWrappers(currentNode);
+  for (let child of currentNode.children) {
     Object.assign(child, {beforeEachs, afterEachs});
   }
-  node.parent.children.push(node);
-  node = node.parent;
+  currentNode.parent.children.push(currentNode);
+  currentNode = currentNode.parent;
 }
 
 async function run(lvl, node) {
+  currentNode = null;
   const time = timer(), selected = !root.hasSelected || node.selected || node.hasSelected;
   if (selected && node !== root) log(lvl, 0, "", node.name);
+  currentNode = node;
   for (let {name, f} of node.befores) await runWrapper(lvl+2, node, name, f, selected);
+  currentNode = null;
   for (let child of node.children) {
     if (child.children) await run(lvl+2, child);
     else await runTest(lvl+2, node, child);
@@ -221,8 +224,7 @@ function setupFixtures(path) {
 }
 
 setTimeout(async () => {
-  started = true;
-  await run(0, node);
+  await run(0, currentNode);
   resolve({count, countFailed});
   if (exitAfter) window.close(countFailed && 1);
 });

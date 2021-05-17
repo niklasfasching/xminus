@@ -86,4 +86,42 @@ t.describe("t", () => {
       assertFixture({id, value: "hello world"});
     });
   });
+
+  t.describe("dynamic tests", () => {
+    let simpleTestFinished,
+        simpleDescribeFinished,
+        beforeFinished,
+        afterFinished;
+    t.describe("create dynamic test", () => {
+      t.before("create dynamic test", async () => {
+        await new Promise(setTimeout);
+        t("simple created test", () => simpleTestFinished = true);
+
+        t.describe("simple created describe", () => {
+          t("created test", () => simpleDescribeFinished = true);
+        });
+
+        t.describe("complex created describe", () => {
+          t.before("created before", () => {
+            beforeFinished = true;
+          });
+          t("created test", () => {
+            t.assert(beforeFinished);
+            beforeFinished = "test was here";
+          });
+          t.after("created after", () => {
+            t.equal(beforeFinished, "test was here");
+            beforeFinished = true, afterFinished = true;
+          });
+        });
+      });
+    });
+
+    t("should have run the dynamic test", () => {
+      t.assert(simpleTestFinished);
+      t.assert(simpleDescribeFinished);
+      t.assert(beforeFinished);
+      t.assert(afterFinished);
+    });
+  });
 });
