@@ -91,7 +91,8 @@ t.describe("t", () => {
     let simpleTestFinished,
         simpleDescribeFinished,
         beforeFinished,
-        afterFinished;
+        afterFinished,
+        iframe;
     t.describe("create dynamic test", () => {
       t.before("create dynamic test", async () => {
         await new Promise(setTimeout);
@@ -114,6 +115,8 @@ t.describe("t", () => {
             beforeFinished = true, afterFinished = true;
           });
         });
+
+        iframe = await openIframe("/test/fixtures/iframe_test.html");
       });
     });
 
@@ -122,6 +125,7 @@ t.describe("t", () => {
       t.assert(simpleDescribeFinished);
       t.assert(beforeFinished);
       t.assert(afterFinished);
+      t.assert(iframe.contentWindow.iframeTestFinished);
     });
   });
 });

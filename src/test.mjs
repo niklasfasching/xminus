@@ -123,9 +123,9 @@ async function run(lvl, node) {
   currentNode = null;
   const time = timer(), selected = !root.hasSelected || node.selected || node.hasSelected;
   if (selected && node !== root) log(lvl, 0, "", node.name);
-  currentNode = node;
+  currentNode = node, window._test_currentNode = node;
   for (let {name, f} of node.befores) await runWrapper(lvl+2, node, name, f, selected);
-  currentNode = null;
+  currentNode = null, window._test_currentNode = null;
   for (let child of node.children) {
     if (child.children) await run(lvl+2, child);
     else await runTest(lvl+2, node, child);
@@ -230,7 +230,9 @@ function setupFixtures(path) {
   }
 }
 
-setTimeout(async () => {
+const parentRoot = window !== window.parent && window.parent._test_currentNode;
+if (parentRoot) parentRoot.children.push(Object.assign(root, {name: location.pathname}));
+else setTimeout(async () => {
   await run(0, root);
   resolve({count, countFailed});
   if (exitAfter) window.close(countFailed && 1);

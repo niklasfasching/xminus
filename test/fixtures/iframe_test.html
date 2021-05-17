@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<head>
+  <title>import iframe tests</title>
+</head>
+<body x-test>
+  <script type="module">
+   import {t} from "/src/test.mjs";
+   t("test", () => window.iframeTestFinished = true);
+  </script>
+</body>
