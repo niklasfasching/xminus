@@ -17,12 +17,14 @@ Object.assign(t, {
   },
 
   describeOnly(name, f) {
+    if (!currentNode) throw new Error("t.describe() must not be called async");
     group(name, f, true);
     markNodes(currentNode, "hasSelected");
     if (count || countFailed) dynamicOnly = true;
   },
 
   only(name, f) {
+    if (!currentNode) throw new Error("t() must not be called async");
     currentNode.children.push({name, f, selected: true});
     markNodes(currentNode, "hasSelected");
     if (count || countFailed) dynamicOnly = true;
@@ -229,7 +231,7 @@ function setupFixtures(path) {
 }
 
 setTimeout(async () => {
-  await run(0, currentNode);
+  await run(0, root);
   resolve({count, countFailed});
   if (exitAfter) window.close(countFailed && 1);
 });
