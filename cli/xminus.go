@@ -38,6 +38,20 @@ var reloadSnippet = `
   longpoll();
 </script>`
 
+var setupHTML = `
+<script type=module>
+window.isHeadless = navigator.webdriver;
+window.close = (code = 0) => isHeadless ? console.clear(code) : console.log("exit:", code);
+window.openIframe = (src) => {
+  return new Promise((resolve, reject) => {
+    const iframe = document.createElement("iframe");
+    const onerror = reject;
+    const onload = () => resolve(iframe);
+    document.body.appendChild(Object.assign(iframe, {onload, onerror, src}));
+  });
+};
+</script>`
+
 type Watcher struct {
 	Path     string
 	Interval time.Duration
@@ -100,11 +114,10 @@ func (w *Watcher) Start() {
 		if (previousSum == 0 || previousSum == sum) && err == nil {
 			previousSum = sum
 		} else {
-			log.Println("\n\n")
 			if err != nil {
-				log.Println("Error traversing directory. Updating...\n")
+				log.Println("Error traversing directory. Updating...")
 			} else {
-				log.Println("Directory changed. Updating...\n")
+				log.Println("Directory changed. Updating...")
 			}
 			previousSum = sum
 			w.Lock()
@@ -219,17 +232,3 @@ func (r *Runner) Start() {
 		cancel()
 	}
 }
-
-var setupHTML = `
-<script type=module>
-window.isHeadless = navigator.webdriver;
-window.close = (code = 0) => isHeadless ? console.clear(code) : console.log("exit:", code);
-window.openIframe = (src) => {
-  return new Promise((resolve, reject) => {
-    const iframe = document.createElement("iframe");
-    const onerror = reject;
-    const onload = () => resolve(iframe);
-    document.body.appendChild(Object.assign(iframe, {onload, onerror, src}));
-  });
-};
-</script>`
