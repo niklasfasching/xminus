@@ -2,7 +2,8 @@
 <head>
   <title>hackernews</title>
   <script type="text/x-template" id="x-hello-world">
-    hello { this.name }
+    <button .on:click="click()"></button>
+    hello { this.name } { props.value }
   </script>
 
   <script type="module">
@@ -18,8 +19,15 @@
    import {mount} from "/src/runtime.mjs";
    import {t} from "/src/test.mjs";
    t("should render hello world", async () => {
-     const component = await mount(document.body, "x-hello-world", {});
-     t.assert(component.innerText === "hello world");
+     const component = await mount(document.body, "x-hello-world", {}, {value: 42});
+     t.assert(component.innerText.trim() === "hello world 42");
+   });
+
+   t("should update props", async () => {
+     const component = await mount(document.body, "x-hello-world", {}, {value: 42});
+     component._props = {value: "updated"};
+     component.updateCallback()
+     t.equal(component.innerText.trim(), "hello world updated");
    });
   </script>
 </body>

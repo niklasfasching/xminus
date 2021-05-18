@@ -241,7 +241,8 @@
     "result": [
       "xm.register(\"x-foo-component\", `<div></div>`, function(_node, slot, $, props) {",
       "let _children_0_node = _node.firstChild;",
-      "return (props) => {",
+      "return () => {",
+      "props = this._props;",
       "};",
       "});",
       ""

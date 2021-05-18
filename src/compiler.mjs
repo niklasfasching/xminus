@@ -60,7 +60,8 @@ export function compile(name, template) {
   generateChildren(vnode, $);
   return `xm.register("${name}", \`${$.html.replaceAll("`", "\\`")}\`, function(_node, slot, $, props) {
     ${$.create}
-    return (props) => {
+    return () => {
+      props = this._props;
       ${$.update}
     };
   });\n`;

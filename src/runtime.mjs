@@ -124,7 +124,7 @@ export function register(name, html, f) {
     }
     updateCallback() {
       this.onUpdate(this._$, this._props, this._slot);
-      this[symbols.updateComponent](this._props);
+      this[symbols.updateComponent]();
     }
     detachedCallback() {
       this.onRemove(this._$, this._props, this._slot);
