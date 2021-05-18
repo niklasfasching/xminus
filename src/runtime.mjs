@@ -6,6 +6,17 @@ export const symbols = {
   updateComponent: Symbol("updateComponent"),
 };
 
+export const ready = init();
+
+async function init() {
+  window.xm = {register};
+  window.xm = await import(import.meta.url);
+  if (document.querySelector("[type*=x-module], [type*=x-template]")) {
+    const {bundle} = await import("./bundler.mjs");
+    await import(await bundle(location, null));
+  }
+}
+
 export function setProperty(node, k, v) {
   if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
@@ -67,12 +78,7 @@ export function updateChildNodes(parent, anchor, nodes, values, updatedValues, $
 }
 
 export async function mount(parentNode, name, _$, _props) {
-  window.xm = {register};
-  window.xm = await import(import.meta.url);
-  if (document.querySelector("[type*=x-module], [type*=x-template]")) {
-    const {bundle} = await import("./bundler.mjs");
-    await import(await bundle(location, null));
-  }
+  await ready;
   if (!location.hash) history.replaceState(null, null, "#/");
   const component = document.createElement(name);
   Object.assign(_$, {$update: () => component.updateCallback()}, parseHash());
@@ -82,7 +88,7 @@ export async function mount(parentNode, name, _$, _props) {
     _$.$update();
   };
   parentNode.innerHTML = '';
-  parentNode.appendChild(component);
+  return parentNode.appendChild(component);
 }
 
 export function fragment(html) {
