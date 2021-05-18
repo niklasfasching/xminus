@@ -233,6 +233,7 @@ function setupFixtures(path) {
 const parentRoot = window !== window.parent && window.parent._test_currentNode;
 if (parentRoot) parentRoot.children.push(Object.assign(root, {name: location.pathname}));
 else setTimeout(async () => {
+  if (window.isCI && root.hasSelected) throw new Error("only not allowed in CI")
   await run(0, root);
   resolve({count, countFailed});
   if (exitAfter) window.close(countFailed && 1);

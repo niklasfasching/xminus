@@ -38,8 +38,9 @@ var reloadSnippet = `
   longpoll();
 </script>`
 
-var setupHTML = `
+var setupHTML = fmt.Sprintf(`
 <script type=module>
+window.isCI = %v;
 window.isHeadless = navigator.webdriver;
 window.close = (code = 0) => isHeadless ? console.clear(code) : console.log("exit:", code);
 window.openIframe = (src) => {
@@ -50,7 +51,7 @@ window.openIframe = (src) => {
     document.body.appendChild(Object.assign(iframe, {onload, onerror, src}));
   });
 };
-</script>`
+</script>`, os.Getenv("CI") == "true")
 
 type Watcher struct {
 	Path     string
