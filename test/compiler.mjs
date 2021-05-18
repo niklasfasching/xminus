@@ -115,7 +115,7 @@ t.describe("compiler", () => {
       const component = document.createElement(name);
       Object.assign(component, {
         _props: {},
-        _$: Object.assign($, {$update: () => component[compiler.symbols.updateComponent]()}),
+        _$: Object.assign($, {$update: () => component[runtime.symbols.updateComponent]()}),
       });
       document.body.append(component)
       return [component, $$ => {
