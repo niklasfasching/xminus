@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<head>
+  <title>hackernews</title>
+  <script type="text/x-template" id="x-hello-world">
+    hello { this.name }
+  </script>
+
+  <script type="module">
+   import {define, Component} from "/src/runtime.mjs";
+   define("x-hello-world", class extends Component {
+     name = "world"
+   });
+  </script>
+</head>
+
+<body x-test>
+  <script type="module">
+   import {mount} from "/src/runtime.mjs";
+   import {t} from "/src/test.mjs";
+   t("should render hello world", async () => {
+     const component = await mount(document.body, "x-hello-world", {});
+     t.assert(component.innerText === "hello world");
+   });
+  </script>
+</body>
