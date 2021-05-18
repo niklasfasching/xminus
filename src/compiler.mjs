@@ -28,9 +28,9 @@ function onMacro(vnode, $, key, value) {
     let after = "$.$update();";
     if (modifiers.includes("no")) after = "";
     $.create += `${vnode.node}.addEventListener("${event}", function($event) {
-                 ${value};
-                 ${after}
-               });\n`;
+                   ${value};
+                   ${after}
+                 });\n`;
   }
 }
 
