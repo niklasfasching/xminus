@@ -56,6 +56,10 @@ t.describe("t", () => {
       t.throws(() => { throw new Error("yolo") }, /yolo/);
     });
 
+    t("should support rejects", () => {
+      t.rejects( async () => { throw new Error("yolo") }, /yolo/);
+    });
+
     t("should support assert", () => {
       t.assert(true);
       t.throws(() => t.assert(false), /false == true/);

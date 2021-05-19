@@ -47,6 +47,6 @@ t.describe("parser", () => {
     t("should work", () => {
       t.jsonEqual(parseValue("{$.foo + $.bar}"), ["($.foo + $.bar)", null, true]);
       t.jsonEqual(parseValue("{ () => {return {};} }"), ["( () => {return {};} )", null, true]);
-    })
-  })
+    });
+  });
 });

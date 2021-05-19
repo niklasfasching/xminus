@@ -1,5 +1,5 @@
 const root = newNode(), updateFixtures = window.args?.includes("update-fixtures"), fixtures = {};
-let currentNode = root, currentID = "", pendingAssertions = [],
+let currentNode = root, currentID = "",
     count = 0, countFailed = 0,
     dynamicOnly = false, exitAfter = false, resolve = null;
 
@@ -54,19 +54,12 @@ Object.assign(t, {
     wrapper(name, f, "after");
   },
 
-  async throws(f, regexp = /.*/, msg) {
-    if (typeof regexp === 'string') msg = regexp, regexp = /.*/;
-    if (typeof f !== 'function') t.fail(`expected ${f} to be a function`);
-    const pop = pushPendingAssertion("throws", f.toString());
-    try {
-      await f();
-      pop();
-    } catch(err) {
-      pop();
-      if (!regexp.test(err.message)) t.fail(`expected ${f} to throw ${regexp}`, err.message);
-      return;
-    }
-    t.fail(msg, `expected ${f} to throw`);
+  throws(f, regexp, msg) {
+    throws(f, regexp, msg, true);
+  },
+
+  rejects(f, regexp, msg) {
+    return throws(f, regexp, msg);
   },
 
   assert(x, msg) {
@@ -96,12 +89,21 @@ Object.assign(t, {
   },
 });
 
-function pushPendingAssertion(key, value) {
-  const pending = `${key}: ${value}`;
-  pendingAssertions.push(pending);
-  return () => {
-    pendingAssertions = pendingAssertions.filter(_ => _ != pending);
+function throws(f, regexp = /.*/, msg, sync) {
+  if (typeof f !== 'function') t.fail(`expected ${f} to be a function`);
+  if (typeof regexp === 'string') msg = regexp, regexp = /.*/;
+  let result = null, checkError = (err) => {
+    if (!err) t.fail(msg, `expected ${f} to throw`);
+    else if (!regexp.test(err.message)) t.fail(`expected ${f} to throw ${regexp}`, err.message);
   };
+  try {
+    result = f();
+    if (!sync && result instanceof Promise) return result.then(checkError, checkError);
+  } catch (err) {
+    return void checkError(err);
+  }
+  if (result) t.fail(`${f} must not return a value`);
+  checkError(null);
 }
 
 function wrapper(name, f, key) {
@@ -175,10 +177,8 @@ async function runFn(node, f, name) {
     currentNode = node, window._test_currentNode = node, currentID = id(node, name);
     if (f) await f();
     currentNode = null, window._test_currentNode = null, currentID = null;
-    if (pendingAssertions.length) t.fail(`did not await all assertions: ${pendingAssertions}`);
     return [time(), null];
   } catch (err) {
-    pendingAssertions = [];
     return [time(), err];
   }
 }
