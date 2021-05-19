@@ -234,10 +234,10 @@ function getTestFile() {
   Error.prepareStackTrace = (err, stack) => stack;
   const stack = new Error().stack;
   Error.prepareStackTrace = prepareStackTrace;
-  while (stack.length) {
-    const url = stack.shift().getFileName();
-    if (url !== import.meta.url) return url;
-  }
+  const urls = typeof stack === "string" ?
+        stack.match(/http:.*:\d+:\d+$/mg).map(s => s.replace(/:\d+:\d+$/, "")) :
+        stack.map(f => f.getFileName());
+  for (let url of urls.reverse()) if (url !== import.meta.url) return url;
   throw new Error("could not find test file name");
 }
 
