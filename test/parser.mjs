@@ -40,7 +40,7 @@ t.describe("parser", () => {
   });
 
   t("should throw on unexpected closing tags", () => {
-    t.throws(() => parse(`<div></foo>`), /unexpected close \/foo for div/);
+    t.throws(() => parse(`<div></foo>`), /unexpected close \/foo for <div>/);
   });
 
   t.describe("parseValue", () => {
@@ -48,5 +48,20 @@ t.describe("parser", () => {
       t.jsonEqual(parseValue("{$.foo + $.bar}"), ["($.foo + $.bar)", null, true]);
       t.jsonEqual(parseValue("{ () => {return {};} }"), ["( () => {return {};} )", null, true]);
     });
+  });
+
+  t.describe("catch bad properties", () => {
+    const throws = (attributes) => {
+      const el = document.createElement("template");
+      el.innerHTML = `<element ${attributes}></element>`;
+      const browserParsedTemplate = el.content.firstChild.outerHTML;
+      t(`'${attributes}' => '${browserParsedTemplate}'`, () => {
+        t.throws(() => parse(browserParsedTemplate), /unexpected attribute/, attributes);
+      });
+    };
+    throws(`{ key }=value`);
+    throws(`{a + b}=value`);
+    throws(`key={ value }`);
+    throws(`key={a + b}`);
   });
 });

@@ -19,7 +19,7 @@ function bindMacro(vnode, $, key, value) {
 
 function onMacro(vnode, $, key, value) {
   generateVnode(vnode, $);
-  const [_on_, event, ...modifiers] = key.split(":")
+  const [_on_, event, ...modifiers] = key.split(":");
   if (event === "update" || event === "create") {
     const node = generateLocalNodeRef($, vnode, "on");
     $.create += `function ${node}_fn() { ${value} }\n`;
@@ -55,9 +55,11 @@ function forMacro(vnode, $, key, value) {
 }
 
 export function compile(name, template) {
-  const vnode = {ref: "_node", properties: {}, children: parse(template)},
-        $ = {html: "", create: "", update: ""};
-  generateChildren(vnode, $);
+  const $ = {html: "", create: "", update: ""},
+        vnode = Object.assign(parse(template)[0], {ref: "this", fragmentRef: "_node"});
+  delete vnode.properties.id;
+  delete vnode.properties.type;
+  generateVnode(vnode, $);
   return `xm.register("${name}", \`${$.html.replaceAll("`", "\\`")}\`, function(_node, slot, $, props) {
     ${$.create}
     return () => {
@@ -95,7 +97,10 @@ export function generateVnode(vnode, $) {
   }
   generateNodeRef($, vnode, "vnode");
   const [tag, rawTag, isDynamicTag] = parseValue(vnode.tag);
-  if (!isDynamicTag && !isComponentTag(rawTag)) {
+  if (vnode.ref === "this") {
+    generateProperties(vnode, $);
+    generateChildren(Object.assign(vnode, {ref: vnode.fragmentRef}), $);
+  } else if (!isDynamicTag && !isComponentTag(rawTag)) {
     $.html += `<${rawTag}`;
     generateProperties(vnode, $);
     $.html += ">";
@@ -121,7 +126,8 @@ function generateProperties(vnode, $) {
   for (const k in vnode.properties) {
     const [key, rawKey, isDynamicKey] = parseValue(k),
           [value, rawValue, isDynamicValue] = parseValue(vnode.properties[k]);
-    if (!isDynamicKey && !isDynamicValue) $.html += ` ${rawKey}=${value}`;
+    if (!isDynamicKey && !isDynamicValue && vnode.ref === "this") $.create += `${vnode.ref}[${key}] = ${value};\n`;
+    else if (!isDynamicKey && !isDynamicValue) $.html += ` ${rawKey}=${value}`;
     else dynamicProperties.push({key, value, isDynamicKey, isDynamicValue});
   }
   if (!dynamicProperties.length) return;
@@ -180,6 +186,6 @@ function generateLocalNodeRef($, vnode, key = "") {
   return `${_}node`;
 }
 
+let prefixId = 0;
 export const resetPrefixId = () => prefixId = 0;
 const prefix = (key) => `_${key}_${prefixId++}_`;
-let prefixId = 0

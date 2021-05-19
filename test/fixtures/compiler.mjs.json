@@ -250,5 +250,27 @@
     "html": "",
     "create": "",
     "update": ""
+  },
+  "compiler: compile: should generate element attributes (except id, type bc used by template) from template attributes": {
+    "result": [
+      "xm.register(\"x-foo-component\", `<p>hello <!----></p>`, function(_node, slot, $, props) {",
+      "let _properties_0_node = this;",
+      "let _properties_1_key = (foo); xm.setProperty(_properties_0_node, _properties_1_key, (bar));",
+      "let _children_2_node = _node.firstChild;",
+      "let _children_3_node = _children_2_node.firstChild;",
+      "let _children_5_node = _children_2_node;",
+      "const _children_4_nodes = [_children_3_node.nextSibling], _children_4_values = [];",
+      "xm.updateChildNodes(_children_5_node, null, _children_4_nodes, _children_4_values, [(world)], $, xm.createChildNode);",
+      "return () => {",
+      "props = this._props;",
+      "_properties_1_key = xm.setDynamicKeyProperty(_properties_0_node, _properties_1_key, (foo), (bar));",
+      "xm.updateChildNodes(_children_5_node, null, _children_4_nodes, _children_4_values, [(world)], $, xm.createChildNode);",
+      "};",
+      "});",
+      ""
+    ],
+    "html": "",
+    "create": "",
+    "update": ""
   }
 }

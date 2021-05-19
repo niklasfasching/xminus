@@ -52,7 +52,7 @@ t.describe("compiler", () => {
     });
 
     t("should generate nested dynamic children", () => {
-      test(`<div><div>{foo bar}</div>{baz}</div`);
+      test(`<div><div>{foo bar}</div>{baz}</div>`);
     });
 
     t.describe("macro", () => {
@@ -95,20 +95,25 @@ t.describe("compiler", () => {
   });
 
   t.describe("compile", () => {
-    function test(template) {
-      t.assertFixture(run("compile", "x-foo-component", template));
+    function test(template, attributes = "") {
+      t.assertFixture(run("compile", "x-foo-component", `<element ${attributes}>${template}</element>`));
     }
 
     t("should generate a component (smoke test)", () => {
       test("<div></div>");
     });
+
+    t("should generate element attributes (except id, type bc used by template) from template attributes", () => {
+      test(`<p>hello {world}</p>`, `id="x-foo" type="x-template" {foo}={bar}`);
+    });
+
   });
 
   t.describe("integration", () => {
     let template = document.createElement("template"), id = 0;
     function render($, template) {
       const name = `x-component-${id++}`;
-      eval(compiler.compile(name, template));
+      eval(compiler.compile(name, "<element>" + template + "</element>"));
       const component = document.createElement(name);
       Object.assign(component, {
         _props: {},
@@ -160,7 +165,7 @@ t.describe("compiler", () => {
     });
 
     t("should update nested components", () => {
-      eval(compiler.compile("x-foo", `<p>a</p>{props.key} {slot} {props.key1}<p>c</p>`));
+      eval(compiler.compile("x-foo", `<element><p>a</p>{props.key} {slot} {props.key1}<p>c</p></element>`));
       const [component, update] = render({key: "key1", value: "key1-value1", child: "child1"},
                                          `<x-foo {$.key}={$.value} key=key-value1>{$.child}</>`);
       t.equal(component.innerHTML, `<x-foo><p>a</p>key-value1 <div class="slot">child1</div> key1-value1<p>c</p></x-foo>`);

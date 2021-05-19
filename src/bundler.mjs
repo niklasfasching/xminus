@@ -29,7 +29,7 @@ export async function loadXModules(url, basePath, loaded = {}) {
         modules = all(document, `:not(x-test) [type*=module]:not([src])`),
         xTemplates = all(document, `:not(x-test) [type*=x-template][id]`),
         xImports = all(document, `:not(x-test) [type*=x-module][src]`);
-  const xComponents = xTemplates.map(({id, text}) => compile(id, text)).join("\n"),
+  const xComponents = xTemplates.map(({id, outerHTML}) => compile(id, outerHTML)).join("\n"),
         xModules = await Promise.all(xImports.map(x => loadXModules(absoluteURL(x.getAttribute("src"), url), basePath, loaded)));
   for (let s of styles) s.href = rebaseURL(s.getAttribute("href"), url, basePath);
   for (let m of modules) m.text = rebaseModuleImports(m.text, url, basePath);

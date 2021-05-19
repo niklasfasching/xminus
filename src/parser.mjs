@@ -1,5 +1,6 @@
 // https://html.spec.whatwg.org/multipage/syntax.html#void-elements
 const voidTags = {area: 1, base: 1, br: 1, col: 1, embed: 1, hr: 1, img: 1, input: 1, link: 1, meta: 1, param: 1, source: 1, track: 1, wbr: 1};
+const badAttributeRegexp = /^({=?})$|[^=]=""|^{[^}]*$|^[^{]*}$/;
 
 export function parseValue(input) {
   const [parts, isDynamic] = parseValueParts(input);
@@ -44,11 +45,14 @@ export function parse(template) {
       parents.unshift(vchild);
     } else if ($ === "close") {
       const vnode = parents.shift();
-      if (vnode && x !== "/" && x !== "/" + vnode.tag) throw new Error(`unexpected close ${x} for ${vnode.tag}`);
+      if (vnode && x !== "/" && x !== "/" + vnode.tag) throw new Error(`unexpected close ${x} for <${vnode.tag}>`);
     } else if ($ === "child") {
       (parents[0]?.children || vnodes).push(x);
     } else if ($ === "key") {
-      parents[0].properties[x] = tokens[i+1][0] === "value" ? tokens[++i][1] : "true";
+      let k = x, v = tokens[i+1][0] === "value" ? tokens[++i][1] : "true";
+      if (badAttributeRegexp.test(k)) throw new Error(`unexpected attribute key '${k}' for <${parents[0].tag}>`);
+      if (badAttributeRegexp.test(v)) throw new Error(`unexpected attribute value '${v}' for <${parents[0].tag}>`);
+      parents[0].properties[k] = v;
     } else throw "unexpected: " + $;
   }
   if (parents.length) throw new Error(`unclosed ${parents[0].tag}: ${template}`);
