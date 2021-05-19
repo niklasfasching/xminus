@@ -7,8 +7,6 @@ const baseURL = "http://example.com";
 t.describe("bundler", () => {
   t.exitAfter();
 
-  const assertFixture = t.setupFixtures(new URL("./fixtures/bundler.json", import.meta.url));
-
   t.describe("rebaseURL", () => {
     t("should rebase (root) relative urls given a basePath", () => {
       t.equal(rebaseURL("foo", baseURL, "/"), "/foo");
@@ -32,12 +30,12 @@ t.describe("bundler", () => {
   });
 
   t.describe("rebaseModuleImports", () => {
-    function test(id, baseURL, basePath, code) {
-      assertFixture({id, module: rebaseModuleImports(code, baseURL, basePath).split(/\n\s*/g)});
+    function test(baseURL, basePath, code) {
+      t.assertFixture({module: rebaseModuleImports(code, baseURL, basePath).split(/\n\s*/g)});
     }
 
-    t("should rewrite relative imports", (id) => {
-      test(id, `${baseURL}/base/index.html`, "/rebase", `
+    t("should rewrite relative imports", () => {
+      test(`${baseURL}/base/index.html`, "/rebase", `
         import * from '/module.js';
         import * from '/dir/module.js';
         import * from './module.js';
@@ -49,9 +47,9 @@ t.describe("bundler", () => {
       `);
     });
 
-    t("should not modify absolute imports", (id) => {
+    t("should not modify absolute imports", () => {
       const baseURL2 = "http://foo.bar";
-      test(id, `${baseURL}/base/index.html`, "/rebase", `
+      test(`${baseURL}/base/index.html`, "/rebase", `
         import * from '${baseURL2}/module.js';
         import {foo, bar} from '${baseURL2}/module.js';
         import * as module from '${baseURL2}/module.js';
@@ -82,16 +80,16 @@ t.describe("bundler", () => {
   });
 
   t.describe("bundle", () => {
-    t("should bundle into an html file", async (id) => {
+    t("should bundle into an html file", async () => {
       compiler.resetPrefixId();
       const html = await bundle(new URL("./fixtures/index.html", import.meta.url));
-      assertFixture({id, html: html.split(/\n\s*/g)});
+      t.assertFixture({html: html.split(/\n\s*/g)});
     });
 
-    t("should bundle into a data url", async (id) => {
+    t("should bundle into a data url", async () => {
       compiler.resetPrefixId();
       const dataURL = await bundle(new URL("./fixtures/index.html", import.meta.url), null);
-      assertFixture({id, code: unescape(unescape(dataURL)).split(/\n\s*/g)});
+      t.assertFixture({code: unescape(unescape(dataURL)).split(/\n\s*/g)});
     });
   });
 });

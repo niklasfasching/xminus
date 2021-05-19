@@ -73,17 +73,17 @@ t.describe("t", () => {
   });
 
   t.describe("misc", () => {
-    t("should throw on t() or t.describe() inside t()", () => {
-      t.throws(() => t("foo"), /t\(\) must not be called async/);
-      t.throws(() => t.describe("foo"), /t\.describe\(\) must not be called async/);
-    })
+    t("should throw on t(), t.describe(), ... with non function body", () => {
+      t.throws(() => t("foo", {}), /bad function body/);
+      t.throws(() => t.only("foo", {}), /bad function body/);
+      t.throws(() => t.describe("foo", {}), /bad function body/);
+      t.throws(() => t.describeOnly("foo", {}), /bad function body/);
+    });
   });
 
   t.describe("json fixtures", () => {
-    const assertFixture = t.setupFixtures(new URL("./fixtures/test.json", import.meta.url));
-
-    t("should test actual value against json fixture", (id) => {
-      assertFixture({id, value: "hello world"});
+    t("should test actual value against json fixture", () => {
+      t.assertFixture({value: "hello world"});
     });
   });
 

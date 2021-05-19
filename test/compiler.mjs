@@ -8,15 +8,12 @@ window.xm = runtime;
 t.describe("compiler", () => {
   t.exitAfter();
 
-  const assertFixture = t.setupFixtures(new URL("./fixtures/compiler.json", import.meta.url));
-
-  function run(id, method, ...args) {
+  function run(method, ...args) {
     compiler.resetPrefixId();
     const $ = {html: "", create: "", update: ""};
     args = args.map(_ => _ === "$" ? $ : _);
     const result = compiler[method](...args);
     return {
-      id,
       result: result?.indexOf("\n") ? result.split(/\n\s*/g) : result,
       html: $.html.indexOf("\n") !== -1 ? $.html.split(/\n\s*/g) : $.html,
       create: $.create.indexOf("\n") !== -1 ? $.create.split(/\n\s*/g) : $.create,
@@ -25,85 +22,85 @@ t.describe("compiler", () => {
   }
 
   t.describe("generateVnode", () => {
-    function test(id, template) {
+    function test(template) {
       const vnodes = parser.parse(template);
       const vnode = vnodes[0];
       t.equal(vnodes.length, 1);
       vnode.node = "root";
       vnode.parent = {children: [vnode]};
-      assertFixture(run(id, "generateVnode", vnode, "$", "_x_"));
+      t.assertFixture(run("generateVnode", vnode, "$", "_x_"));
     }
 
-    t("should not generate update code for static html", (id) => {
-      test(id, `<div>hello <b>world</b></div>`);
+    t("should not generate update code for static html", () => {
+      test(`<div>hello <b>world</b></div>`);
     });
 
-    t("should generate create and update code for dynamic properties", (id) => {
-      test(id, `<div {dynamic key}=value key={dynamic value}>hello world</div>`);
+    t("should generate create and update code for dynamic properties", () => {
+      test(`<div {dynamic key}=value key={dynamic value}>hello world</div>`);
     });
 
-    t("should generate create and update code for dynamic children", (id) => {
-      test(id, `<div>hello {dynamic child}</div>`);
+    t("should generate create and update code for dynamic children", () => {
+      test(`<div>hello {dynamic child}</div>`);
     });
 
-    t("should generate void tags without children", (id) => {
-      test(id, `<div><input>{not a child of input}</div>`);
+    t("should generate void tags without children", () => {
+      test(`<div><input>{not a child of input}</div>`);
     });
 
-    t("should generate component tags", (id) => {
-      test(id, `<x-component {dynamic key}=value key={dynamic value}>foo bar {baz}</x-component>`);
+    t("should generate component tags", () => {
+      test(`<x-component {dynamic key}=value key={dynamic value}>foo bar {baz}</x-component>`);
     });
 
-    t("should generate nested dynamic children", (id) => {
-      test(id, `<div><div>{foo bar}</div>{baz}</div`);
+    t("should generate nested dynamic children", () => {
+      test(`<div><div>{foo bar}</div>{baz}</div`);
     });
 
     t.describe("macro", () => {
-      t("should generate .on macro", (id) => {
-        test(id, `<div key={dynamic value} .on:click="console.log('magic')"></div>`);
+      t("should generate .on macro", () => {
+        test(`<div key={dynamic value} .on:click="console.log('magic')"></div>`);
       });
 
-      t("should generate .on:create macro", (id) => {
-        test(id, `<div .on:create="console.log('magic')"></div>`);
+      t("should generate .on:create macro", () => {
+        test(`<div .on:create="console.log('magic')"></div>`);
       });
 
-      t("should generate .on:update macro", (id) => {
-        test(id, `<div .on:update="console.log('magic')"></div>`);
+      t("should generate .on:update macro", () => {
+        test(`<div .on:update="console.log('magic')"></div>`);
       });
 
-      t("should generate .on macro with no(update) modifier", (id) => {
-        test(id, `<div .on:update:no="console.log('magic')"></div>`);
+      t("should generate .on macro with no(update) modifier", () => {
+        test(`<div .on:update:no="console.log('magic')"></div>`);
       });
 
-      t("should generate .bind: macro", (id) => {
-        test(id, `<div .bind:value="$.value"></div>`);
+      t("should generate .bind: macro", () => {
+        test(`<div .bind:value="$.value"></div>`);
       });
 
-      t("should generate .bind: macro for input elements", (id) => {
-        test(id, `<div>
+      t("should generate .bind: macro for input elements", () => {
+        test(`<div>
                     <input .bind:value="$.value">
                     <textarea .bind:value="$.value"></textarea>
                     <select .bind:value="$.value"><option>foo</option></select>
                   </div>`);
       });
 
-      t("should generate .for macro", (id) => {
-        test(id, `<div key={dynamic value} .for="item in $.items"></div>`);
+      t("should generate .for macro", () => {
+        test(`<div key={dynamic value} .for="item in $.items"></div>`);
       });
 
-      t("should generate .if macro", (id) => {
-        test(id, `<div key={dynamic value} .if="$.condition"></div>`);
+      t("should generate .if macro", () => {
+        test(`<div key={dynamic value} .if="$.condition"></div>`);
       });
     });
   });
 
   t.describe("compile", () => {
-    function test(id, template) {
-      assertFixture(run(id, "compile", "x-foo-component", template));
+    function test(template) {
+      t.assertFixture(run("compile", "x-foo-component", template));
     }
 
-    t("should generate a component (smoke test)", (id) => {
-      test(id, "<div></div>")
+    t("should generate a component (smoke test)", () => {
+      test("<div></div>");
     });
   });
 
@@ -117,7 +114,7 @@ t.describe("compiler", () => {
         _props: {},
         _$: Object.assign($, {$update: () => component[runtime.symbols.updateComponent]()}),
       });
-      document.body.append(component)
+      document.body.append(component);
       return [component, $$ => {
         Object.assign($, $$);
         component.updateCallback();

@@ -1,36 +1,38 @@
-const root = newNode(), updatingFixtures = window.args?.includes("update-fixtures");
-let currentNode = root, pendingAssertions = [],
+const root = newNode(), updateFixtures = window.args?.includes("update-fixtures"), fixtures = {};
+let currentNode = root, currentID = "", pendingAssertions = [],
     count = 0, countFailed = 0,
     dynamicOnly = false, exitAfter = false, resolve = null;
 
 export const done = new Promise((r) => resolve = r);
 
+function assertFunctionBody(method, name, f) {
+  if (f && !(f instanceof Function)) throw new Error(`${method}("${name}") bad function body`);
+}
+
 export function t(name, f) {
-  if (!currentNode) throw new Error("t() must not be called async");
+  assertFunctionBody("t", name, f);
   currentNode.children.push({name, f, selected: currentNode.selected});
 }
 
 Object.assign(t, {
   describe(name, f) {
-    if (!currentNode) throw new Error("t.describe() must not be called async");
+    assertFunctionBody("t.describe", name, f);
     group(name, f);
   },
 
   describeOnly(name, f) {
-    if (!currentNode) throw new Error("t.describe() must not be called async");
+    assertFunctionBody("t.describeOnly", name, f);
     group(name, f, true);
     markNodes(currentNode, "hasSelected");
     if (count || countFailed) dynamicOnly = true;
   },
 
   only(name, f) {
-    if (!currentNode) throw new Error("t() must not be called async");
+    assertFunctionBody("t.only", name, f);
     currentNode.children.push({name, f, selected: true});
     markNodes(currentNode, "hasSelected");
     if (count || countFailed) dynamicOnly = true;
   },
-
-  setupFixtures,
 
   exitAfter() {
     exitAfter = true;
@@ -80,6 +82,15 @@ Object.assign(t, {
     if (x !== y) t.fail(msg, `${x} !== ${y}`);
   },
 
+  assertFixture(actual, msg) {
+    if (!updateFixtures) t.jsonEqual(actual, currentNode.fixtures[currentID]);
+    else {
+      fixtures[currentNode.testFile] = fixtures[currentNode.testFile] || {};
+      if (fixtures[currentNode.testFile][currentID]) t.fail(`reassignment of fixture "${currentID}"`);
+      fixtures[currentNode.testFile][currentID] = actual;
+    }
+  },
+
   fail(msg, info = "fail") {
     throw new Error(`${msg ? msg + ": " : ""}${info}`);
   },
@@ -108,7 +119,7 @@ function getEachWrappers(node) {
 }
 
 function group(name, f, selected) {
-  currentNode = newNode(name, currentNode, selected);
+  currentNode = newNode(name, getTestFile(), currentNode, selected);
   const result = f?.();
   if (result) throw new Error(`unexpected return value from describe: ${result}`);
   const [beforeEachs, afterEachs] = getEachWrappers(currentNode);
@@ -123,9 +134,8 @@ async function run(lvl, node) {
   currentNode = null;
   const time = timer(), selected = !root.hasSelected || node.selected || node.hasSelected;
   if (selected && node !== root) log(lvl, 0, "", node.name);
-  currentNode = node, window._test_currentNode = node;
+  await loadFixtures(node);
   for (let {name, f} of node.befores) await runWrapper(lvl+2, node, name, f, selected);
-  currentNode = null, window._test_currentNode = null;
   for (let child of node.children) {
     if (child.children) await run(lvl+2, child);
     else await runTest(lvl+2, node, child);
@@ -162,7 +172,9 @@ async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEac
 async function runFn(node, f, name) {
   const time = timer();
   try {
-    if (f) await f(id(node, name));
+    currentNode = node, window._test_currentNode = node, currentID = id(node, name);
+    if (f) await f();
+    currentNode = null, window._test_currentNode = null, currentID = null;
     if (pendingAssertions.length) t.fail(`did not await all assertions: ${pendingAssertions}`);
     return [time(), null];
   } catch (err) {
@@ -173,7 +185,7 @@ async function runFn(node, f, name) {
 
 function id(node, name) {
   let names = [name];
-  do { names.push(node.name) } while (node = node.parent);
+  do { names.push(node.name); } while (node = node.parent);
   return names.reverse().filter(Boolean).join(": ");
 }
 
@@ -185,18 +197,18 @@ function log(lvl, isFailure, color, line, err) {
   }
 }
 
-function newNode(name, parent, selected) {
-  return {name, parent, selected, children: [],
+function newNode(name, testFile, parent, selected) {
+  return {name, testFile, parent, selected, children: [], fixtures: {},
           befores: [], afters: [],
           beforeEachs: [], afterEachs: []};
 }
 
 function markNodes(node, key) {
-  do { node[key] = true } while (node = node.parent);
+  do { node[key] = true; } while (node = node.parent);
 }
 
 function timer() {
-  const start = performance.now()
+  const start = performance.now();
   return () => (performance.now() - start).toFixed();
 }
 
@@ -210,31 +222,34 @@ function json(x, set = new WeakSet(), indent = 2) {
   }, indent);
 }
 
-function setupFixtures(path) {
-  let fixtures, updatedFixtures = {};
-  t.before(async () => {
-    fixtures = await fetch(path).then(r => r.json()).catch(() => ({}));
-  });
-  t.after(() => {
-    if (updatingFixtures) console.info(json(updatedFixtures));
-  });
-  return function(actual, msg) {
-    const id = actual?.id;
-    delete actual.id;
-    if (!id) t.fail(msg, "actual value must have id property");
-    else if (!updatingFixtures) t.jsonEqual(actual, fixtures[id])
-    else {
-      if (updatedFixtures[id]) t.fail(`reassignment of fixture "${id}"`);
-      updatedFixtures[id] = actual;
-    }
+async function loadFixtures(node) {
+  if (!node.parent || updateFixtures) return;
+  const url = new URL(node.testFile).pathname.replace(/\/([^/]+)\.\w+$/, "/fixtures/$1.json");
+  if (!fixtures[node.testFile]) fixtures[node.testFile] = await fetch(url).then(r => r.json()).catch(() => ({}));
+  node.fixtures = fixtures[node.testFile];
+}
+
+function getTestFile() {
+  const prepareStackTrace = Error.prepareStackTrace;
+  Error.prepareStackTrace = (err, stack) => stack;
+  const stack = new Error().stack;
+  Error.prepareStackTrace = prepareStackTrace;
+  while (stack.length) {
+    const url = stack.shift().getFileName();
+    if (url !== import.meta.url) return url;
   }
+  throw new Error("could not find test file name");
 }
 
 const parentRoot = window !== window.parent && window.parent._test_currentNode;
 if (parentRoot) parentRoot.children.push(Object.assign(root, {name: location.pathname}));
 else setTimeout(async () => {
-  if (window.isCI && root.hasSelected) throw new Error("only not allowed in CI")
+  if (window.isCI && root.hasSelected) throw new Error("only not allowed in CI");
   await run(0, root);
   resolve({count, countFailed});
+  if (updateFixtures) {
+    const [[_, fixture] = []] = Object.entries(fixtures);
+    if (fixture) console.log(json(fixture));
+  }
   if (exitAfter) window.close(countFailed && 1);
 });
