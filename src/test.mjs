@@ -133,8 +133,9 @@ async function run(lvl, node) {
   for (let {name, f} of node.afters) await runWrapper(lvl+2, node, name, f, selected);
   if (selected && node !== root) log(lvl, 0, "grey", `(${time()}ms)\n`);
   else if (node === root) {
-    const details = dynamicOnly ? " - exit after dynamic only" : ""
-    log(lvl + 2, 0, dynamicOnly ? "yellow" : "grey", `${count} tests (${countFailed} failures)${details}\n`);
+    const details = dynamicOnly ? " - exit after dynamic only" : "";
+    const color = countFailed ? "red" : dynamicOnly ? "yellow" : "grey";
+    log(lvl + 2, 0, color, `${count} tests (${countFailed} failures)${details}\n`);
   }
 }
 
