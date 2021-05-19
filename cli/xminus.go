@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -24,6 +25,7 @@ import (
 var listenAddress = flag.String("l", ":8000", "http listen address")
 var watchInterval = flag.Int("i", 500, "directory watch poll interval in ms")
 var exitAfterRun = flag.Bool("e", false, "exit after run")
+var updateFixtures = flag.Bool("u", false, "update test fixtures and exit")
 var windowArgs = flag.String("a", "", "window.args available inside run (split into strings.Fields)")
 
 var reloadSnippet = `
@@ -73,8 +75,9 @@ type Runner struct {
 	Paths []string
 	Args  []string
 	*Watcher
-	fs   fs.FS
-	html string
+	fs       fs.FS
+	html     string
+	headless headless.H
 }
 
 func main() {
@@ -88,9 +91,19 @@ func main() {
 	r := &Runner{Paths: flag.Args(), Watcher: w, Args: strings.Fields(*windowArgs)}
 	s := &Server{Address: *listenAddress, Watcher: w, Runner: r}
 
-	if *exitAfterRun {
+	if *updateFixtures {
+		exitCode, err := r.UpdateFixtures()
+		if err != nil {
+			log.Fatal(err)
+		}
+		os.Exit(exitCode)
+	} else if *exitAfterRun {
 		r.Watcher = nil
-		r.Start()
+		exitCode, err := r.Start()
+		if err != nil {
+			log.Fatal(err)
+		}
+		os.Exit(exitCode)
 	} else {
 		go w.Start()
 		go r.Start()
@@ -132,12 +145,12 @@ func (w *Watcher) Start() {
 	}
 }
 
-func (w *Watcher) AwaitChange() {
+func (w *Watcher) AwaitChange() chan struct{} {
 	w.Lock()
 	c := make(chan struct{})
 	w.subscribers = append(w.subscribers, c)
 	w.Unlock()
-	<-c
+	return c
 }
 
 func (s *Server) Start() error {
@@ -148,7 +161,7 @@ func (s *Server) Start() error {
 	s.Server = &http.Server{Addr: s.Address, Handler: mux}
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" && r.Method == "POST" {
-			s.Watcher.AwaitChange()
+			<-s.Watcher.AwaitChange()
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
@@ -188,50 +201,84 @@ func (s *Server) Start() error {
 	return s.Server.ListenAndServe()
 }
 
-func (r *Runner) Start() {
+func (r *Runner) Start() (int, error) {
 	if len(r.Paths) == 0 {
-		return
+		return 0, nil
 	}
-	h := headless.H{}
 	r.html = headless.HTML(setupHTML, headless.TemplateHTML("", r.Paths, r.Args))
-	if err := h.Start(); err != nil {
-		log.Fatal(err)
+	if err := r.headless.Start(); err != nil {
+		return 0, err
 	}
-	defer h.Stop()
+	defer r.headless.Stop()
+	if r.Watcher == nil {
+		return r.run(context.Background(), os.Stdout, os.Stderr)
+	}
 	for {
+		changed := r.Watcher.AwaitChange()
 		ctx, cancel := context.WithCancel(context.Background())
-		run := h.Run(ctx, r.html)
 		go func() {
-			exitCode, err := 1, error(nil)
-			for m := range run.Messages {
-				if m.Method == "clear" {
-					cancel()
-					exitCode = int(m.Args[0].(float64))
-				} else if m.Method == "exception" {
-					cancel()
-					err = errors.New(m.Args[0].(string))
-				} else if m.Method == "info" {
-					fmt.Println(headless.Colorize(m))
-				} else if m.Method == "error" {
-					fmt.Fprintln(os.Stderr, headless.Colorize(m))
-				} else {
-					fmt.Println(m.Args...)
-				}
-			}
-			if r.Watcher == nil {
-				h.Stop()
-				if err != nil {
-					log.Fatal(err)
-				}
-				os.Exit(exitCode)
-			} else {
-				log.Printf("\nRun: Finished with %d %v", exitCode, err)
-			}
+			<-changed
+			cancel()
 		}()
-		if r.Watcher == nil {
-			select {}
-		}
-		r.Watcher.AwaitChange()
-		cancel()
+		exitCode, err := r.run(ctx, os.Stdout, os.Stderr)
+		log.Printf("\nRun: Finished with %d %v", exitCode, err)
+		<-changed
 	}
+}
+
+func (r *Runner) UpdateFixtures() (int, error) {
+	if err := r.headless.Start(); err != nil {
+		return 0, err
+	}
+	defer r.headless.Stop()
+	updatedFixtures := map[string]string{}
+	defer func() {
+		for path, fixturePath := range updatedFixtures {
+			log.Printf("Updated %s (%s)", fixturePath, path)
+		}
+	}()
+	for _, p := range r.Paths {
+		r.html = headless.HTML(setupHTML, headless.TemplateHTML("", []string{p}, append(r.Args, "update-fixtures")))
+		out := &bytes.Buffer{}
+		if exitCode, err := r.run(context.Background(), out, os.Stderr); exitCode != 0 || err != nil {
+			return exitCode, err
+		}
+		fixturePath := filepath.Join(filepath.Dir(p), "fixtures", filepath.Base(p[:len(p)-len(filepath.Ext(p))])+".json")
+		if err := os.MkdirAll(filepath.Join(filepath.Dir(p), "fixtures"), os.ModePerm); err != nil {
+			return 0, err
+		}
+		if err := os.WriteFile(fixturePath, out.Bytes(), os.ModePerm); err != nil {
+			return 0, err
+		}
+		updatedFixtures[p] = fixturePath
+	}
+	return 0, nil
+}
+
+func (r *Runner) run(ctx context.Context, stdout, stderr io.Writer) (int, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	run := r.headless.Run(ctx, r.html)
+	for m := range run.Messages {
+		if exit, exitCode, err := r.log(m, stdout, stderr); exit {
+			cancel()
+			return exitCode, err
+		}
+	}
+	return 0, nil
+}
+
+func (r *Runner) log(m headless.Message, stdout, stderr io.Writer) (bool, int, error) {
+	if m.Method == "clear" {
+		return true, int(m.Args[0].(float64)), nil
+	} else if m.Method == "exception" {
+		return true, 0, errors.New(m.Args[0].(string))
+	} else if m.Method == "info" {
+		fmt.Fprintln(stdout, headless.Colorize(m))
+	} else if m.Method == "error" {
+		fmt.Fprintln(stderr, headless.Colorize(m))
+	} else {
+		fmt.Fprintln(stdout, m.Args...)
+	}
+	return false, 0, nil
 }
