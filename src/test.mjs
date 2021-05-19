@@ -177,11 +177,10 @@ function id(node, name) {
 }
 
 function log(lvl, isFailure, color, line, err) {
-  if (updatingFixtures && !isFailure) return;
-  console.info(" ".repeat(lvl) + "%c" + line, "color: " + color);
+  console[navigator.webdriver ? "error" : "info"](" ".repeat(lvl) + "%c" + line, "color: " + color);
   if (err) {
-    if (!navigator.webdriver) console.error(err);
-    else for (let l of err.stack.split("\n")) log(lvl + 2, false, "grey", l);
+    if (!navigator.webdriver) console.info(err);
+    else for (let l of err.stack.split("\n")) log(lvl + 2, isFailure, "grey", l);
   }
 }
 

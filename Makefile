@@ -13,7 +13,7 @@ bench: cli/xminus
 
 .PHONY: update-fixtures
 update-fixtures: cli/xminus
-	for f in test/*.mjs; do cli/xminus -e -a update-fixtures $$f > test/fixtures/$$(basename $$f .mjs).json; done
+	set -e; for f in test/*.mjs; do cli/xminus -e -a update-fixtures $$f > test/fixtures/$$(basename $$f .mjs).json; done
 
 .PHONY: test
 test: cli/xminus

@@ -212,6 +212,8 @@ func (r *Runner) Start() {
 					err = errors.New(m.Args[0].(string))
 				} else if m.Method == "info" {
 					fmt.Println(headless.Colorize(m))
+				} else if m.Method == "error" {
+					fmt.Fprintln(os.Stderr, headless.Colorize(m))
 				} else {
 					fmt.Println(m.Args...)
 				}
