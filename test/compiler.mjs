@@ -26,7 +26,7 @@ t.describe("compiler", () => {
       const vnodes = parser.parse(template);
       const vnode = vnodes[0];
       t.equal(vnodes.length, 1);
-      vnode.node = "root";
+      vnode.ref = "root";
       vnode.parent = {children: [vnode]};
       t.assertFixture(run("generateVnode", vnode, "$", "_x_"));
     }
