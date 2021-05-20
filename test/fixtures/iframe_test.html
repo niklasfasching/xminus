@@ -5,6 +5,18 @@
 <body x-test>
   <script type="module">
    import {t} from "/src/test.mjs";
-   t("test", () => window.iframeTestFinished = true);
+   t("simple test", () => window.iframeTestFinished = true);
+   t("fixture test", () => {
+       t.assertFixture(0);
+   });
+   t.describe("describe with fixture tests", () => {
+     t("fixture test 1", () => {
+       t.assertFixture(1);
+     });
+
+     t("fixture test 2", () => {
+       t.assertFixture(2);
+     });
+   })
   </script>
 </body>

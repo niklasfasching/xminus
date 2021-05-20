@@ -1,34 +1,32 @@
-const root = newNode(), updateFixtures = window.args?.includes("update-fixtures"), fixtures = {};
-let currentNode = root, currentID = "",
-    count = 0, countFailed = 0,
-    dynamicOnly = false, exitAfter = false, resolve = null;
-
-export const done = new Promise((r) => resolve = r);
-
-function assertFunctionBody(method, name, f) {
-  if (f && !(f instanceof Function)) throw new Error(`${method}("${name}") bad function body`);
-}
+let count = 0, countFailed = 0,
+    dynamicOnly = false, exitAfter = false,
+    resolve = null;
+export const root = newNode(),
+             updateFixtures = window.args?.includes("update-fixtures"),
+             fixtures = {},
+             done = new Promise((r) => resolve = r);
+export let currentNode = root, currentID = "";
 
 export function t(name, f) {
-  assertFunctionBody("t", name, f);
+  beforeCreate("t", name, f);
   currentNode.children.push({name, f, selected: currentNode.selected});
 }
 
 Object.assign(t, {
   describe(name, f) {
-    assertFunctionBody("t.describe", name, f);
+    beforeCreate("t.describe", name, f);
     group(name, f);
   },
 
   describeOnly(name, f) {
-    assertFunctionBody("t.describeOnly", name, f);
+    beforeCreate("t.describeOnly", name, f);
     group(name, f, true);
     markNodes(currentNode, "hasSelected");
     if (count || countFailed) dynamicOnly = true;
   },
 
   only(name, f) {
-    assertFunctionBody("t.only", name, f);
+    beforeCreate("t.only", name, f);
     currentNode.children.push({name, f, selected: true});
     markNodes(currentNode, "hasSelected");
     if (count || countFailed) dynamicOnly = true;
@@ -76,11 +74,12 @@ Object.assign(t, {
   },
 
   assertFixture(actual, msg) {
-    if (!updateFixtures) t.jsonEqual(actual, currentNode.fixtures[currentID]);
+    const {fixtures, updateFixtures, currentNode, currentID} = window.test;
+    if (!updateFixtures) t.jsonEqual(actual, fixtures[currentNode.fixtureUrl][currentID]);
     else {
-      fixtures[currentNode.testFile] = fixtures[currentNode.testFile] || {};
-      if (fixtures[currentNode.testFile][currentID]) t.fail(`reassignment of fixture "${currentID}"`);
-      fixtures[currentNode.testFile][currentID] = actual;
+      fixtures[currentNode.fixtureUrl] = fixtures[currentNode.fixtureUrl] || {};
+      if (fixtures[currentNode.fixtureUrl][currentID]) t.fail(`reassignment of fixture "${currentID}"`);
+      fixtures[currentNode.fixtureUrl][currentID] = actual;
     }
   },
 
@@ -121,7 +120,7 @@ function getEachWrappers(node) {
 }
 
 function group(name, f, selected) {
-  currentNode = newNode(name, getTestFile(), currentNode, selected);
+  currentNode = newNode(name, currentNode, selected);
   const result = f?.();
   if (result) throw new Error(`unexpected return value from describe: ${result}`);
   const [beforeEachs, afterEachs] = getEachWrappers(currentNode);
@@ -174,16 +173,16 @@ async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEac
 async function runFn(node, f, name) {
   const time = timer();
   try {
-    currentNode = node, window._test_currentNode = node, currentID = id(node, name);
+    currentNode = node, currentID = getCurrentID(node, name);
     if (f) await f();
-    currentNode = null, window._test_currentNode = null, currentID = null;
+    currentNode = null, currentID = null;
     return [time(), null];
   } catch (err) {
     return [time(), err];
   }
 }
 
-function id(node, name) {
+function getCurrentID(node, name) {
   let names = [name];
   do { names.push(node.name); } while (node = node.parent);
   return names.reverse().filter(Boolean).join(": ");
@@ -197,8 +196,8 @@ function log(lvl, isFailure, color, line, err) {
   }
 }
 
-function newNode(name, testFile, parent, selected) {
-  return {name, testFile, parent, selected, children: [], fixtures: {},
+function newNode(name, parent, selected) {
+  return {name, parent, selected, children: [], fixtureUrl: "",
           befores: [], afters: [],
           beforeEachs: [], afterEachs: []};
 }
@@ -223,13 +222,13 @@ function json(x, set = new WeakSet(), indent = 2) {
 }
 
 async function loadFixtures(node) {
-  if (!node.parent || updateFixtures) return;
-  const url = new URL(node.testFile).pathname.replace(/\/([^/]+)\.\w+$/, "/fixtures/$1.json");
-  if (!fixtures[node.testFile]) fixtures[node.testFile] = await fetch(url).then(r => r.json()).catch(() => ({}));
-  node.fixtures = fixtures[node.testFile];
+  if (updateFixtures || window.test.fixtures[node.fixtureUrl]) return;
+  window.test.fixtures[node.fixtureUrl] = await fetch(node.fixtureUrl)
+    .then(r => r.json())
+    .catch(() => ({}));
 }
 
-function getTestFile() {
+function getFixtureUrl() {
   const prepareStackTrace = Error.prepareStackTrace;
   Error.prepareStackTrace = (err, stack) => stack;
   const stack = new Error().stack;
@@ -237,19 +236,29 @@ function getTestFile() {
   const urls = typeof stack === "string" ?
         stack.match(/http:.*:\d+:\d+$/mg).map(s => s.replace(/:\d+:\d+$/, "")) :
         stack.map(f => f.getFileName());
-  for (let url of urls.reverse()) if (url !== import.meta.url) return url;
-  throw new Error("could not find test file name");
+  const testFile = urls.reverse().find(url => url !== import.meta.url);
+  if (!testFile) throw new Error("could not find test file name");
+  return new URL(testFile).pathname.replace(/\/([^/]+)$/, "/fixtures/$1.json");
 }
 
-const parentRoot = window !== window.parent && window.parent._test_currentNode;
-if (parentRoot) parentRoot.children.push(Object.assign(root, {name: location.pathname}));
-else setTimeout(async () => {
-  if (window.isCI && root.hasSelected) throw new Error("only not allowed in CI");
-  await run(0, root);
-  resolve({count, countFailed});
-  if (updateFixtures) {
-    const [[_, fixture] = []] = Object.entries(fixtures);
-    if (fixture) console.log(json(fixture));
+function beforeCreate(method, name, f) {
+  if (f && !(f instanceof Function)) throw new Error(`${method}("${name}") bad function body`);
+  if (!currentNode.fixtureUrl) currentNode.fixtureUrl = getFixtureUrl();
+}
+
+async function init() {
+  const parentTest = window.parent.test;
+  window.test = parentTest || await import(import.meta.url);
+  if (parentTest) {
+    parentTest.currentNode.children.push(root);
   }
-  if (exitAfter) window.close(countFailed && 1);
-});
+  else setTimeout(async () => {
+    if (window.isCI && root.hasSelected) throw new Error("only not allowed in CI");
+    await run(0, root);
+    resolve({count, countFailed});
+    if (updateFixtures) console.warn(json(fixtures));
+    if (exitAfter) window.close(countFailed && 1);
+  });
+}
+
+init();

@@ -3,15 +3,16 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"io/fs"
 	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -211,7 +212,7 @@ func (r *Runner) Start() (int, error) {
 	}
 	defer r.headless.Stop()
 	if r.Watcher == nil {
-		return r.run(context.Background(), os.Stdout, os.Stderr)
+		return r.run(context.Background(), nil)
 	}
 	for {
 		changed := r.Watcher.AwaitChange()
@@ -220,7 +221,7 @@ func (r *Runner) Start() (int, error) {
 			<-changed
 			cancel()
 		}()
-		exitCode, err := r.run(ctx, os.Stdout, os.Stderr)
+		exitCode, err := r.run(ctx, nil)
 		log.Printf("\nRun: Finished with %d %v", exitCode, err)
 		<-changed
 	}
@@ -237,30 +238,50 @@ func (r *Runner) UpdateFixtures() (int, error) {
 			log.Printf("Updated %s (%s)", fixturePath, path)
 		}
 	}()
-	for _, p := range r.Paths {
-		r.html = headless.HTML(setupHTML, headless.TemplateHTML("", []string{p}, append(r.Args, "update-fixtures")))
-		out := &bytes.Buffer{}
-		if exitCode, err := r.run(context.Background(), out, os.Stderr); exitCode != 0 || err != nil {
-			return exitCode, err
+	r.html = headless.HTML(setupHTML, headless.TemplateHTML("", r.Paths, append(r.Args, "update-fixtures")))
+	bs := &bytes.Buffer{}
+	f := func(m headless.Message) bool {
+		if m.Method == "warning" {
+			fmt.Fprint(bs, m.Args...)
+			return true
 		}
-		fixturePath := filepath.Join(filepath.Dir(p), "fixtures", filepath.Base(p[:len(p)-len(filepath.Ext(p))])+".json")
-		if err := os.MkdirAll(filepath.Join(filepath.Dir(p), "fixtures"), os.ModePerm); err != nil {
+		return false
+	}
+	if exitCode, err := r.run(context.Background(), f); exitCode != 0 || err != nil {
+		return exitCode, err
+	}
+	m := map[string]json.RawMessage{}
+	if err := json.Unmarshal(bs.Bytes(), &m); err != nil {
+		return 0, err
+	}
+	for fixtureURL, bs := range m {
+		lines := strings.Split(string(bs), "\n")
+		result := lines[0] + "\n"
+		for _, line := range lines[1:] {
+			result += line[2:] + "\n"
+		}
+		log.Println(fixtureURL)
+		u, err := url.Parse(fixtureURL)
+		if err != nil {
 			return 0, err
 		}
-		if err := os.WriteFile(fixturePath, out.Bytes(), os.ModePerm); err != nil {
+		fixturePath := path.Join(".", u.Path)
+		if err := os.MkdirAll(path.Dir(fixturePath), os.ModePerm); err != nil {
 			return 0, err
 		}
-		updatedFixtures[p] = fixturePath
+		if err := os.WriteFile(fixturePath, []byte(result), 0644); err != nil {
+			return 0, err
+		}
 	}
 	return 0, nil
 }
 
-func (r *Runner) run(ctx context.Context, stdout, stderr io.Writer) (int, error) {
+func (r *Runner) run(ctx context.Context, f func(m headless.Message) bool) (int, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	run := r.headless.Run(ctx, r.html)
 	for m := range run.Messages {
-		if exit, exitCode, err := r.log(m, stdout, stderr); exit {
+		if exit, exitCode, err := r.log(m, f); exit {
 			cancel()
 			return exitCode, err
 		}
@@ -268,17 +289,19 @@ func (r *Runner) run(ctx context.Context, stdout, stderr io.Writer) (int, error)
 	return 0, nil
 }
 
-func (r *Runner) log(m headless.Message, stdout, stderr io.Writer) (bool, int, error) {
-	if m.Method == "clear" {
+func (r *Runner) log(m headless.Message, f func(m headless.Message) bool) (bool, int, error) {
+	if f != nil && f(m) {
+		return false, 0, nil
+	} else if m.Method == "clear" {
 		return true, int(m.Args[0].(float64)), nil
 	} else if m.Method == "exception" {
 		return true, 0, errors.New(m.Args[0].(string))
 	} else if m.Method == "info" {
-		fmt.Fprintln(stdout, headless.Colorize(m))
+		fmt.Println(headless.Colorize(m))
 	} else if m.Method == "error" {
-		fmt.Fprintln(stderr, headless.Colorize(m))
+		fmt.Fprintln(os.Stderr, headless.Colorize(m))
 	} else {
-		fmt.Fprintln(stdout, m.Args...)
+		fmt.Println(m.Args...)
 	}
 	return false, 0, nil
 }
