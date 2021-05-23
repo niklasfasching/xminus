@@ -77,18 +77,17 @@ export function updateChildNodes(parent, anchor, nodes, values, updatedValues, $
   }
 }
 
-export async function mount(parentNode, name, _$, _props) {
+export async function mount(parentNode, name, props = {}) {
   await ready;
   if (!location.hash) history.replaceState(null, null, "#/");
-  const component = document.createElement(name);
-  Object.assign(_$, {$update: () => component.updateCallback()}, parseHash());
-  Object.assign(component, {_props, _$})
+  const app = document.createElement(name);
+  Object.assign(app, {props: Object.assign(props, parseHash()), app});
   window.onhashchange = () => {
-    Object.assign(_$, parseHash());
-    _$.$update();
+    Object.assign(props, parseHash());
+    app.update();
   };
   parentNode.innerHTML = '';
-  return parentNode.appendChild(component);
+  return parentNode.appendChild(app);
 }
 
 export function fragment(html) {
@@ -113,28 +112,29 @@ export function register(name, html, f) {
   template.innerHTML = html;
   customElements.define(name, class extends (classes[name] || Component) {
     connectedCallback() {
-      this._slot = slotTemplate.cloneNode(true);
-      for (let child of this.childNodes) this._slot.append(child);
-      let {_$: $, _props: props, _slot: slot} = this;
-      this.onInit($, props, slot);
+      this.xSlot = slotTemplate.cloneNode(true);
+      for (let child of this.childNodes) this.xSlot.append(child);
+      for (let k in this.props) this[k] = this.props[k];
+      this.onInit(this.props);
       const fragment = template.content.cloneNode(true);
-      this[symbols.updateComponent] = f.call(this, fragment, slot, $, props);
+      this[symbols.updateComponent] = f.call(this, fragment);
       this.append(fragment);
-      this.onCreate($, props, slot);
-    }
-    updateCallback() {
-      this.onUpdate(this._$, this._props, this._slot);
-      this[symbols.updateComponent]();
+      this.onCreate(this.props);
     }
     detachedCallback() {
-      this.onRemove(this._$, this._props, this._slot);
+      this.onRemove(this.props);
+    }
+    update() {
+      for (let k in this.props) this[k] = this.props[k];
+      this.onUpdate(this.props);
+      this[symbols.updateComponent]();
     }
   });
 }
 
 export class Component extends HTMLElement {
-  onInit($, props, slot) {}
-  onCreate($, props, slot) {}
-  onUpdate($, props, slot) {}
-  onRemove($, props, slot) {}
+  onInit(props) {}
+  onCreate(props) {}
+  onUpdate(props) {}
+  onRemove(props) {}
 }

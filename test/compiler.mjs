@@ -115,25 +115,21 @@ t.describe("compiler", () => {
 
   t.describe("integration", () => {
     let template = document.createElement("template"), id = 0;
-    function render($, template) {
+    function render(props, template) {
       const name = `x-component-${id++}`;
       eval(compiler.compile(name, "<element>" + template + "</element>"));
       const component = document.createElement(name);
-      Object.assign(component, {
-        _props: {},
-        _$: Object.assign($, {$update: () => component[runtime.symbols.updateComponent]()}),
-      });
+      Object.assign(component, {props, app: component});
       document.body.append(component);
-      return [component, $$ => {
-        Object.assign($, $$);
-        component.updateCallback();
+      return [component, props => {
+        Object.assign(component, {props}).update();
       }];
     }
 
     t("should update dynamic properties", () => {
       const [component, update] = render({key1: "key1a", key2: "key2a", value: "value1"},
                                          `<div key={$.value} {$.key1}=normal-value {$.key2}={$.value}/>`);
-            t.equal(component.innerHTML, `<div key="value1" key1a="normal-value" key2a="value1"></div>`);
+      t.equal(component.innerHTML, `<div key="value1" key1a="normal-value" key2a="value1"></div>`);
       update({key1: "key1b", key2: "key2b", value: "value2"});
       t.equal(component.innerHTML, `<div key="value2" key1b="normal-value" key2b="value2"></div>`);
     });
@@ -169,7 +165,7 @@ t.describe("compiler", () => {
     });
 
     t("should update nested components", () => {
-      eval(compiler.compile("x-foo", `<element><p>a</p>{props.key} {slot} {props.key1}<p>c</p></element>`));
+      eval(compiler.compile("x-foo", `<element><p>a</p>{$.key} {$.xSlot} {$.key1}<p>c</p></element>`));
       const [component, update] = render({key: "key1", value: "key1-value1", child: "child1"},
                                          `<x-foo {$.key}={$.value} key=key-value1>{$.child}</>`);
       t.equal(component.innerHTML, `<x-foo><p>a</p>key-value1 <div class="slot">child1</div> key1-value1<p>c</p></x-foo>`);

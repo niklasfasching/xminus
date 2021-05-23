@@ -55,12 +55,12 @@ t.describe("TodoMVC", () => {
     });
 
     t("should not add empty todos", async () => {
-      const length = items.length
+      const length = items.length;
       input.value = ``;
       enter(input);
       enter(input);
       items = await all(iframe, ".todo-item");
-      t.equal(length, items.length)
+      t.equal(length, items.length);
     });
 
     t("should show $main and $footer when there are todos", async () => {
@@ -82,9 +82,9 @@ t.describe("TodoMVC", () => {
 
     t("should allow marking all items as completed", () => {
       for (let item of items) t.assert(!item.classList.contains("completed"));
-      toggleAll.click()
+      toggleAll.click();
       for (let item of items) t.assert(item.classList.contains("completed"));
-      items[0].querySelector(".toggle").click()
+      items[0].querySelector(".toggle").click();
       t.assert(!items[0].classList.contains("completed"));
       t.assert(!toggleAll.checked);
       toggleAll.click();
@@ -93,14 +93,14 @@ t.describe("TodoMVC", () => {
 
     t("should allow un-marking all items as completed", () => {
       for (let item of items) t.assert(!item.classList.contains("completed"));
-      toggleAll.click()
-      toggleAll.click()
+      toggleAll.click();
+      toggleAll.click();
       for (let item of items) t.assert(!item.classList.contains("completed"));
     });
 
     t("should keep the 'complete all' checkbox updated", () => {
       t.equal(toggleAll.checked, false);
-      toggleAll.click()
+      toggleAll.click();
       t.equal(toggleAll.checked, true);
     });
   });
@@ -157,7 +157,7 @@ t.describe("TodoMVC", () => {
 
     t("should save edits on blur", () => {
       editInput.value = "updated title";
-      editInput.dispatchEvent(new Event("blur"))
+      editInput.dispatchEvent(new Event("blur"));
       t.equal(item.querySelector("label").textContent, "updated title");
     });
 
@@ -177,8 +177,8 @@ t.describe("TodoMVC", () => {
       const title = item.title;
       editInput.value = "  ";
       editInput.dispatchEvent(new KeyboardEvent("keydown", {key: "Escape"}));
-      t.assert(!item.querySelector("input.edit"))
-      t.assert(item.querySelector("label"))
+      t.assert(!item.querySelector("input.edit"));
+      t.assert(item.querySelector("label"));
       t.equal(item.title, title);
     });
   });
@@ -259,7 +259,7 @@ t.describe("TodoMVC", () => {
       items[0].querySelector(".toggle").click();
       items[3].querySelector(".toggle").click();
       items[5].querySelector(".toggle").click();
-    })
+    });
 
     t("should allow filtering for active items", async () => {
       iframe.contentWindow.location.hash = "#/active";
@@ -299,7 +299,7 @@ function first(iframe, selector, timeout) {
 }
 
 function all(iframe, selector, timeout) {
-  return waitFor(iframe, selector, "All", timeout)
+  return waitFor(iframe, selector, "All", timeout);
 }
 
 async function waitFor(iframe, selector, maybeAll, timeout = 100) {

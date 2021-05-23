@@ -60,13 +60,13 @@
       "let _children_2_node = root;",
       "const _children_1_nodes = [_children_0_node.nextSibling], _children_1_values = [];",
       "xm.updateChildNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(baz)], $, xm.createChildNode);",
-      "root._props = { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), }, root._$ = $;",
+      "root.props = { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), }, root.app = $.app;",
       ""
     ],
     "update": [
       "xm.updateChildNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(baz)], $, xm.createChildNode);",
-      "root._props = { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), };",
-      "root.updateCallback();",
+      "root.props = { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), };",
+      "root.update();",
       ""
     ]
   },
@@ -97,7 +97,7 @@
       "xm.setProperty(_properties_0_node, \"key\", (dynamic value));",
       "root.addEventListener(\"click\", function($event) {",
       "console.log('magic');",
-      "$.$update();",
+      "$.app.update();",
       "});",
       ""
     ],
@@ -195,11 +195,11 @@
       "let _for_0_anchor = root, _for_0_node = xm.fragment(`<div></div>`).firstChild;",
       "function _for_0_create($, ..._args) {",
       "let root = _for_0_node.cloneNode(true);",
-      "$ = Object.assign(Object.create($), {\"item\": _args[0]});",
+      "let item = _args[0];",
       "let _properties_1_node = root;",
       "xm.setProperty(_properties_1_node, \"key\", (dynamic value));",
       "root[xm.symbols.updateChildNode] = (..._args) => {",
-      "$[\"item\"] = _args[0];",
+      "item = _args[0];",
       "xm.setProperty(_properties_1_node, \"key\", (dynamic value));",
       "return root;",
       "};",
@@ -247,10 +247,10 @@
   },
   "compiler: compile: should generate a component (smoke test)": {
     "result": [
-      "xm.register(\"x-foo-component\", `<div></div>`, function(_node, slot, $, props) {",
+      "xm.register(\"x-foo-component\", `<div></div>`, function(_node) {",
+      "const $ = this;",
       "let _children_0_node = _node.firstChild;",
       "return () => {",
-      "props = this._props;",
       "};",
       "});",
       ""
@@ -261,7 +261,8 @@
   },
   "compiler: compile: should generate element attributes (except id, type bc used by template) from template attributes": {
     "result": [
-      "xm.register(\"x-foo-component\", `<p>hello <!----></p>`, function(_node, slot, $, props) {",
+      "xm.register(\"x-foo-component\", `<p>hello <!----></p>`, function(_node) {",
+      "const $ = this;",
       "let _properties_0_node = this;",
       "let _properties_1_key = (foo); xm.setProperty(_properties_0_node, _properties_1_key, (bar));",
       "let _children_2_node = _node.firstChild;",
@@ -270,7 +271,6 @@
       "const _children_4_nodes = [_children_3_node.nextSibling], _children_4_values = [];",
       "xm.updateChildNodes(_children_5_node, null, _children_4_nodes, _children_4_values, [(world)], $, xm.createChildNode);",
       "return () => {",
-      "props = this._props;",
       "_properties_1_key = xm.setDynamicKeyProperty(_properties_0_node, _properties_1_key, (foo), (bar));",
       "xm.updateChildNodes(_children_5_node, null, _children_4_nodes, _children_4_values, [(world)], $, xm.createChildNode);",
       "};",

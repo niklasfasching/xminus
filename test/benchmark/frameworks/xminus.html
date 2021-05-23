@@ -36,14 +36,14 @@
         </div>
         <table class="table table-hover table-striped test-data" on:click="handleClick">
           <tbody>
-            <tr .for="row of $.store.rows" class="{$.row.id === $.store.selected && 'danger'}">
-              <td class="col-md-1">{$.row.id}</td>
+            <tr .for="row of $.store.rows" class="{row.id === $.store.selected && 'danger'}">
+              <td class="col-md-1">{row.id}</td>
               <td class="col-md-4">
-                <a .on:click="$.store.select($.row.id)">{$.row.label}</a>
+                <a .on:click="$.store.select(row.id)">{row.label}</a>
               </td>
               <td class="col-md-1">
                 <a>
-                  <span class="glyphicon glyphicon-remove" aria-hidden="true" .on:click="$.store.remove($.row.id)"></span>
+                  <span class="glyphicon glyphicon-remove" aria-hidden="true" .on:click="$.store.remove(row.id)"></span>
                 </a>
               </td>
               <td class="col-md-6"></td>

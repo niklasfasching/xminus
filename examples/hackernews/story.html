@@ -18,27 +18,27 @@
     </div>
 
     <div id="comments">
-      <x-comment comment="{$.comment}" .for="comment in $.story.children || []"/>
+      <x-comment comment="{comment}" .for="comment in $.story.children || []"/>
     </div>
   </main>
 </script>
 
-<script type="text/x-template" id="x-comment">
+<script type="text/x-template" id="x-comment" .inject:x-story="story">
   <div class="comment">
     <div class="header"
-         style="--alpha: {(props.comment.childCount / $.maxComments) * 100}%;">
-      <a href="https://news.ycombinator.com/user?id={props.comment.author}">{props.comment.author}</a>
-      <a href="https://news.ycombinator.com/item?id={props.comment.id}">{$.timeSince(props.comment)} ago</a>
+         style="--alpha: {($.comment.childCount / $.story.maxComments) * 100}%;">
+      <a href="https://news.ycombinator.com/user?id={$.comment.author}">{$.comment.author}</a>
+      <a href="https://news.ycombinator.com/item?id={$.comment.id}">{$.story.timeSince($.comment)} ago</a>
     </div>
-    {$.toNode(props.comment.text)}
+    {$.story.toNode($.comment.text)}
     <div class="count"
-         .on:click="props.comment.showChildren = !props.comment.showChildren"
+         .on:click="$.comment.showChildren = !$.comment.showChildren"
          .if="$.comment.childCount !== 0">
-      [{props.comment.showChildren ? "-" : "+"}
-      {props.comment.children.length}/{props.comment.childCount}]
+      [{$.comment.showChildren ? "-" : "+"}
+      {$.comment.children.length}/{$.comment.childCount}]
     </div>
-    <div class="comments" .if="props.comment.showChildren">
-      <x-comment comment="{$.comment}" .for="comment in props.comment.children || []"/>
+    <div class="comments" .if="$.comment.showChildren">
+      <x-comment comment="{comment}" .for="comment in $.comment.children || []"/>
     </div>
   </div>
 </script>
@@ -47,34 +47,31 @@
  import {define, Component} from "/src/runtime.mjs";
 
  define("x-story", class extends Component {
-   onInit($, props) {
-     Object.assign($, methods);
-     $.getStory();
+   onInit(props) {
+     this.getStory();
    }
- });
 
- const methods = {
    toNode(html) {
      const div = document.createElement("div");
      div.innerHTML = html;
      return div;
-   },
+   }
 
-   timeSince(story) {
+   timeSince() {
      const fmt = (n, unit) => `${n} ${unit}${n === 1 ? "" : "s"}`;
-     const s = Date.now() / 1000 - story.created_at_i;
+     const s = Date.now() / 1000 - this.story.created_at_i;
      if (s < 60 * 60) return fmt(Math.floor(s / 60), "minute");
      else if (s < 60 * 60 * 24) return fmt(Math.floor(s / 60 / 60), "hour");
      else return fmt(Math.floor(s / 60 / 60 / 24), "day");
-   },
+   }
 
    async getStory() {
-     const id = this.$query.id
+     const id = this.app.$query.id
      try {
        this.story = await fetch("https://hn.algolia.com/api/v1/items/" + id).then(r => r.json());
      } catch(e) {
        this.error = `Story with id "${id}" does not exist`;
-       return void this.$update();
+       return void this.app.update();
      }
      this.maxComments = 0;
      const processItem = (item) => {
@@ -89,7 +86,7 @@
      this.story = processItem(this.story);
      if (!this.story.url) this.story.url = `https://news.ycombinator.com/item?id=${this.story.objectID}`;
      this.story.hostname = new URL(this.story.url).hostname.replace(/^(www\.)/, "");
-     this.$update();
-   },
- }
+     this.app.update();
+   }
+ });
 </script>

@@ -17,7 +17,7 @@
                  .on:click="$.toggleAll($event)" checked="{!$.store.remaining.length}">
 		  <label for="toggle-all"></label>
           <ul class="todo-list">
-            <x-todo-item .for="item in $.store.routeItems($.$path)"/>
+            <x-todo-item item={item} .for="item in $.store.routeItems($.$path)"/>
           </ul>
           <footer class="footer" .if="$.store.items.length">
             <span class="todo-count">{$.store.remaining.length} item{$.store.remaining.length === 1 ? '' : 's'} left</span>
@@ -47,10 +47,10 @@
                .if="!$.item.editing">{$.item.title}</label>
         <input .if="$.item.editing" class="edit"
                .bind:value="$.item.title"
-               .on:blur:no="$.onEditInput($event, $.item)"
-               .on:keydown:no="$.onEditInput($event, $.item)"
+               .on:blur:no="$.onEditInput($event)"
+               .on:keydown:no="$.onEditInput($event)"
                .on:create="if ($.item.editing) this.focus()">
-        <button class="destroy" .on:click="$.store.remove($.item)"></button>
+        <button class="destroy" .on:click="$.app.store.remove($.item)"></button>
       </li>
     </script>
 
@@ -58,14 +58,42 @@
      import {mount, define, Component} from "/src/runtime.mjs";
 
      define("x-todomvc", class extends Component {
-       onInit($) {
-         $.store.items = JSON.parse(localStorage.getItem("items") || "[]");
+       onInit({store}) {
+         store.items = JSON.parse(localStorage.getItem("items") || "[]");
        }
 
-       onUpdate($) {
-         localStorage.setItem("items", JSON.stringify($.store.items));
+       onUpdate({store}) {
+         localStorage.setItem("items", JSON.stringify(store.items));
+       }
+
+       onInput({target, key}) {
+         if (key !== "Enter") return
+         this.store.add(target.value.trim());
+         target.value = "";
+         this.update();
+       }
+
+       toggleAll({target}) {
+         for (const item of this.store.items) item.completed = target.checked;
        }
      })
+
+
+     define("x-todo-item", class extends Component {
+       onEditInput({type, target, key}) {
+         if (key === 'Escape') {
+           this.item.editing = false;
+           this.app.update();
+         } else if (key === "Enter" || type === "blur") {
+           this.item.title = target.value.trim();
+           this.item.editing = false;
+           if (!this.item.title) this.app.store.remove(this.item);
+           this.app.update();
+         }
+       }
+     })
+
+
 
      class Store {
        id = 0
@@ -104,31 +132,7 @@
 
      window.store = new Store();
 
-     mount(document.body, "x-todomvc", {
-       store,
-       onInput({target, key}) {
-         if (key !== "Enter") return
-         this.store.add(target.value.trim());
-         target.value = "";
-         this.$update();
-       },
-
-       onEditInput({type, target, key}, item) {
-         if (key === 'Escape') {
-           item.editing = false;
-           this.$update();
-         } else if (key === "Enter" || type === "blur") {
-           item.title = target.value.trim();
-           item.editing = false;
-           if (!item.title) this.store.remove(item);
-           this.$update();
-         }
-       },
-
-       toggleAll({target}) {
-         for (const item of this.store.items) item.completed = target.checked;
-       }
-     });
+     mount(document.body, "x-todomvc", {store});
     </script>
   </head>
   <body></body>

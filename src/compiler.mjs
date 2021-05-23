@@ -32,7 +32,7 @@ function onMacro(vnode, $, key, value) {
     $.create += `function ${node}_fn() { ${value} }\n`;
     $[event] += `setTimeout(() => ${node}_fn.call(${node}));\n`;
   } else {
-    let after = "$.$update();";
+    let after = "$.app.update();";
     if (modifiers.includes("no")) after = "";
     $.create += `${vnode.ref}.addEventListener("${event}", function($event) {
                    ${value};
@@ -54,8 +54,8 @@ function forMacro(vnode, $, key, value) {
         [name, inOrOf, values] = value.split(/ (of|in) /);
   generateClosure(vnode, $, _,
                   "xm.symbols.updateChildNode",
-                  `$ = Object.assign(Object.create($), {"${name}": _args[0]});`,
-                  `$["${name}"] = _args[0];`);
+                  `let ${name} = _args[0];`,
+                  `${name} = _args[0];`);
   $.create += `const ${_}values = [], ${_}nodes = [];
                xm.updateChildNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}create);\n`;
   $.update += `xm.updateChildNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}create);\n`;
@@ -67,10 +67,10 @@ export function compile(name, template) {
   delete vnode.properties.id;
   delete vnode.properties.type;
   generateVnode(vnode, $);
-  return `xm.register("${name}", \`${$.html.replaceAll("`", "\\`")}\`, function(_node, slot, $, props) {
+  return `xm.register("${name}", \`${$.html.replaceAll("`", "\\`")}\`, function(_node) {
+    const $ = this;
     ${$.create}
     return () => {
-      props = this._props;
       ${$.update}
     };
   });\n`;
@@ -120,9 +120,9 @@ export function generateVnode(vnode, $) {
     $.html += `</${rawTag}>`;
     const properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
       `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
-    $.create += `${vnode.ref}._props = ${properties}, ${vnode.ref}._$ = $;\n`;
-    $.update += `${vnode.ref}._props = ${properties};
-                 ${vnode.ref}.updateCallback();\n`;
+    $.create += `${vnode.ref}.props = ${properties}, ${vnode.ref}.app = $.app;\n`;
+    $.update += `${vnode.ref}.props = ${properties};
+                 ${vnode.ref}.update();\n`;
   } else {
     throw new Error("dynamic tags are currently not supported");
   }

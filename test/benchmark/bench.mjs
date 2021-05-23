@@ -8,7 +8,7 @@ async function benchmark(name) {
 async function runTests(window) {
   const {document, store} = window;
   store.callback = () => {};
-  const clear = await waitFor(document, "#clear"), results = {}
+  const clear = await waitFor(document, "#clear"), results = {};
   await runTest(results, store, document.querySelector("#run"), clear);
   return results;
 }
