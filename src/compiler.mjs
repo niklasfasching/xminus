@@ -1,6 +1,7 @@
 import {parse, parseValue, parseValueParts} from "./parser.mjs";
 
 const macros = [
+  [/^\.inject:/, injectMacro],
   [/^\.if$/, ifMacro],
   [/^\.for$/, forMacro],
   [/^\.on:/, onMacro],
@@ -15,6 +16,12 @@ function bindMacro(vnode, $, key, value) {
   $.create += `if (${value} !== undefined) ${node}["${property}"] = ${value};\n
                ${node}.addEventListener("${event}", () => ${value} = ${node}["${property}"]);\n`;
   $.update += `if (document.activeElement !== ${node}) ${node}["${property}"] = ${value};\n`;
+}
+
+function injectMacro(vnode, $, key, value) {
+  const [_, selector] = key.split(":");
+  $.create += `$["${value}"] = $.closest("${selector}");\n`;
+  generateVnode(vnode, $);
 }
 
 function onMacro(vnode, $, key, value) {

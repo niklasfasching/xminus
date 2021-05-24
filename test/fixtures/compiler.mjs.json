@@ -237,6 +237,14 @@
       ""
     ]
   },
+  "compiler: generateVnode: macro: should generate .inject macro": {
+    "html": "<div></div>",
+    "create": [
+      "$[\"x\"] = $.closest(\"x-component\");",
+      ""
+    ],
+    "update": ""
+  },
   "compiler: compile: should generate a component (smoke test)": {
     "result": [
       "xm.register(\"x-foo-component\", `<div></div>`, function(_node, slot, $, props) {",

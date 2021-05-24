@@ -91,6 +91,10 @@ t.describe("compiler", () => {
       t("should generate .if macro", () => {
         test(`<div key={dynamic value} .if="$.condition"></div>`);
       });
+
+      t("should generate .inject macro", () => {
+        test(`<div .inject:x-component="x"></div>`);
+      });
     });
   });
 
@@ -171,6 +175,13 @@ t.describe("compiler", () => {
       t.equal(component.innerHTML, `<x-foo><p>a</p>key-value1 <div class="slot">child1</div> key1-value1<p>c</p></x-foo>`);
       update({key: "key1", value: "key1-value2", child: "child2"});
       t.equal(component.innerHTML, `<x-foo><p>a</p>key-value1 <div class="slot">child2</div> key1-value2<p>c</p></x-foo>`);
+    });
+
+    t("should inject parent components", () => {
+      eval(compiler.compile("x-parent", `<element><x-child></x-child></element>`));
+      eval(compiler.compile("x-child", `<element .inject:x-parent="xParent"></element>`));
+      const [component, update] = render({}, `<x-parent></x-parent>`);
+      t.assert(component.querySelector("x-child").xParent);
     });
 
     t("should update dynamic component tags");
