@@ -134,7 +134,7 @@ function group(name, f, selected) {
 async function run(lvl, node) {
   currentNode = null;
   const time = timer(), selected = !root.hasSelected || node.selected || node.hasSelected;
-  if (selected && node !== root) log(lvl, 0, "", node.name);
+  if (selected && node !== window.test.root) log(lvl, 0, "", node.name);
   await loadFixtures(node);
   for (let {name, f} of node.befores) await runWrapper(lvl+2, node, name, f, selected);
   for (let child of node.children) {
@@ -185,7 +185,7 @@ async function runFn(node, f, name) {
 function getCurrentID(node, name) {
   let names = [name];
   do { names.push(node.name); } while (node = node.parent);
-  return names.reverse().filter(Boolean).join(": ");
+  return names.slice(0, -1).reverse().filter(Boolean).join(": ");
 }
 
 function log(lvl, isFailure, color, line, err) {
@@ -228,7 +228,7 @@ async function loadFixtures(node) {
     .catch(() => ({}));
 }
 
-function getFixtureUrl() {
+function getTestUrl() {
   const prepareStackTrace = Error.prepareStackTrace;
   Error.prepareStackTrace = (err, stack) => stack;
   const stack = new Error().stack;
@@ -238,20 +238,23 @@ function getFixtureUrl() {
         stack.map(f => f.getFileName());
   const testFile = urls.reverse().find(url => url !== import.meta.url);
   if (!testFile) throw new Error("could not find test file name");
-  return new URL(testFile).pathname.replace(/\/([^/]+)$/, "/fixtures/$1.json");
+  return new URL(testFile).pathname.replace(/\/$/, "/index.html");
+}
+
+function getFixtureUrl() {
+  return getTestUrl().replace(/\/([^/]+)$/, "/fixtures/$1.json");
 }
 
 function beforeCreate(method, name, f) {
   if (f && !(f instanceof Function)) throw new Error(`${method}("${name}") bad function body`);
   if (!currentNode.fixtureUrl) currentNode.fixtureUrl = getFixtureUrl();
+  if (!root.name) root.name = getTestUrl();
 }
 
 async function init() {
   const parentTest = window.parent.test;
   window.test = parentTest || await import(import.meta.url);
-  if (parentTest) {
-    parentTest.currentNode.children.push(root);
-  }
+  if (parentTest) parentTest.currentNode.children.push(root);
   else setTimeout(async () => {
     if (window.isCI && root.hasSelected) throw new Error("only not allowed in CI");
     await run(0, root);
