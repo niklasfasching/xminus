@@ -25,10 +25,10 @@ export async function loadXModules(url, basePath, loaded = {}) {
   if (loaded[url]) return [];
   else loaded[url] = true;
   const document = url === location.href ? window.document : await loadDocument(url);
-  const styles = all(document, `:not(x-test) link[rel=stylesheet]`),
-        modules = all(document, `:not(x-test) [type*=module]:not([src])`),
-        xTemplates = all(document, `:not(x-test) [type*=x-template][id]`),
-        xImports = all(document, `:not(x-test) [type*=x-module][src]`);
+  const styles = all(document, `link[rel=stylesheet]`),
+        modules = all(document, `[type*=module]:not([src])`),
+        xTemplates = all(document, `[type*=x-template][id]`),
+        xImports = all(document, `[type*=x-module][src]`);
   const xComponents = xTemplates.map(({id, outerHTML}) => compile(id, outerHTML)).join("\n"),
         xModules = await Promise.all(xImports.map(x => loadXModules(absoluteURL(x.getAttribute("src"), url), basePath, loaded)));
   for (let s of styles) s.href = rebaseURL(s.getAttribute("href"), url, basePath);
@@ -58,7 +58,7 @@ function absoluteURL(url, baseURL, rootRelative) {
 }
 
 function all(document, selector) {
-  return [...document.querySelectorAll(selector)];
+  return [...document.querySelectorAll(selector)].filter(el => !el.closest("[x-test]"));
 }
 
 function loadDocument(url) {
