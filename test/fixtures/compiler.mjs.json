@@ -245,6 +245,23 @@
     ],
     "update": ""
   },
+  "compiler: generateVnode: macro: should generate .class macro": {
+    "html": "<div class=\"class-0 class-1 class-2 class-3\"></div>",
+    "create": "",
+    "update": ""
+  },
+  "compiler: generateVnode: macro: should generate .class macro with dynamic classes": {
+    "html": "<div></div>",
+    "create": [
+      "let _properties_0_node = root;",
+      "xm.setProperty(_properties_0_node, \"class\", \"class-0 \" + (\"dynamic-class-1\") + \" class-2 class-3\");",
+      ""
+    ],
+    "update": [
+      "xm.setProperty(_properties_0_node, \"class\", \"class-0 \" + (\"dynamic-class-1\") + \" class-2 class-3\");",
+      ""
+    ]
+  },
   "compiler: compile: should generate a component (smoke test)": {
     "result": [
       "xm.register(\"x-foo-component\", `<div></div>`, function(_node) {",

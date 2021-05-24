@@ -5,7 +5,8 @@ const macros = [
   [/^\.if$/, ifMacro],
   [/^\.for$/, forMacro],
   [/^\.on:/, onMacro],
-  [/^\.bind:/, bindMacro]
+  [/^\.bind:/, bindMacro],
+  [/^\.\./, classMacro]
 ];
 
 function bindMacro(vnode, $, key, value) {
@@ -16,6 +17,11 @@ function bindMacro(vnode, $, key, value) {
   $.create += `if (${value} !== undefined) ${node}["${property}"] = ${value};\n
                ${node}.addEventListener("${event}", () => ${value} = ${node}["${property}"]);\n`;
   $.update += `if (document.activeElement !== ${node}) ${node}["${property}"] = ${value};\n`;
+}
+
+function classMacro(vnode, $, key, value) {
+  vnode.properties.class = ((vnode.properties.class || "") + " " + key.slice(2)).trim();
+  generateVnode(vnode, $);
 }
 
 function injectMacro(vnode, $, key, value) {

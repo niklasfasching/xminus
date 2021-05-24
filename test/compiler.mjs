@@ -95,6 +95,14 @@ t.describe("compiler", () => {
       t("should generate .inject macro", () => {
         test(`<div .inject:x-component="x"></div>`);
       });
+
+      t("should generate .class macro", () => {
+        test(`<div class="class-0" ..class-1 ..class-2 ..class-3></div>`);
+      });
+
+      t("should generate .class macro with dynamic classes", () => {
+        test(`<div class="class-0" ..{"dynamic-class-1"} ..class-2 ..class-3></div>`);
+      });
     });
   });
 
