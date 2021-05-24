@@ -40,6 +40,7 @@ nav {
 
 #stories {
     border-spacing: 0;
+    width: 100%;
 }
 
 #stories thead {
@@ -73,6 +74,10 @@ nav {
     font-size: 0.75em;
     color: #888;
     font-family: var(--font-mono);
+}
+
+#stories .title {
+    word-break: break-all;
 }
 
 #stories .author {
@@ -133,4 +138,11 @@ nav {
 
 #story .comment > .comments {
     margin-left: 1em;
+}
+
+#story pre {
+    background-color: #eee;
+    max-width: 100%;
+    overflow-x: scroll;
+
 }
