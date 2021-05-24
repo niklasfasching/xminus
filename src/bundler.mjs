@@ -6,6 +6,7 @@ export async function bundle(url, basePath = "/") {
   const xComponents = xModules.map(x => x.xComponents).join("\n");
   const moduleCodeBlocks = xModules.flatMap(x => x.modules.map(m => [m.text, x.url]));
   if (asDataURL) {
+    for (const module of (xModules[0].xTemplates)) module.remove();
     const imports = moduleCodeBlocks.slice(xModules[0].modules.length)
           .map(([code, path], i) => `//# sourceURL=${path}.${i}.js\n${code}`)
           .concat(`//# sourceURL=xmComponents.js\n${xComponents}`)

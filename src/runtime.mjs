@@ -8,10 +8,11 @@ export const symbols = {
 
 export const ready = init();
 
-async function init() {
+export async function init(includeXTest) {
   window.xm = {register};
   window.xm = await import(import.meta.url);
   if (document.querySelector("[type*=x-module], [type*=x-template]")) {
+    if (includeXTest) document.querySelectorAll("[x-test]").forEach((el) => el.removeAttribute("x-test"));
     const {bundle} = await import("./bundler.mjs");
     await import(await bundle(location, null));
   }
