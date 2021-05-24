@@ -80,7 +80,6 @@ export function updateChildNodes(parent, anchor, nodes, values, updatedValues, $
 export async function mount(parentNode, name, props = {}) {
   await ready;
   const app = document.createElement(name);
-  parentNode.innerHTML = '';
   return parentNode.appendChild(Object.assign(app, {props, app}));
 }
 
