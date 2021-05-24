@@ -111,6 +111,7 @@ export function register(name, html, f) {
   const slotTemplate = template.content.firstChild;
   template.innerHTML = html;
   customElements.define(name, class extends (classes[name] || Component) {
+    static name = name
     connectedCallback() {
       this.xSlot = slotTemplate.cloneNode(true);
       for (let child of this.childNodes) this.xSlot.append(child);
