@@ -1,0 +1,14 @@
+* keyed for
+until now only unkeyed for loop (i.e. disregards state and can re-use elements independent of identity)
+keyed will allow keeping local state in looped components
+* app component
+add localstorage proxy as app.db
+* register macros / directives
+script tag with [x-compile] or [x-macros] that is executed at bundle / compile time and can register macros
+we can guard macro definitions to bundle time by setting a var in bundle and throwing e.g. if !window.bundleTime
+as macros would be global and regexes rather than exact match it's hard to ensure macros do not conflict
+* improve headless
+- directory listing with globbing
+- disable cache (headers/--disk-cache-size): sometimes cli needs to be restarted for changes to become visible. i guess that's due to caching
+* assumptions
+- everythting in create can close over provided variables. we must not just provide a variable with the same name in update, we must modify the original variable
