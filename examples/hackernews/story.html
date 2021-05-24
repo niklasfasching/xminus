@@ -66,7 +66,7 @@
    }
 
    async getStory() {
-     const id = this.app.$query.id
+     const id = this.app.query.id;
      try {
        this.story = await fetch("https://hn.algolia.com/api/v1/items/" + id).then(r => r.json());
      } catch(e) {

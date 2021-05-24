@@ -79,25 +79,14 @@ export function updateChildNodes(parent, anchor, nodes, values, updatedValues, $
 
 export async function mount(parentNode, name, props = {}) {
   await ready;
-  if (!location.hash) history.replaceState(null, null, "#/");
   const app = document.createElement(name);
-  Object.assign(app, {props: Object.assign(props, parseHash()), app});
-  window.onhashchange = () => {
-    Object.assign(props, parseHash());
-    app.update();
-  };
   parentNode.innerHTML = '';
-  return parentNode.appendChild(app);
+  return parentNode.appendChild(Object.assign(app, {props, app}));
 }
 
 export function fragment(html) {
   compilerTemplate.innerHTML = html;
   return compilerTemplate.content;
-}
-
-function parseHash() {
-  const [$path, query] = location.hash.slice(1).split("?");
-  return {$path, $query: Object.fromEntries(new URLSearchParams(query).entries())};
 }
 
 export function define(name, c) {

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<head>
+  <title>hackernews</title>
+  <script type="text/x-template" id="x-app"></script>
+
+  <script type="module">
+   import {define, Component} from "/src/runtime.mjs";
+   define("x-app", class extends Component {
+     onInit({routes}) {
+       if (!location.hash) history.replaceState(null, null, "#/");
+       this.routeList = Object.entries(this.routes).map(([path, tag]) => [
+         new RegExp("^" + path.replace(/\/?$/, "/?$").replaceAll(/{(\w+)}/g, "(?<$1>[^/]+)")),
+         tag,
+       ]);
+       window.addEventListener("hashchange", () => {
+         this.route();
+         this.update();
+       });
+       this.route();
+     }
+
+     route() {
+       const [path, query] = location.hash.slice(1).split("?");
+       const [r, [tag, f = (app) => ({})]] = this.routeList.find(([r]) => r.test(path)) || [null, []];
+       if (!r) throw new Error(`404 for ${path}: ${JSON.stringify(this.routes)}`);
+       this.path = path;
+       this.params = r.exec(path).groups;
+       this.query = Object.fromEntries(new URLSearchParams(query).entries());
+       this.onUpdate = () => void Object.assign(this.active, {props: f(this.app)}).update?.();
+       if (this.active?.tagName === tag.toUpperCase()) return void Object.assign(this.active, {props: f(this.app)}).update();
+       this.active = Object.assign(document.createElement(tag), {app: this.app, props: f(this.app)});
+       if (!this.firstChild) this.append(this.active);
+       else this.firstChild.replaceWith(this.active);
+     }
+   });
+  </script>
+</head>
+
+<body x-test>
+  <script type="module">
+   import {mount} from "/src/runtime.mjs";
+   import {compile} from "/src/compiler.mjs";
+   import {t} from "/src/test.mjs";
+
+   eval(compile("x-child", `<element>{$.app.params.param}</element>`))
+
+   t.after("reset hash", () => location.hash = "");
+
+   t("should route", async () => {
+     const component = await mount(document.body, "x-app", {routes: {
+       "/p": ["p"],
+       "/{param}": ["x-child"],
+       "/": ["hr"],
+     }});
+     t.equal(component.active.tagName, "HR");
+
+     location.hash = "/p";
+     await new Promise(r => setTimeout(r));
+     t.equal(component.active.tagName, "P");
+
+     location.hash = "/whatever";
+     await new Promise(r => setTimeout(r));
+     t.equal(component.active.tagName, "X-CHILD");
+     t.equal(component.innerText, "whatever");
+   });
+  </script>
+</body>

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <script type="text/x-template" id="x-main">
       <p>{$.foo}</p>
-      <div>{$.app.$path}: {"{" + Object.entries($.app.$query).map(([k,v]) => `${k}: ${v}`).join(",") + "}"}</div>
+      <div>{$.app.constructor.name}</div>
     </script>
     <script type="module">
      import {mount} from "/src/runtime.mjs";

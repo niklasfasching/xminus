@@ -70,7 +70,7 @@ t.describe("runtime", () => {
       await new Promise(r => setTimeout(r, 100));
       const p = iframe.contentDocument.querySelector("p"), div = iframe.contentDocument.querySelector("div");
       t.equal(p.innerText, "bar");
-      t.equal(div.innerText, "/foo: {bar: baz}");
+      t.equal(div.innerText, "x-main");
     });
   });
 

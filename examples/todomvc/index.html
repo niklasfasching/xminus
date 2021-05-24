@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <link href="/src/base.css" rel="stylesheet"/>
     <link href="todomvc.css" rel="stylesheet"/>
+    <script type="x-module" src="/modules/app/index.html"></script>
     <script type="text/x-template" id="x-todomvc">
       <section class="todoapp">
         <header class="header">
@@ -17,14 +18,14 @@
                  .on:click="$.toggleAll($event)" checked="{!$.store.remaining.length}">
 		  <label for="toggle-all"></label>
           <ul class="todo-list">
-            <x-todo-item item={item} .for="item in $.store.routeItems($.$path)"/>
+            <x-todo-item item={item} store={$.store} .for="item in $.store.routeItems($.app.path)"/>
           </ul>
           <footer class="footer" .if="$.store.items.length">
             <span class="todo-count">{$.store.remaining.length} item{$.store.remaining.length === 1 ? '' : 's'} left</span>
             <ul class="filters">
-			  <li><a class="{$.$path === '/' && 'selected'}" href="#/">All</a></li>
-			  <li><a class="{$.$path === '/active' && 'selected'}" href="#/active">Active</a></li>
-			  <li><a class="{$.$path === '/completed' && 'selected'}" href="#/completed">Completed</a></li>
+			  <li><a class="{$.app.path === '/' && 'selected'}" href="#/">All</a></li>
+			  <li><a class="{$.app.path === '/active' && 'selected'}" href="#/active">Active</a></li>
+			  <li><a class="{$.app.path === '/completed' && 'selected'}" href="#/completed">Completed</a></li>
 		    </ul>
             <button class="clear-completed"
                     .if="$.store.completed.length"
@@ -50,7 +51,7 @@
                .on:blur:no="$.onEditInput($event)"
                .on:keydown:no="$.onEditInput($event)"
                .on:create="if ($.item.editing) this.focus()">
-        <button class="destroy" .on:click="$.app.store.remove($.item)"></button>
+        <button class="destroy" .on:click="$.store.remove($.item)"></button>
       </li>
     </script>
 
@@ -87,13 +88,11 @@
          } else if (key === "Enter" || type === "blur") {
            this.item.title = target.value.trim();
            this.item.editing = false;
-           if (!this.item.title) this.app.store.remove(this.item);
+           if (!this.item.title) this.store.remove(this.item);
            this.app.update();
          }
        }
      })
-
-
 
      class Store {
        id = 0
@@ -131,8 +130,9 @@
      }
 
      window.store = new Store();
-
-     mount(document.body, "x-todomvc", {store});
+     mount(document.body, "x-app", {
+       routes: {".*": ["x-todomvc", () => ({store})]},
+     });
     </script>
   </head>
   <body></body>
