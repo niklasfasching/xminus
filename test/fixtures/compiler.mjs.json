@@ -60,12 +60,12 @@
       "let _children_2_node = root;",
       "const _children_1_nodes = [_children_0_node.nextSibling], _children_1_values = [];",
       "xm.updateChildNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(baz)], $, xm.createChildNode);",
-      "root.props = { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), }, root.app = $.app;",
+      "root.props = {[(dynamic key)]: \"value\", [\"key\"]: (dynamic value)}, root.app = $.app;",
       ""
     ],
     "update": [
       "xm.updateChildNodes(_children_2_node, null, _children_1_nodes, _children_1_values, [(baz)], $, xm.createChildNode);",
-      "root.props = { [(dynamic key)]: \"value\", [\"key\"]: (dynamic value), };",
+      "root.props = {[(dynamic key)]: \"value\", [\"key\"]: (dynamic value)};",
       "root.update();",
       ""
     ]
@@ -290,6 +290,23 @@
       "return () => {",
       "_properties_1_key = xm.setDynamicKeyProperty(_properties_0_node, _properties_1_key, (foo), (bar));",
       "xm.updateChildNodes(_children_5_node, null, _children_4_nodes, _children_4_values, [(world)], $, xm.createChildNode);",
+      "};",
+      "});",
+      ""
+    ],
+    "html": "",
+    "create": "",
+    "update": ""
+  },
+  "compiler: compile: should support splat properties on child components": {
+    "result": [
+      "xm.register(\"x-foo-component\", `<x-child></x-child>`, function(_node) {",
+      "const $ = this;",
+      "let _children_0_node = _node.firstChild;",
+      "_children_0_node.props = Object.assign({}, $.props, {[\"key\"]: \"value\"}), _children_0_node.app = $.app;",
+      "return () => {",
+      "_children_0_node.props = Object.assign({}, $.props, {[\"key\"]: \"value\"});",
+      "_children_0_node.update();",
       "};",
       "});",
       ""

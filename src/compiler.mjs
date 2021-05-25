@@ -6,8 +6,10 @@ const macros = [
   [/^\.for$/, forMacro],
   [/^\.on:/, onMacro],
   [/^\.bind:/, bindMacro],
-  [/^\.\./, classMacro]
+  [/^\.\./, classMacro],
 ];
+
+const splatRegexp = /^\s*{\s*\.\.\.\s*(.+)\s*}\s*$/;
 
 function bindMacro(vnode, $, key, value) {
   const [_, property] = key.split(":");
@@ -124,10 +126,13 @@ export function generateVnode(vnode, $) {
     $.html += `<${rawTag}>`;
     generateChildren(vnode, $);
     $.html += `</${rawTag}>`;
-    const properties = Object.entries(vnode.properties).reduce((out, [k, v]) =>
-      `${out}[${parseValue(k)[0]}]: ${parseValue(v)[0]}, `, "{ ") + "}";
-    $.create += `${vnode.ref}.props = ${properties}, ${vnode.ref}.app = $.app;\n`;
-    $.update += `${vnode.ref}.props = ${properties};
+    const [splats, kvs] = Object.entries(vnode.properties).reduce(([splats, props], [k, v]) => {
+      if (!splatRegexp.test(k)) return [splats, props.concat(`[${parseValue(k)[0]}]: ${parseValue(v)[0]}`)];
+      return [splats.concat(k.match(splatRegexp)[1]), props];
+    }, [[], []]);
+    const props = splats.length ? `Object.assign({}, ${splats.join(", ")}, {${kvs.join(", ")}})` : `{${kvs.join(", ")}}`;
+    $.create += `${vnode.ref}.props = ${props}, ${vnode.ref}.app = $.app;\n`;
+    $.update += `${vnode.ref}.props = ${props};
                  ${vnode.ref}.update();\n`;
   } else {
     throw new Error("dynamic tags are currently not supported");
@@ -139,7 +144,8 @@ function generateProperties(vnode, $) {
   for (const k in vnode.properties) {
     const [key, rawKey, isDynamicKey] = parseValue(k),
           [value, rawValue, isDynamicValue] = parseValue(vnode.properties[k]);
-    if (!isDynamicKey && !isDynamicValue && vnode.ref === "this") $.create += `${vnode.ref}[${key}] = ${value};\n`;
+    if (splatRegexp.test(k)) throw new Error(`splat properties are only allowed on component tags, not <${vnode.tag}>`);
+    else if (!isDynamicKey && !isDynamicValue && vnode.ref === "this") $.create += `${vnode.ref}[${key}] = ${value};\n`;
     else if (!isDynamicKey && !isDynamicValue) $.html += ` ${rawKey}=${value}`;
     else dynamicProperties.push({key, value, isDynamicKey, isDynamicValue});
   }

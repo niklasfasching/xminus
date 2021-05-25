@@ -63,5 +63,6 @@ t.describe("parser", () => {
     throws(`{a + b}=value`);
     throws(`key={ value }`);
     throws(`key={a + b}`);
+    throws(`{ ...foo }`);
   });
 });

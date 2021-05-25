@@ -119,6 +119,15 @@ t.describe("compiler", () => {
       test(`<p>hello {world}</p>`, `id="x-foo" type="x-template" {foo}={bar}`);
     });
 
+    t("should support splat properties on child components", () => {
+      test(`<x-child key=value {...$.props} />`);
+    });
+
+    t("should throw on splat properties on non child-components", () => {
+      t.throws(() => run("compile", "x-foo-component", `<element><div {...$.props}></div></element>`),
+               /splat properties.*<div>/);
+    });
+
   });
 
   t.describe("integration", () => {
