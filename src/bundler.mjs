@@ -15,6 +15,7 @@ export async function bundle(url, basePath = "/") {
   }
   const {document, xImports, xTemplates, modules} = xModules[0];
   for (let el of [...xImports, ...xTemplates, ...modules]) el.remove();
+  document.querySelectorAll("[x-dev]").forEach(el => el.remove());
   const html = moduleCodeBlocks.map(([code]) => code).concat(xComponents).map(code => {
     return `<script type=module>\n${code}</script>`;
   }).join("\n");
@@ -59,7 +60,7 @@ function absoluteURL(url, baseURL, rootRelative) {
 }
 
 function all(document, selector) {
-  return [...document.querySelectorAll(selector)].filter(el => !el.closest("[x-test]"));
+  return [...document.querySelectorAll(selector)].filter(el => !el.closest("[x-dev]"));
 }
 
 function loadDocument(url) {

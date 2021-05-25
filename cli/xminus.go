@@ -30,7 +30,7 @@ var updateFixtures = flag.Bool("u", false, "update test fixtures and exit")
 var windowArgs = flag.String("a", "", "window.args available inside run (split into strings.Fields)")
 
 var reloadSnippet = `
-<script>
+<script x-dev>
   // THIS SNIPPET IS NOT PART OF THE ORIGINAL HTML BUT INSERTED BY THE SERVER
   function longpoll() {
     fetch("/", {method: "POST"}).then(r => {

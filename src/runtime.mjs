@@ -12,7 +12,7 @@ export async function init(includeXTest) {
   window.xm = {register};
   window.xm = await import(import.meta.url);
   if (document.querySelector("[type*=x-module], [type*=x-template]")) {
-    if (includeXTest) document.querySelectorAll("[x-test]").forEach((el) => el.removeAttribute("x-test"));
+    if (includeXTest) document.querySelectorAll("[x-dev]").forEach((el) => el.removeAttribute("x-dev"));
     const {bundle} = await import("./bundler.mjs");
     await import(await bundle(location, null));
   }
