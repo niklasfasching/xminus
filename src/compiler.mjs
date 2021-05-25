@@ -28,7 +28,7 @@ function classMacro(vnode, $, key, value) {
 
 function injectMacro(vnode, $, key, value) {
   const [_, selector] = key.split(":");
-  $.create += `$["${value}"] = $.closest("${selector}");\n`;
+  $.create += `$["${value}"] = $.xParent.closest("${selector}");\n`;
   generateVnode(vnode, $);
 }
 
@@ -71,13 +71,13 @@ function forMacro(vnode, $, key, value) {
 
 export function compile(name, template) {
   const $ = {html: "", create: "", update: ""},
-        vnode = Object.assign(parse(template)[0], {ref: "this", fragmentRef: "_node"});
+        vnode = Object.assign(parse(template)[0], {ref: "this"});
   const assignedProps = "[" + (vnode.properties["x-props"] || "").replaceAll(/(\w+)/g, `"$1",`) + "]";
   delete vnode.properties.id;
   delete vnode.properties.type;
   delete vnode.properties["x-props"];
   generateVnode(vnode, $);
-  return `xm.register("${name}", \`${$.html.replaceAll("`", "\\`")}\`, function(_node) {
+  return `xm.register("${name}", \`${$.html.replaceAll("`", "\\`")}\`, function() {
     const $ = this;
     ${$.create}
     return () => {
@@ -116,7 +116,7 @@ export function generateVnode(vnode, $) {
   const [tag, rawTag, isDynamicTag] = parseValue(vnode.tag);
   if (vnode.ref === "this") {
     generateProperties(vnode, $);
-    generateChildren(Object.assign(vnode, {ref: vnode.fragmentRef}), $);
+    generateChildren(vnode, $);
   } else if (!isDynamicTag && !isComponentTag(rawTag)) {
     $.html += `<${rawTag}`;
     generateProperties(vnode, $);
@@ -133,9 +133,8 @@ export function generateVnode(vnode, $) {
       return [splats.concat(k.match(splatRegexp)[1]), props];
     }, [[], []]);
     const props = splats.length ? `Object.assign({}, ${splats.join(", ")}, {${kvs.join(", ")}})` : `{${kvs.join(", ")}}`;
-    $.create += `${vnode.ref}.props = ${props}, ${vnode.ref}.app = $.app;\n`;
-    $.update += `${vnode.ref}.props = ${props};
-                 ${vnode.ref}.update();\n`;
+    $.create += `${vnode.ref}.init($.app, $, ${props});\n`;
+    $.update += `${vnode.ref}.update(${props});\n`;
   } else {
     throw new Error("dynamic tags are currently not supported");
   }

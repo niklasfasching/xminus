@@ -136,11 +136,9 @@ t.describe("compiler", () => {
       const name = `x-component-${id++}`;
       eval(compiler.compile(name, `<element x-props="${Object.keys(props).join(" ")}">${template}</element>`));
       const component = document.createElement(name);
-      Object.assign(component, {props, app: component});
       document.body.append(component);
-      return [component, props => {
-        Object.assign(component, {props}).update();
-      }];
+      component.init(component, component, props);
+      return [component, props => component.update(props)];
     }
 
     t("should update dynamic properties", () => {
@@ -179,6 +177,16 @@ t.describe("compiler", () => {
                                        {innerHTML: `<p>a2</p> <p>b2</p>`});
       update({child1: "child1b", childNode: childNode2, child3: "child2b"});
       t.equal(component.innerHTML, `<div>child1b, <div><p>a2</p> <p>b2</p></div> and child2b</div>`);
+    });
+
+    t("should update for child nodes", () => {
+      eval(compiler.compile("x-for-foo", `<element>{$.props.x}</element>`));
+      const [component, update] = render({xs: [1, 2]}, `<x-for-foo x={x} .for="x of $.xs"/>`);
+      t.equal(component.innerHTML, `<x-for-foo>1</x-for-foo><x-for-foo>2</x-for-foo><!---->`);
+      update({xs: [3, 4, 5]});
+      t.equal(component.innerHTML, `<x-for-foo>3</x-for-foo><x-for-foo>4</x-for-foo><x-for-foo>5</x-for-foo><!---->`);
+      update({xs: [6]});
+      t.equal(component.innerHTML, `<x-for-foo>6</x-for-foo><!---->`);
     });
 
     t("should update nested components", () => {

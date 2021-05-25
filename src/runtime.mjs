@@ -81,12 +81,13 @@ export function updateChildNodes(parent, anchor, nodes, values, updatedValues, $
 export async function mount(parentNode, name, props = {}) {
   await ready;
   const app = document.createElement(name);
-  return parentNode.appendChild(Object.assign(app, {props, app}));
+  app.init(app, app, props);
+  return parentNode.appendChild(app);
 }
 
 export function fragment(html) {
   compilerTemplate.innerHTML = html;
-  return compilerTemplate.content;
+  return document.importNode(compilerTemplate.content, true);
 }
 
 export function define(name, c) {
@@ -101,20 +102,23 @@ export function register(name, html, f, assignedProps) {
   template.innerHTML = html;
   customElements.define(name, class extends (classes[name] || Component) {
     static name = name
-    connectedCallback() {
+    init(app, xParent, props) {
+      this.xParent = xParent;
+      this.app = app;
+      this.props = props;
       this.xSlot = slotTemplate.cloneNode(true);
       for (let child of this.childNodes) this.xSlot.append(child);
       for (let k of assignedProps) this[k] = this.props[k];
       this.onInit(this.props);
-      const fragment = template.content.cloneNode(true);
-      this[symbols.updateComponent] = f.call(this, fragment);
-      this.append(fragment);
+      this.append(document.importNode(template.content, true));
+      this[symbols.updateComponent] = f.call(this);
       this.onCreate(this.props);
     }
     detachedCallback() {
       this.onRemove(this.props);
     }
-    update() {
+    update(props = this.props) {
+      this.props = props;
       for (let k of assignedProps) this[k] = this.props[k];
       this.onUpdate(this.props);
       this[symbols.updateComponent]();

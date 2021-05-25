@@ -26,9 +26,10 @@
        this.path = path;
        this.params = r.exec(path).groups;
        this.query = Object.fromEntries(new URLSearchParams(query).entries());
-       this.onUpdate = () => void Object.assign(this.active, {props: f(this.app)}).update?.();
-       if (this.active?.tagName === tag.toUpperCase()) return void Object.assign(this.active, {props: f(this.app)}).update();
-       this.active = Object.assign(document.createElement(tag), {app: this.app, props: f(this.app)});
+       this.onUpdate = () => void this.active.update?.(f(this.app));
+       if (this.active?.tagName === tag.toUpperCase()) return void this.active.update?.(f(this.app));
+       this.active = document.createElement(tag);
+       if (this.active instanceof Component) this.active.init(this.app, this, f(this.app));
        if (!this.firstChild) this.append(this.active);
        else this.firstChild.replaceWith(this.active);
      }
