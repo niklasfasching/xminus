@@ -174,7 +174,8 @@ async function runFn(node, f, name) {
   const time = timer();
   try {
     currentNode = node, currentID = getCurrentID(node, name);
-    if (f) await f();
+    const result = await Promise.race([f && f(), new Promise(r => setTimeout(() => r(node), 2000))]);
+    if (result === node) t.fail("exceeded timeout of 2000ms");
     currentNode = null, currentID = null;
     return [time(), null];
   } catch (err) {

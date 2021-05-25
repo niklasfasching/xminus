@@ -7,14 +7,14 @@ t.describe("TodoMVC", () => {
   let iframe, input;
   t.beforeEach(async () => {
     localStorage.setItem("items", "[]");
-    if (iframe?.parentElement) iframe.parentElement.removeChild(iframe);
+    iframe?.remove();
     iframe = await openIframe("/examples/todomvc/index.html");
-    input = await first(iframe, "input");
+    input = await first(iframe, "input", 1000);
   });
 
   t.describe("Initial load", () => {
     t("should focus todo input", async () => {
-      await new Promise(r => setTimeout(r));
+      await new Promise(r => setTimeout(r, 100));
       t.equal(iframe.contentDocument.activeElement, input);
     });
   });
@@ -241,9 +241,9 @@ t.describe("TodoMVC", () => {
       }
       const items = await all(iframe, ".todo-item");
       t.equal(items.length, 10);
-
-      const iframe2 = await openIframe("/examples/todomvc/index.html");
-      const items2 = await all(iframe2, ".todo-item");
+      iframe.remove();
+      iframe = await openIframe("/examples/todomvc/index.html");
+      const items2 = await all(iframe, ".todo-item");
       t.equal(items2.length, 10);
     });
   });
@@ -286,7 +286,7 @@ t.describe("TodoMVC", () => {
         iframe.contentWindow.location.hash = "#" + path;
         await new Promise(r => setTimeout(r));
         const selected = await all(iframe, ".filters a.selected");
-        t.equal(selected.length, 1)
+        t.equal(selected.length, 1);
         t.equal(selected[0].getAttribute("href"), "#" + path);
       }
     });
@@ -303,14 +303,14 @@ function all(iframe, selector, timeout) {
 }
 
 async function waitFor(iframe, selector, maybeAll, timeout = 100) {
-    const now = Date.now();
-    while (true) {
-      const x = iframe.contentDocument["querySelector" + maybeAll](selector);
-      if (maybeAll ? x.length : x) return x;
-      else if (Date.now() - now > timeout) return null;
-      else await new Promise(r => requestAnimationFrame(r));
-    }
+  const now = Date.now();
+  while (true) {
+    const x = iframe.contentDocument["querySelector" + maybeAll](selector);
+    if (maybeAll ? x.length : x) return x;
+    else if (Date.now() - now > timeout) return null;
+    else await new Promise(r => requestAnimationFrame(r));
   }
+}
 
 function enter(node, type = "keydown") {
   node.dispatchEvent(new KeyboardEvent(type, {key: "Enter"}));
