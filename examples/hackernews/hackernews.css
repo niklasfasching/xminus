@@ -76,7 +76,7 @@ nav {
     font-family: var(--font-mono);
 }
 
-#stories .title {
+#stories .title small {
     word-break: break-all;
 }
 
