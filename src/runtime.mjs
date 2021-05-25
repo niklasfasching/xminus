@@ -94,7 +94,7 @@ export function define(name, c) {
   classes[name] = c;
 }
 
-export function register(name, html, f) {
+export function register(name, html, f, assignedProps) {
   const template = document.createElement("template");
   template.innerHTML = `<div class=slot></div>`;
   const slotTemplate = template.content.firstChild;
@@ -104,7 +104,7 @@ export function register(name, html, f) {
     connectedCallback() {
       this.xSlot = slotTemplate.cloneNode(true);
       for (let child of this.childNodes) this.xSlot.append(child);
-      for (let k in this.props) this[k] = this.props[k];
+      for (let k of assignedProps) this[k] = this.props[k];
       this.onInit(this.props);
       const fragment = template.content.cloneNode(true);
       this[symbols.updateComponent] = f.call(this, fragment);
@@ -115,7 +115,7 @@ export function register(name, html, f) {
       this.onRemove(this.props);
     }
     update() {
-      for (let k in this.props) this[k] = this.props[k];
+      for (let k of assignedProps) this[k] = this.props[k];
       this.onUpdate(this.props);
       this[symbols.updateComponent]();
     }

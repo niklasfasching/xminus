@@ -72,8 +72,10 @@ function forMacro(vnode, $, key, value) {
 export function compile(name, template) {
   const $ = {html: "", create: "", update: ""},
         vnode = Object.assign(parse(template)[0], {ref: "this", fragmentRef: "_node"});
+  const assignedProps = "[" + (vnode.properties["x-props"] || "").replaceAll(/(\w+)/g, `"$1",`) + "]";
   delete vnode.properties.id;
   delete vnode.properties.type;
+  delete vnode.properties["x-props"];
   generateVnode(vnode, $);
   return `xm.register("${name}", \`${$.html.replaceAll("`", "\\`")}\`, function(_node) {
     const $ = this;
@@ -81,7 +83,7 @@ export function compile(name, template) {
     return () => {
       ${$.update}
     };
-  });\n`;
+  }, ${assignedProps});\n`;
 }
 
 function generateClosure(vnode, $, _, updateKey, beforeCreate = "", beforeUpdate = "") {

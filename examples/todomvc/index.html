@@ -5,7 +5,7 @@
     <link href="/src/base.css" rel="stylesheet"/>
     <link href="todomvc.css" rel="stylesheet"/>
     <script type="x-module" src="/modules/app/index.html"></script>
-    <script type="text/x-template" id="x-todomvc">
+    <script type="text/x-template" id="x-todomvc" x-props="store">
       <section class="todoapp">
         <header class="header">
           <h1>todos</h1>
@@ -39,7 +39,7 @@
 	  </footer>
     </script>
 
-    <script type="text/x-template" id="x-todo-item">
+    <script type="text/x-template" id="x-todo-item" x-props="item store">
       <li class="todo-item {$.item.completed ? 'completed' : ''} {$.item.editing ? 'editing' : ''}">
         <input class="toggle" type="checkbox"
                checked="{$.item.completed}"

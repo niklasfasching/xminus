@@ -269,7 +269,7 @@
       "let _children_0_node = _node.firstChild;",
       "return () => {",
       "};",
-      "});",
+      "}, []);",
       ""
     ],
     "html": "",
@@ -291,7 +291,7 @@
       "_properties_1_key = xm.setDynamicKeyProperty(_properties_0_node, _properties_1_key, (foo), (bar));",
       "xm.updateChildNodes(_children_5_node, null, _children_4_nodes, _children_4_values, [(world)], $, xm.createChildNode);",
       "};",
-      "});",
+      "}, []);",
       ""
     ],
     "html": "",
@@ -308,7 +308,7 @@
       "_children_0_node.props = Object.assign({}, $.props, {[\"key\"]: \"value\"});",
       "_children_0_node.update();",
       "};",
-      "});",
+      "}, []);",
       ""
     ],
     "html": "",

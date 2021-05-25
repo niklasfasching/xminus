@@ -23,7 +23,7 @@
   </main>
 </script>
 
-<script type="text/x-template" id="x-comment" .inject:x-story="story">
+<script type="text/x-template" id="x-comment" .inject:x-story="story" x-props="comment">
   <div class="comment">
     <div class="header"
          style="--alpha: {($.comment.childCount / $.story.maxComments) * 100}%;">

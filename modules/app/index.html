@@ -8,7 +8,7 @@
    define("x-app", class extends Component {
      onInit({routes}) {
        if (!location.hash) history.replaceState(null, null, "#/");
-       this.routeList = Object.entries(this.routes).map(([path, tag]) => [
+       this.routeList = Object.entries(routes).map(([path, tag]) => [
          new RegExp("^" + path.replace(/\/?$/, "/?$").replaceAll(/{(\w+)}/g, "(?<$1>[^/]+)")),
          tag,
        ]);
