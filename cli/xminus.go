@@ -192,6 +192,8 @@ func (s *Server) Start() error {
 		if contentType == "" {
 			contentType = http.DetectContentType(bs)
 		}
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Expires", "0")
 		w.Header().Set("Content-Type", contentType)
 		if strings.HasPrefix(contentType, "text/html") {
 			bs = bytes.Replace(bs, []byte("</head>"), []byte(reloadSnippet+"\n</head>"), -1)
