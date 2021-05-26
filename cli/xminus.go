@@ -165,6 +165,16 @@ func (s *Server) Start() error {
 			<-s.Watcher.AwaitChange()
 			w.WriteHeader(http.StatusNoContent)
 			return
+		} else if r.Method == "POST" {
+			w.Header().Set("Content-Type", "application/json")
+
+			is, _ := ioutil.ReadDir(path.Join("./", r.URL.Path))
+			files := []string{}
+			for _, i := range is {
+				files = append(files, i.Name())
+			}
+			json.NewEncoder(w).Encode(files)
+			return
 		}
 
 		bs := []byte{}

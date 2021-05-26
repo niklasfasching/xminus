@@ -2,6 +2,8 @@ github.com/niklasfasching/headless v0.0.0-20210112224806-0b04d9afee92 h1:7PuUlCG
 github.com/niklasfasching/headless v0.0.0-20210112224806-0b04d9afee92/go.mod h1:RqNc7EvGKbXI8Spzmb01L4Kh/cfJZOtQ4sF42VVL7zk=
 github.com/niklasfasching/headless v0.0.0-20210118002734-b8e56c016e22 h1:y0T+i88iQQv+X6s1VMVpyGd2FODFNTF7REZLyjh5VOc=
 github.com/niklasfasching/headless v0.0.0-20210118002734-b8e56c016e22/go.mod h1:RqNc7EvGKbXI8Spzmb01L4Kh/cfJZOtQ4sF42VVL7zk=
+github.com/niklasfasching/headless v0.0.0-20210526200504-237a572ec88b h1:Zc/E510UWSxZzG4WQnbLIhydeVVyXtL0k75zDivk9mI=
+github.com/niklasfasching/headless v0.0.0-20210526200504-237a572ec88b/go.mod h1:RqNc7EvGKbXI8Spzmb01L4Kh/cfJZOtQ4sF42VVL7zk=
 golang.org/x/net v0.0.0-20201224014010-6772e930b67b h1:iFwSg7t5GZmB/Q5TjiEAsdoLDrdJRC1RiF2WhuV29Qw=
 golang.org/x/net v0.0.0-20201224014010-6772e930b67b/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
 golang.org/x/net v0.0.0-20210119194325-5f4716e94777 h1:003p0dJM77cxMSyCPFphvZf/Y5/NXf5fzg6ufd1/Oew=
