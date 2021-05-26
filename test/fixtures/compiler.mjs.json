@@ -249,6 +249,11 @@
     "create": "",
     "update": ""
   },
+  "compiler: generateVnode: macro: should generate #id macro": {
+    "html": "<div id=\"id\"></div>",
+    "create": "",
+    "update": ""
+  },
   "compiler: generateVnode: macro: should generate .class macro with dynamic classes": {
     "html": "<div></div>",
     "create": [

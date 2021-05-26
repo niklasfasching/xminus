@@ -7,6 +7,7 @@ const macros = [
   [/^\.on:/, onMacro],
   [/^\.bind:/, bindMacro],
   [/^\.\./, classMacro],
+  [/^#/, idMacro],
 ];
 
 const splatRegexp = /^\s*{\s*\.\.\.\s*(.+)\s*}\s*$/;
@@ -23,6 +24,11 @@ function bindMacro(vnode, $, key, value) {
 
 function classMacro(vnode, $, key, value) {
   vnode.properties.class = ((vnode.properties.class || "") + " " + key.slice(2)).trim();
+  generateVnode(vnode, $);
+}
+
+function idMacro(vnode, $, key, value) {
+  vnode.properties.id = key.slice(1).trim();
   generateVnode(vnode, $);
 }
 

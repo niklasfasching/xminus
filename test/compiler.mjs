@@ -100,6 +100,10 @@ t.describe("compiler", () => {
         test(`<div class="class-0" ..class-1 ..class-2 ..class-3></div>`);
       });
 
+      t("should generate #id macro", () => {
+        test(`<div #id></div>`);
+      });
+
       t("should generate .class macro with dynamic classes", () => {
         test(`<div class="class-0" ..{"dynamic-class-1"} ..class-2 ..class-3></div>`);
       });
