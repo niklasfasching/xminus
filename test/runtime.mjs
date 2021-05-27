@@ -74,6 +74,12 @@ t.describe("runtime", () => {
       t.equal(div.innerText, "x-main");
     });
 
+    t("should respect x-dev templates when loaded", async () => {
+      const iframe = await openIframe(new URL("./fixtures/index.html#/foo?bar=baz", import.meta.url));
+      await new Promise(r => setTimeout(r, 100));
+      t.assert(iframe.contentWindow.customElements.get("x-dev"));
+    });
+
     t("should handle html templates", async () => {
       eval(compiler.compile("x-y", `<x>{$.props.value}</x>`));
       const app = await runtime.mount(document.body, `<x-y {...$.props}></x-y><x-y {...$.props}></x-y>`, {value: 42});

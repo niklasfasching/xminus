@@ -11,5 +11,8 @@
      mount(document.body, "x-main", {foo: "bar"});
     </script>
   </head>
-  <body></body>
+  <body x-dev>
+    <!-- registered when opened as html file but ignored during bundling -->
+    <script type="text/x-template" id="x-dev"></script>
+  </body>
 </html>
