@@ -16,6 +16,8 @@ export async function init() {
     const {bundle} = await import("./bundler.mjs");
     await import(await bundle(location, null));
   }
+  const xMount = document.querySelector("[type*=x-mount]");
+  if (xMount) window.app = mount(xMount.parentNode, xMount.innerHTML, window.props);
 }
 
 export function setProperty(node, k, v) {

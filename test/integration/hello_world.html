@@ -16,8 +16,10 @@
 
 <body x-dev>
   <script type="module">
-   import {mount} from "/src/runtime.mjs";
+   import {mount, ready} from "/src/runtime.mjs";
    import {t} from "/src/test.mjs";
+   window.props = {value: "world"};
+
    t("should render hello world", async () => {
      const component = await mount(document.body, "x-hello-world", {value: 42});
      t.assert(component.innerText.trim() === "hello world 42");
@@ -29,5 +31,15 @@
      component.update()
      t.equal(component.innerText.trim(), "hello world updated");
    });
+
+   t("should mount [x-mount] on init", async () => {
+     await ready;
+     const xMount = document.body.querySelector("x-mount");
+     t.equal(xMount.innerHTML.trim(), `<h1>hello world</h1>`)
+     t.equal(xMount, await window.app);
+   });
+  </script>
+  <script type="text/x-mount">
+    <h1>hello {$.props.value}</h1>
   </script>
 </body>
