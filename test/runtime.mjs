@@ -68,7 +68,7 @@ t.describe("runtime", () => {
   t.describe("mount", () => {
     t("smoke test", async () => {
       const iframe = await openIframe(new URL("./fixtures/index.html#/foo?bar=baz", import.meta.url));
-      await new Promise(r => setTimeout(r, 100));
+      await iframe.contentWindow.xm.ready;
       const p = iframe.contentDocument.querySelector("p"), div = iframe.contentDocument.querySelector("div");
       t.equal(p.innerText, "bar");
       t.equal(div.innerText, "x-main");
@@ -76,7 +76,7 @@ t.describe("runtime", () => {
 
     t("should respect x-dev templates when loaded", async () => {
       const iframe = await openIframe(new URL("./fixtures/index.html#/foo?bar=baz", import.meta.url));
-      await new Promise(r => setTimeout(r, 100));
+      await iframe.contentWindow.xm.ready;
       t.assert(iframe.contentWindow.customElements.get("x-dev"));
     });
 

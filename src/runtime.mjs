@@ -9,15 +9,20 @@ export const symbols = {
 export const ready = init();
 
 export async function init() {
-  window.xm = {register};
-  window.xm = await import(import.meta.url);
-  if (document.querySelector("[type*=x-module], [type*=x-template]")) {
-    if (document.body.hasAttribute("x-dev")) document.querySelectorAll("[x-dev]").forEach((el) => el.removeAttribute("x-dev"));
-    const {bundle} = await import("./bundler.mjs");
-    await import(await bundle(location, null));
+  window.xm = {register, ready: new Promise((resolve, reject) => Object.assign(init, {resolve, reject}))};
+  try {
+    window.xm = await import(import.meta.url);
+    if (document.querySelector("[type*=x-module], [type*=x-template]")) {
+      if (document.body.hasAttribute("x-dev")) document.querySelectorAll("[x-dev]").forEach((el) => el.removeAttribute("x-dev"));
+      const {bundle} = await import("./bundler.mjs");
+      await import(await bundle(location, null));
+    }
+    const xMount = document.querySelector("[type*=x-mount]");
+    if (xMount) window.app = mount(xMount.parentNode, xMount.innerHTML, window.props);
+    init.resolve();
+  } catch (err) {
+    init.reject();
   }
-  const xMount = document.querySelector("[type*=x-mount]");
-  if (xMount) window.app = mount(xMount.parentNode, xMount.innerHTML, window.props);
 }
 
 export function setProperty(node, k, v) {
