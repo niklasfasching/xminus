@@ -80,7 +80,14 @@ export function updateChildNodes(parent, anchor, nodes, values, updatedValues, $
 
 export async function mount(parentNode, name, props = {}) {
   await ready;
-  const app = document.createElement(name);
+  let app;
+  if (name.trim()[0] !== "<") app = document.createElement(name);
+  else {
+    const {compile} = await import("./compiler.mjs");
+    eval(compile("x-mount", `<x-mount x-props="${Object.keys(props).join(" ")}">${name}</>`));
+    app = document.createElement("x-mount");
+    app.style.display = "contents";
+  }
   app.init(app, app, props);
   return parentNode.appendChild(app);
 }

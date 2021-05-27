@@ -1,5 +1,6 @@
 import {t, done} from "../src/test.mjs";
 import * as runtime from "../src/runtime.mjs";
+import * as compiler from "../src/compiler.mjs";
 
 
 t.describe("runtime", () => {
@@ -71,6 +72,12 @@ t.describe("runtime", () => {
       const p = iframe.contentDocument.querySelector("p"), div = iframe.contentDocument.querySelector("div");
       t.equal(p.innerText, "bar");
       t.equal(div.innerText, "x-main");
+    });
+
+    t("should handle html templates", async () => {
+      eval(compiler.compile("x-y", `<x>{$.props.value}</x>`));
+      const app = await runtime.mount(document.body, `<x-y {...$.props}></x-y><x-y {...$.props}></x-y>`, {value: 42});
+      t.equal(app.innerHTML, `<x-y>42</x-y><x-y>42</x-y>`);
     });
   });
 
