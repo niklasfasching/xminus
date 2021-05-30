@@ -3,7 +3,7 @@ set -euo pipefail
 
 rm -rf docs
 mkdir docs
-cp -r src examples docs/
+cp -r src examples modules docs/
 
 # github actions sets CI to true
 # We only need to set the base_path to xminus when built for production
