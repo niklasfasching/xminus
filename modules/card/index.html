@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<head>
+  <title>hackernews</title>
+  <link href="/src/base.css" rel="stylesheet"/>
+  <link href="card.css" rel="stylesheet"/>
+  <script type="text/x-template" id="x-card" x-props="title subtitle content tags">
+    <img ..cover src="{$.cover}">
+    <section>
+      <div ..tags>
+        <span ..tag .for="tag of $.tags">{tag}</span>
+      </div>
+      <div ..title>{$.title}</div>
+      <div ..subtitle>{$.subtitle}</div>
+      <div ..content>{$.content || $.xSlot}</div>
+    </section>
+  </script>
+</head>
+
+<body x-dev>
+  <style>
+   body {
+     display: grid;
+     grid-template-columns: 1fr 1fr 1fr;
+     grid-auto-rows: 80vh;
+   }
+  </style>
+  <script type="module">
+   import {mount, init} from "/src/runtime.mjs";
+   init(true);
+   for (let i = 0; i < 10; i++) {
+     mount(document.body, "x-card", {
+       title: "The title of the card",
+       subtitle: "The subtitle of the card",
+       cover: "http",
+       tags: ["foo", "bar", "baz bam"],
+       content: "hello world foo bar baz ".repeat(100)
+     });
+   }
+  </script>
+</body>
