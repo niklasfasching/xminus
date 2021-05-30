@@ -108,6 +108,9 @@ t.describe("compiler", () => {
         test(`<div class="class-0" ..{"dynamic-class-1"} ..class-2 ..class-3></div>`);
       });
 
+      t("should generate --cssVar macro", () => {
+        test(`<div --x="$.x" --{$.conditionalVar}=$.var></div>`);
+      });
 
       t("should generate #id macro", () => {
         test(`<div #id></div>`);

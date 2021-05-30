@@ -274,6 +274,19 @@
       ""
     ]
   },
+  "compiler: generateVnode: macro: should generate --cssVar macro": {
+    "html": "<div></div>",
+    "create": [
+      "root.style.setProperty(\"x\", \"$.x\");",
+      "root.style.setProperty(($.conditionalVar), \"$.var\");",
+      ""
+    ],
+    "update": [
+      "root.style.setProperty(\"x\", \"$.x\");",
+      "root.style.setProperty(($.conditionalVar), \"$.var\");",
+      ""
+    ]
+  },
   "compiler: generateVnode: macro: should generate #id macro": {
     "html": "<div id=\"id\"></div>",
     "create": "",

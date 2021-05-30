@@ -7,6 +7,7 @@ const macros = [
   [/^\.on:/, onMacro],
   [/^\.bind:/, bindMacro],
   [/^\.\./, classMacro],
+  [/^--/, cssVarMacro],
   [/^#/, idMacro],
 ];
 
@@ -28,6 +29,12 @@ function classMacro(vnode, $, key, value) {
     $.create += `${vnode.ref}.classList.toggle(${parseValue(key.slice(2))[0]}, ${value});\n`;
     $.update += `${vnode.ref}.classList.toggle(${parseValue(key.slice(2))[0]}, ${value});\n`;
   }
+  generateVnode(vnode, $);
+}
+
+function cssVarMacro(vnode, $, key, value) {
+  $.create += `${vnode.ref}.style.setProperty(${parseValue(key.slice(2))[0]}, "${value}");\n`;
+  $.update += `${vnode.ref}.style.setProperty(${parseValue(key.slice(2))[0]}, "${value}");\n`;
   generateVnode(vnode, $);
 }
 
