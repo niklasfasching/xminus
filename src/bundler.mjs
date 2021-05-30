@@ -5,21 +5,24 @@ export async function bundle(url, basePath = "/") {
         xModules = await loadXModules(absoluteURL(url, location), basePath);
   const xComponents = xModules.map(x => x.xComponents).join("\n");
   const moduleCodeBlocks = xModules.flatMap(x => x.modules.map(m => [m.text, x.url]));
+  const styles = xModules.flatMap(x => x.styles);
   if (asDataURL) {
     for (const module of (xModules[0].xTemplates)) module.remove();
     const imports = moduleCodeBlocks.slice(xModules[0].modules.length)
           .map(([code, path], i) => `//# sourceURL=${path}.${i}.js\n${code}`)
           .concat(`//# sourceURL=xmComponents.js\n${xComponents}`)
           .map(src => `import "${dataURL(src)}";`);
+    window.document.head.append(...styles);
     return dataURL(imports.join("\n"));
   }
   const {document, xImports, xTemplates, modules} = xModules[0];
   for (let el of [...xImports, ...xTemplates, ...modules]) el.remove();
   document.querySelectorAll("[x-dev]").forEach(el => el.remove());
-  const html = moduleCodeBlocks.map(([code]) => code).concat(xComponents).map(code => {
+  const moduleHTML = moduleCodeBlocks.map(([code]) => code).concat(xComponents).map(code => {
     return `<script type=module>\n${code}</script>`;
   }).join("\n");
-  document.head.innerHTML = "\n" + html + document.head.innerHTML;
+  const styleHTML = styles.map(s => s.outerHTML).join("\n");
+  document.head.innerHTML = "\n" + moduleHTML + "\n" + styleHTML + "\n" + document.head.innerHTML;
   return "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
 }
 
