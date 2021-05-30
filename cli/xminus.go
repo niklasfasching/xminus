@@ -92,6 +92,16 @@ func main() {
 	r := &Runner{Paths: flag.Args(), Watcher: w, Args: strings.Fields(*windowArgs)}
 	s := &Server{Address: *listenAddress, Watcher: w, Runner: r}
 
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		is, _ := ioutil.ReadDir(path.Join("./", r.URL.Path))
+		files := []string{}
+		for _, i := range is {
+			files = append(files, i.Name())
+		}
+		json.NewEncoder(w).Encode(files)
+	})
+
 	if *updateFixtures {
 		exitCode, err := r.UpdateFixtures()
 		if err != nil {
@@ -166,14 +176,7 @@ func (s *Server) Start() error {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		} else if r.Method == "POST" {
-			w.Header().Set("Content-Type", "application/json")
-
-			is, _ := ioutil.ReadDir(path.Join("./", r.URL.Path))
-			files := []string{}
-			for _, i := range is {
-				files = append(files, i.Name())
-			}
-			json.NewEncoder(w).Encode(files)
+			http.DefaultServeMux.ServeHTTP(w, r)
 			return
 		}
 
@@ -219,6 +222,7 @@ func (r *Runner) Start() (int, error) {
 		return 0, nil
 	}
 	r.html = headless.HTML(setupHTML, headless.TemplateHTML("", r.Paths, r.Args))
+	r.headless.POSTMux = http.DefaultServeMux
 	if err := r.headless.Start(); err != nil {
 		return 0, err
 	}
@@ -240,6 +244,7 @@ func (r *Runner) Start() (int, error) {
 }
 
 func (r *Runner) UpdateFixtures() (int, error) {
+	r.headless.POSTMux = http.DefaultServeMux
 	if err := r.headless.Start(); err != nil {
 		return 0, err
 	}
