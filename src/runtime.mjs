@@ -21,7 +21,7 @@ export async function init() {
     if (xMount) window.app = mount(xMount.parentNode, xMount.innerHTML, window.props);
     init.resolve();
   } catch (err) {
-    init.reject();
+    init.reject(err);
   }
 }
 
