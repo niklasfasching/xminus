@@ -23,7 +23,11 @@ function bindMacro(vnode, $, key, value) {
 }
 
 function classMacro(vnode, $, key, value) {
-  vnode.properties.class = ((vnode.properties.class || "") + " " + key.slice(2)).trim();
+  if (value === "true" || value === "") vnode.properties.class = (vnode.properties.class || "") + " " + key.slice(2).trim();
+  else {
+    $.create += `${vnode.ref}.classList.toggle(${parseValue(key.slice(2))[0]}, ${value});\n`;
+    $.update += `${vnode.ref}.classList.toggle(${parseValue(key.slice(2))[0]}, ${value});\n`;
+  }
   generateVnode(vnode, $);
 }
 

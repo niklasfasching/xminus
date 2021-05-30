@@ -249,10 +249,18 @@
     "create": "",
     "update": ""
   },
-  "compiler: generateVnode: macro: should generate #id macro": {
-    "html": "<div id=\"id\"></div>",
-    "create": "",
-    "update": ""
+  "compiler: generateVnode: macro: should generate conditional .class macro": {
+    "html": "<div></div>",
+    "create": [
+      "root.classList.toggle(\"conditional\", $.condition);",
+      "root.classList.toggle(($.conditionalClass), $.condition);",
+      ""
+    ],
+    "update": [
+      "root.classList.toggle(\"conditional\", $.condition);",
+      "root.classList.toggle(($.conditionalClass), $.condition);",
+      ""
+    ]
   },
   "compiler: generateVnode: macro: should generate .class macro with dynamic classes": {
     "html": "<div></div>",
@@ -265,6 +273,11 @@
       "xm.setProperty(_properties_0_node, \"class\", \"class-0 \" + (\"dynamic-class-1\") + \" class-2 class-3\");",
       ""
     ]
+  },
+  "compiler: generateVnode: macro: should generate #id macro": {
+    "html": "<div id=\"id\"></div>",
+    "create": "",
+    "update": ""
   },
   "compiler: compile: should generate a component (smoke test)": {
     "result": [
