@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<head>
+  <title>hackernews</title>
+  <script type="text/x-template" id="x-no-nullish-false">
+    {null} {undefined} {false}
+  </script>
+</head>
+
+<body x-dev>
+  <script type="module">
+   import {mount} from "/src/runtime.mjs";
+   import {t} from "/src/test.mjs";
+   t.describe("render child nodes", () => {
+     t("should not render nullish and false values", async () => {
+       const app = await mount(document.body, "x-no-nullish-false");
+       t.equal(app.innerHTML.trim(), "");
+     });
+   });
+  </script>
+</body>

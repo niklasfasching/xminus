@@ -57,12 +57,12 @@ export function createChildNode($, value) {
   let node = value, oldValue;
   if (value instanceof DocumentFragment) throw new Error("Cannot use DocumentFragment as child");
   else if (value instanceof Node) return value;
-  node = document.createTextNode(value);
+  node = document.createTextNode(value == null || value === false ? "" : value);
   node[symbols.updateChildNode] = (updatedValue) => {
     oldValue = value, value = updatedValue;
     if (oldValue === updatedValue) return node;
     else if ((updatedValue instanceof Node)) return updatedValue;
-    node.textContent = updatedValue;
+    node.textContent = value == null || value === false ? "" : value;
     return node;
   };
   return node;
