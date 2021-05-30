@@ -84,8 +84,12 @@ t.describe("compiler", () => {
                   </div>`);
       });
 
-      t("should generate .for macro", () => {
-        test(`<div key={dynamic value} .for="item in $.items"></div>`);
+      t("should generate .for of macro (list)", () => {
+        test(`<div key={dynamic value} .for="item of $.items"></div>`);
+      });
+
+      t("should generate .for in macro (object)", () => {
+        test(`<div .for="key, value in $.items"></div>`);
       });
 
       t("should generate .if macro", () => {

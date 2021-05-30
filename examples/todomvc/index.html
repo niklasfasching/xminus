@@ -18,7 +18,7 @@
                  .on:click="$.toggleAll($event)" checked="{!$.store.remaining.length}">
 		  <label for="toggle-all"></label>
           <ul class="todo-list">
-            <x-todo-item item={item} store={$.store} .for="item in $.store.routeItems($.app.path)"/>
+            <x-todo-item item={item} store={$.store} .for="item of $.store.routeItems($.app.path)"/>
           </ul>
           <footer class="footer" .if="$.store.items.length">
             <span class="todo-count">{$.store.remaining.length} item{$.store.remaining.length === 1 ? '' : 's'} left</span>

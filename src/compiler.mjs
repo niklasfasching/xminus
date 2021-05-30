@@ -75,15 +75,16 @@ function ifMacro(vnode, $, key, value) {
 }
 
 function forMacro(vnode, $, key, value) {
-  const _ = prefix("for"),
-        [name, inOrOf, values] = value.split(/ (of|in) /);
+  let _ = prefix("for"),
+      [name, inOrOf, values] = value.split(/ (of|in) /);
+  if (inOrOf === "in") values = `Object.entries(${values} || {})`;
   generateClosure(vnode, $, _,
                   "xm.symbols.updateChildNode",
                   `let ${name} = _args[0];`,
                   `${name} = _args[0];`);
   $.create += `const ${_}values = [], ${_}nodes = [];
-               xm.updateChildNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}create);\n`;
-  $.update += `xm.updateChildNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values}, $, ${_}create);\n`;
+               xm.updateChildNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values} || [], $, ${_}create);\n`;
+  $.update += `xm.updateChildNodes(${_}anchor.parentNode, ${_}anchor, ${_}nodes, ${_}values, ${values} || [], $, ${_}create);\n`;
 }
 
 export function compile(name, template) {

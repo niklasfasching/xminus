@@ -18,7 +18,7 @@
     </div>
 
     <div id="comments">
-      <x-comment comment="{comment}" .for="comment in $.story.children || []"/>
+      <x-comment comment="{comment}" .for="comment of $.story.children"/>
     </div>
   </main>
 </script>
@@ -38,7 +38,7 @@
       {$.comment.children.length}/{$.comment.childCount}]
     </div>
     <div class="comments" .if="$.comment.showChildren">
-      <x-comment comment="{comment}" .for="comment in $.comment.children || []"/>
+      <x-comment comment="{comment}" .for="comment of $.comment.children"/>
     </div>
   </div>
 </script>

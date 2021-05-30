@@ -31,7 +31,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr .for="story in $.stories">
+      <tr .for="story of $.stories">
         <td class="points" style="--alpha: {(story.points / $.maxPoints) * 100}%;">
           <p class="{$.isOld(story) ? 'old' : ''}">{story.points || 0}</p>
         </td>

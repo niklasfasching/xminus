@@ -188,7 +188,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .for macro": {
+  "compiler: generateVnode: macro: should generate .for of macro (list)": {
     "html": "<!---->",
     "create": [
       "let _for_0_anchor = root, _for_0_node = xm.fragment(`<div></div>`).firstChild;",
@@ -205,11 +205,33 @@
       "return root;",
       "}",
       "const _for_0_values = [], _for_0_nodes = [];",
-      "xm.updateChildNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, $.items, $, _for_0_create);",
+      "xm.updateChildNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, $.items || [], $, _for_0_create);",
       ""
     ],
     "update": [
-      "xm.updateChildNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, $.items, $, _for_0_create);",
+      "xm.updateChildNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, $.items || [], $, _for_0_create);",
+      ""
+    ]
+  },
+  "compiler: generateVnode: macro: should generate .for in macro (object)": {
+    "html": "<!---->",
+    "create": [
+      "let _for_0_anchor = root, _for_0_node = xm.fragment(`<div></div>`).firstChild;",
+      "function _for_0_create($, ..._args) {",
+      "let root = _for_0_node.cloneNode(true);",
+      "let key, value = _args[0];",
+      "root[xm.symbols.updateChildNode] = (..._args) => {",
+      "key, value = _args[0];",
+      "return root;",
+      "};",
+      "return root;",
+      "}",
+      "const _for_0_values = [], _for_0_nodes = [];",
+      "xm.updateChildNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, Object.entries($.items || {}) || [], $, _for_0_create);",
+      ""
+    ],
+    "update": [
+      "xm.updateChildNodes(_for_0_anchor.parentNode, _for_0_anchor, _for_0_nodes, _for_0_values, Object.entries($.items || {}) || [], $, _for_0_create);",
       ""
     ]
   },
