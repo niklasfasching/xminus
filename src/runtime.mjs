@@ -121,7 +121,7 @@ export function register(name, html, f, assignedProps) {
       this.app = app;
       this.props = props;
       this.xSlot = slotTemplate.cloneNode(true);
-      for (let child of this.childNodes) this.xSlot.append(child);
+      while (this.firstChild) this.xSlot.append(this.firstChild);
       for (let k of assignedProps) this[k] = this.props[k];
       this.onInit(this.props);
       this.append(document.importNode(template.content, true));
