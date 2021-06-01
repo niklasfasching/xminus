@@ -138,4 +138,14 @@ t.describe("t", () => {
     t.log("bar", "blue");
     t.log("baz");
   });
+
+  t.describe("bench", () => {
+    t.bench("a", (n) => {
+      for (let i = 0; i < n; i++) document.body.setAttribute("key", "value");
+    }, 100);
+
+    t.bench("b", (n) => {
+      for (let i = 0; i < n; i++) document.body.key = "value";
+    }, 200);
+  });
 });

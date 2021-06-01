@@ -83,6 +83,24 @@ Object.assign(t, {
     }
   },
 
+  bench(name, f, maxDuration = 1000) {
+    current.node.children.push({name, f: f && (() => {
+      let ts = [maxDuration], m = 1, n = 1, d = 0, i = 0;
+      while (n < 1e9 && d < maxDuration) {
+        // n to fill remaining time based on previous t/op. limit to at most 100x previous n / 1e9 total
+        n = Math.min(Math.min((maxDuration - d) / ts[ts.length-1], m*10), 1e9);
+        const start = performance.now();
+        f(n);
+        const elapsed = performance.now() - start;
+        m = n, d += elapsed, i += m, ts.push(elapsed / n);
+      }
+      ts = ts.length > 2 ? ts.slice(2) : ts.slice(1);
+      let avgT = ts.reduce((sum, t) => sum + t, 0) / ts.length, unit = "ms";
+      if (avgT < 1) avgT = avgT * 1000, unit = "µs";
+      t.log(`${avgT.toFixed(2)}${unit}/op\t${i.toLocaleString()} ops`, "grey");
+    })});
+  },
+
   fail(msg, info = "fail") {
     throw new Error(`${msg ? msg + ": " : ""}${info}`);
   },
