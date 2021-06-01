@@ -1,0 +1,14 @@
+{
+  "slots: should provide slots": [
+    "<x-slots>",
+    "<div class=\" rest-slot\"><div class=\"slot\">",
+    "",
+    "<div>the</div>",
+    "<div>rest</div>",
+    "",
+    "</div></div>",
+    "<div class=\" header-slot\"><div x-slot=\"header\">header</div></div>",
+    "<div class=\" footer-slot\"><div x-slot=\"footer\">footer</div></div>",
+    "</x-slots>"
+  ]
+}

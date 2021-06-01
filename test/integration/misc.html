@@ -4,6 +4,11 @@
   <script type="text/x-template" id="x-no-nullish-false">
     {null} {undefined} {false}
   </script>
+  <script type="text/x-template" id="x-slots">
+    <div ..rest-slot>{$.slots.rest}</div>
+    <div ..header-slot>{$.slots.header}</div>
+    <div ..footer-slot>{$.slots.footer}</div>
+  </script>
 </head>
 
 <body x-dev>
@@ -14,6 +19,18 @@
      t("should not render nullish and false values", async () => {
        const app = await mount(document.body, "x-no-nullish-false");
        t.equal(app.innerHTML.trim(), "");
+     });
+   });
+
+   t.describe("slots", () => {
+     t("should provide slots", async () => {
+       const app = await mount(document.body, `<x-slots>
+                                                 <div |header|>header</div>
+                                                 <div>the</div>
+                                                 <div>rest</div>
+                                                 <div |footer|>footer</div>
+                                               </x-slots>`);
+       t.assertFixture(app.innerHTML.trim().split("\n"));
      });
    });
   </script>

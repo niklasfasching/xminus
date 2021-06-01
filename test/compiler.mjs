@@ -206,7 +206,7 @@ t.describe("compiler", () => {
     });
 
     t("should update nested components", () => {
-      eval(compiler.compile("x-foo", `<element x-props="key key1"><p>a</p>{$.key} {$.xSlot} {$.key1}<p>c</p></element>`));
+      eval(compiler.compile("x-foo", `<element x-props="key key1"><p>a</p>{$.key} {$.slots.rest} {$.key1}<p>c</p></element>`));
       const [component, update] = render({key: "key1", value: "key1-value1", child: "child1"},
                                          `<x-foo {$.key}={$.value} key=key-value1>{$.child}</>`);
       t.equal(component.innerHTML, `<x-foo><p>a</p>key-value1 <div class="slot">child1</div> key1-value1<p>c</p></x-foo>`);

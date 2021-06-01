@@ -13,7 +13,7 @@ bench: cli/xminus
 
 .PHONY: update-fixtures
 update-fixtures: cli/xminus
-	cli/xminus -u test/*.mjs
+	cli/xminus -u test/*.mjs test/integration/*.mjs
 
 .PHONY: test
 test: cli/xminus

@@ -9,6 +9,7 @@ const macros = [
   [/^\.\./, classMacro],
   [/^--/, cssVarMacro],
   [/^#/, idMacro],
+  [/^\|.*\|$/, slotMacro]
 ];
 
 const splatRegexp = /^\s*{\s*\.\.\.\s*(.+)\s*}\s*$/;
@@ -29,6 +30,11 @@ function classMacro(vnode, $, key, value) {
     $.create += `${vnode.ref}.classList.toggle(${parseValue(key.slice(2))[0]}, ${value});\n`;
     $.update += `${vnode.ref}.classList.toggle(${parseValue(key.slice(2))[0]}, ${value});\n`;
   }
+  generateVnode(vnode, $);
+}
+
+function slotMacro(vnode, $, key, value) {
+  vnode.properties["x-slot"] = key.slice(1, -1);
   generateVnode(vnode, $);
 }
 
