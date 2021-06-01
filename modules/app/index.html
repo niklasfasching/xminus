@@ -3,7 +3,7 @@
   <title>app</title>
   <script type="text/x-template" id="x-app"></script>
   <script type="module">
-   import {define, Component} from "/src/runtime.mjs";
+   import {define, Component} from "../../src/runtime.mjs";
    define("x-app", class extends Component {
      onInit({db, routes}) {
        this.db = this.initDB(db);
