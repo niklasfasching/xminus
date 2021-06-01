@@ -152,6 +152,21 @@
       ""
     ]
   },
+  "compiler: generateVnode: macro: should generate .bind: macro multiple select": {
+    "html": "<select multiple=\"true\"><option>a</option></select>",
+    "create": [
+      "let _children_0_node = root.firstChild;",
+      "let _children_1_node = _children_0_node.firstChild;",
+      "let _bind_2_node = root;",
+      "if ($.value !== undefined) for (let o of _bind_2_node.options) o.selected = ($.value)?.[o.value] || false;",
+      "_bind_2_node.addEventListener(\"change\", () => $.value = Object.fromEntries([..._bind_2_node.selectedOptions].map(o => [o.value, true])));",
+      ""
+    ],
+    "update": [
+      "if (document.activeElement !== _bind_2_node) for (let o of _bind_2_node.options) o.selected = ($.value)?.[o.value] || false;",
+      ""
+    ]
+  },
   "compiler: generateVnode: macro: should generate .bind: macro for input elements": {
     "html": [
       "<div>",

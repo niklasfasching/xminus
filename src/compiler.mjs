@@ -19,9 +19,14 @@ function bindMacro(vnode, $, key, value) {
   generateVnode(vnode, $);
   const event = ["input", "textarea"].includes(vnode.tag) ? "keyup" : "change";
   const node = generateLocalNodeRef($, vnode, "bind");
-  $.create += `if (${value} !== undefined) ${node}["${property}"] = ${value};\n
-               ${node}.addEventListener("${event}", () => ${value} = ${node}["${property}"]);\n`;
-  $.update += `if (document.activeElement !== ${node}) ${node}["${property}"] = ${value};\n`;
+  let getValue = `${node}["${property}"]`, setValue = `${node}["${property}"] = ${value}`;
+  if (property === "options") {
+    getValue = `Object.fromEntries([...${node}.selectedOptions].map(o => [o.value, true]))`;
+    setValue = `for (let o of ${node}.options) o.selected = (${value})?.[o.value] || false`;
+  }
+  $.create += `if (${value} !== undefined) ${setValue};\n
+               ${node}.addEventListener("${event}", () => ${value} = ${getValue});\n`;
+  $.update += `if (document.activeElement !== ${node}) ${setValue};\n`;
 }
 
 function classMacro(vnode, $, key, value) {

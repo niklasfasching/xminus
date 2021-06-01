@@ -76,6 +76,10 @@ t.describe("compiler", () => {
         test(`<div .bind:value="$.value"></div>`);
       });
 
+      t("should generate .bind: macro multiple select", () => {
+        test(`<select multiple .bind:options="$.value"><option>a</option></select>`);
+      });
+
       t("should generate .bind: macro for input elements", () => {
         test(`<div>
                     <input .bind:value="$.value">
@@ -219,6 +223,35 @@ t.describe("compiler", () => {
       eval(compiler.compile("x-child", `<element .inject:x-parent="xParent"></element>`));
       const [component, update] = render({}, `<x-parent></x-parent>`);
       t.assert(component.querySelector("x-child").xParent);
+    });
+
+    t("should get and set multiple select options with .bind:options macro", async () => {
+      eval(compiler.compile("x-select", `<element>
+                                           <select multiple .bind:options="$.props.selected">
+                                             <option>a</option>
+                                             <option>b</option>
+                                             <option>c</option>
+                                           </select>
+                                         </element>`));
+      // simulate change event - seems to only be triggered on user action
+      let [component, update] = render({selected: []}, `<x-select {...$.props}></x-select>`);
+      let xSelect = component.querySelector("x-select");
+      t.equal(xSelect.selected, undefined);
+      xSelect.querySelectorAll("option")[0].selected = true;
+      xSelect.querySelector("select").dispatchEvent(new Event("change"));
+      t.jsonEqual(xSelect.props.selected, {a: true});
+
+      xSelect.querySelectorAll("option")[0].selected = false;
+      xSelect.querySelectorAll("option")[1].selected = true;
+      xSelect.querySelectorAll("option")[2].selected = true;
+      xSelect.querySelector("select").dispatchEvent(new Event("change"));
+      t.jsonEqual(xSelect.props.selected, {b: true, c: true});
+
+      update({selected:{"a": true}});
+      t.jsonEqual(xSelect.props.selected, {a: true});
+      t.assert(xSelect.querySelectorAll("option")[0].selected);
+      t.assert(!xSelect.querySelectorAll("option")[1].selected);
+      t.assert(!xSelect.querySelectorAll("option")[2].selected);
     });
 
     t("should update dynamic component tags");
