@@ -5,11 +5,11 @@ export const root = newNode(),
              updateFixtures = window.args?.includes("update-fixtures"),
              fixtures = {},
              done = new Promise((r) => resolve = r);
-export let currentNode = root, currentID = "";
+export let current = {node: root};
 
 export function t(name, f) {
   beforeCreate("t", name, f);
-  currentNode.children.push({name, f, selected: currentNode.selected});
+  current.node.children.push({name, f, selected: current.node.selected});
 }
 
 Object.assign(t, {
@@ -21,14 +21,14 @@ Object.assign(t, {
   describeOnly(name, f) {
     beforeCreate("t.describeOnly", name, f);
     group(name, f, true);
-    markNodes(currentNode, "hasSelected");
+    markNodes(current.node, "hasSelected");
     if (count || countFailed) dynamicOnly = true;
   },
 
   only(name, f) {
     beforeCreate("t.only", name, f);
-    currentNode.children.push({name, f, selected: true});
-    markNodes(currentNode, "hasSelected");
+    current.node.children.push({name, f, selected: true});
+    markNodes(current.node, "hasSelected");
     if (count || countFailed) dynamicOnly = true;
   },
 
@@ -74,18 +74,22 @@ Object.assign(t, {
   },
 
   assertFixture(actual, msg) {
-    const {fixtures, updateFixtures, currentNode, currentID} = window.test;
-    if (!updateFixtures) t.jsonEqual(actual, fixtures[currentNode.fixtureUrl][currentID]);
+    const {fixtures, updateFixtures, current} = window.test;
+    if (!updateFixtures) t.jsonEqual(actual, fixtures[current.node.fixtureUrl][current.id]);
     else {
-      fixtures[currentNode.fixtureUrl] = fixtures[currentNode.fixtureUrl] || {};
-      if (fixtures[currentNode.fixtureUrl][currentID]) t.fail(`reassignment of fixture "${currentID}"`);
-      fixtures[currentNode.fixtureUrl][currentID] = actual;
+      fixtures[current.node.fixtureUrl] = fixtures[current.node.fixtureUrl] || {};
+      if (fixtures[current.node.fixtureUrl][current.id]) t.fail(`reassignment of fixture "${current.id}"`);
+      fixtures[current.node.fixtureUrl][current.id] = actual;
     }
   },
 
   fail(msg, info = "fail") {
     throw new Error(`${msg ? msg + ": " : ""}${info}`);
   },
+
+  log(msg, color = "grey") {
+    current.logs.push(...msg.split("\n").map(line => [line, color]));
+  }
 });
 
 function throws(f, regexp = /.*/, msg, sync) {
@@ -106,8 +110,8 @@ function throws(f, regexp = /.*/, msg, sync) {
 }
 
 function wrapper(name, f, key) {
-  if (!f) f = name, name = `${key} ${currentNode[key + "s"].length}`;
-  currentNode[key + "s"].push({name, f});
+  if (!f) f = name, name = `${key} ${current.node[key + "s"].length}`;
+  current.node[key + "s"].push({name, f});
 }
 
 function getEachWrappers(node) {
@@ -120,19 +124,19 @@ function getEachWrappers(node) {
 }
 
 function group(name, f, selected) {
-  currentNode = newNode(name, currentNode, selected);
+  current.node = newNode(name, current.node, selected);
   const result = f?.();
   if (result) throw new Error(`unexpected return value from describe: ${result}`);
-  const [beforeEachs, afterEachs] = getEachWrappers(currentNode);
-  for (let child of currentNode.children) {
+  const [beforeEachs, afterEachs] = getEachWrappers(current.node);
+  for (let child of current.node.children) {
     Object.assign(child, {beforeEachs, afterEachs});
   }
-  currentNode.parent.children.push(currentNode);
-  currentNode = currentNode.parent;
+  current.node.parent.children.push(current.node);
+  current.node = current.node.parent;
 }
 
 async function run(lvl, node) {
-  currentNode = null;
+  current.node = null;
   const time = timer(), selected = !root.hasSelected || node.selected || node.hasSelected;
   if (selected && node !== window.test.root) log(lvl, 0, "", node.name);
   await loadFixtures(node);
@@ -146,54 +150,56 @@ async function run(lvl, node) {
   else if (node === root) {
     const details = dynamicOnly ? " - exit after dynamic only" : "";
     const color = countFailed ? "red" : dynamicOnly ? "yellow" : "grey";
-    log(lvl + 2, 0, color, `${count} tests (${countFailed} failures)${details}\n`);
+    log(lvl+2, 0, color, `${count} tests (${countFailed} failures)${details}\n`);
   }
 }
 
 async function runWrapper(lvl, node, name, f, selected) {
   if (!selected) return;
-  const [ms, err] = await runFn(node, f, name);
+  const [logs, ms, err] = await runFn(node, f, name);
   if (err) log(lvl, 1, "red", `x ${name} (${ms}ms)`, err);
+  for (let [line, color] of logs) log(lvl+2, 1, color, line);
 }
 
 async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEachs = []}) {
   if (root.hasSelected && !selected) return;
   count++;
   if (f) for (let {f, name} of beforeEachs) await runWrapper(lvl, node, name, f, true);
-  const [ms, err] = await runFn(node, f, name);
+  const [logs, ms, err] = await runFn(node, f, name);
   if (f && !err) log(lvl, 0, "green", `✓ ${name} (${ms}ms)`);
   else if (!err) log(lvl, 0, "yellow", `✓ ${name}`);
   else {
     log(lvl, 1, "red", `x ${name} (${ms}ms)`, err);
     countFailed++;
   }
+  for (let [line, color] of logs) log(lvl+2, 1, color, line);
   if (f) for (let {f, name} of afterEachs) await runWrapper(lvl, node, name, f, true);
 }
 
 async function runFn(node, f, name) {
-  const time = timer();
+  const time = timer(), logs = [];
   try {
-    currentNode = node, currentID = getCurrentID(node, name);
+    current = getCurrent(node, name, logs);
     const result = await Promise.race([f && f(), new Promise(r => setTimeout(() => r(node), 2000))]);
+    current.node = null;
     if (result === node) t.fail("exceeded timeout of 2000ms");
-    currentNode = null, currentID = null;
-    return [time(), null];
+    return [logs, time(), null];
   } catch (err) {
-    return [time(), err];
+    return [[], time(), err];
   }
 }
 
-function getCurrentID(node, name) {
-  let names = [name];
-  do { names.push(node.name); } while (node = node.parent);
-  return names.slice(0, -1).reverse().filter(Boolean).join(": ");
+function getCurrent(node, name, logs) {
+  let id = name, n = node;
+  while (n.parent) id = `${n.name}: ${id}`, n = n.parent;
+  return {id, logs, node};
 }
 
 function log(lvl, isFailure, color, line, err) {
   console[navigator.webdriver ? "error" : "info"](" ".repeat(lvl) + "%c" + line, "color: " + color);
   if (err) {
     if (!navigator.webdriver) console.info(err);
-    else for (let l of err.stack.split("\n")) log(lvl + 2, isFailure, "grey", l);
+    else for (let l of err.stack.split("\n")) log(lvl+2, isFailure, "grey", l);
   }
 }
 
@@ -248,14 +254,14 @@ function getFixtureUrl() {
 
 function beforeCreate(method, name, f) {
   if (f && !(f instanceof Function)) throw new Error(`${method}("${name}") bad function body`);
-  if (!currentNode.fixtureUrl) currentNode.fixtureUrl = getFixtureUrl();
+  if (!current.node.fixtureUrl) current.node.fixtureUrl = getFixtureUrl();
   if (!root.name) root.name = getTestUrl();
 }
 
 async function init() {
   const parentTest = window.parent.test;
   window.test = parentTest || await import(import.meta.url);
-  if (parentTest) parentTest.currentNode.children.push(root);
+  if (parentTest) parentTest.current.node.children.push(root);
   else setTimeout(async () => {
     if (window.isCI && root.hasSelected) throw new Error("only not allowed in CI");
     await run(0, root);

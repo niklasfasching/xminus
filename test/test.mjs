@@ -132,4 +132,10 @@ t.describe("t", () => {
       t.assert(iframe.contentWindow.iframeTestFinished);
     });
   });
+
+  t("should log messages", () => {
+    t.log("foo", "yellow");
+    t.log("bar", "blue");
+    t.log("baz");
+  });
 });
