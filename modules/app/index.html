@@ -1,22 +1,30 @@
 <!DOCTYPE html>
 <head>
-  <title>hackernews</title>
+  <title>app</title>
   <script type="text/x-template" id="x-app"></script>
-
   <script type="module">
    import {define, Component} from "/src/runtime.mjs";
    define("x-app", class extends Component {
-     onInit({routes}) {
+     onInit({db, routes}) {
+       this.db = this.initDB(db);
        if (!location.hash) history.replaceState(null, null, "#/");
-       this.routeList = Object.entries(routes).map(([path, tag]) => [
+       this.routeList = Object.entries(routes || []).map(([path, tag]) => [
          new RegExp("^" + path.replace(/\/?$/, "/?$").replaceAll(/{(\w+)}/g, "(?<$1>[^/]+)")),
          tag,
        ]);
-       window.addEventListener("hashchange", () => {
+       if (routes) {
+         window.addEventListener("hashchange", () => {
+           this.route();
+           this.update();
+         });
          this.route();
-         this.update();
-       });
-       this.route();
+       }
+     }
+
+     initDB(defaults = {}) {
+       const json = localStorage.getItem("app.db");
+       const db = Object.assign({}, defaults, json === "" ? {} : JSON.parse(json));
+       return this.proxy(db, () => localStorage.setItem("app.db", JSON.stringify(this.db)));
      }
 
      route() {
@@ -32,6 +40,21 @@
        if (this.active instanceof Component) this.active.init(this.app, this, f(this.app));
        if (!this.firstChild) this.append(this.active);
        else this.firstChild.replaceWith(this.active);
+     }
+
+     proxy(x, cb) {
+       const that = this;
+       return new Proxy(x, {
+         get(x, key) {
+           const value = x[key];
+           return typeof value === "object" ? that.proxy(value, cb) : value;
+         },
+         set(x, key, value) {
+           x[key] = value;
+           cb();
+           return true;
+         },
+       })
      }
    });
   </script>
@@ -63,6 +86,28 @@
      await new Promise(r => setTimeout(r));
      t.equal(component.active.tagName, "X-CHILD");
      t.equal(component.innerText, "whatever");
+   });
+
+   t("should persist db", async () => {
+     localStorage.removeItem("app.db")
+     const app = await mount(document.body, "x-app", {
+       db: {a: 10},
+     });
+     t.equal(app.db.a, 10);
+     app.db.a = 20;
+     t.equal(app.db.a, 20);
+     t.equal(localStorage.getItem("app.db"), `{"a":20}`);
+     app.db.b = 20;
+     t.equal(app.db.b, 20);
+     app.db.c = {d: 10};
+     t.equal(app.db.c.d, 10);
+     app.db.c.d = 20;
+     t.equal(app.db.c.d, 20);
+     app.db.d = [1, 2];
+     t.jsonEqual(app.db.d, [1, 2]);
+     app.db.d[1] = 3;
+     t.jsonEqual(app.db.d, [1, 3]);
+     t.equal(localStorage.getItem("app.db"), `{"a":20,"b":20,"c":{"d":20},"d":[1,3]}`);
    });
   </script>
 </body>
