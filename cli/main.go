@@ -19,6 +19,7 @@ var watchInterval = flag.Int("i", 500, "watch poll interval in ms")
 var updateFixtures = flag.Bool("u", false, "update test fixtures")
 var bundle = flag.Bool("b", false, "bundle srcFile dstFile")
 var bundleBasePath = flag.String("bp", "/", "bundle rooted basePath (e.g. github pages project root /xminus)")
+var create = flag.Bool("c", false, "scaffold [module|app] dst [name]")
 var windowArgs = flag.String("a", "", "window.args = strings.Fields(a) inside executed files")
 
 func main() {
@@ -59,6 +60,11 @@ func main() {
 			log.Fatal(err)
 		}
 		os.Exit(exitCode)
+	} else if *create {
+		if err := CreateScaffold(flag.Args()); err != nil {
+			log.Fatal(err)
+		}
+		os.Exit(0)
 	} else {
 		exitCode, err := r.Run(nil)
 		if err != nil {
