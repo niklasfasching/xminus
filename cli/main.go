@@ -14,10 +14,10 @@ import (
 )
 
 var listenAddress = flag.String("l", ":8000", "http listen address")
-var watchInterval = flag.Int("i", 500, "directory watch poll interval in ms")
-var exitAfterRun = flag.Bool("e", false, "exit after run")
-var updateFixtures = flag.Bool("u", false, "update test fixtures and exit")
-var windowArgs = flag.String("a", "", "window.args available inside run (split into strings.Fields)")
+var watch = flag.Bool("w", false, "watch and re-run on change")
+var watchInterval = flag.Int("i", 500, "watch poll interval in ms")
+var updateFixtures = flag.Bool("u", false, "update test fixtures")
+var windowArgs = flag.String("a", "", "window.args = strings.Fields(a) inside executed files")
 
 func main() {
 	log.SetFlags(0)
@@ -26,6 +26,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
 	w := &Watcher{Path: "./", Interval: time.Duration(*watchInterval) * time.Millisecond}
 	r := &Runner{Paths: flag.Args(), Watcher: w, Args: strings.Fields(*windowArgs)}
 	s := &Server{Address: *listenAddress, Watcher: w, Runner: r}
@@ -46,16 +47,16 @@ func main() {
 			log.Fatal(err)
 		}
 		os.Exit(exitCode)
-	} else if *exitAfterRun {
+	} else if *watch {
+		go w.Start()
+		go r.Start()
+		log.Fatal(s.Start())
+	} else {
 		r.Watcher = nil
 		exitCode, err := r.Start()
 		if err != nil {
 			log.Fatal(err)
 		}
 		os.Exit(exitCode)
-	} else {
-		go w.Start()
-		go r.Start()
-		log.Fatal(s.Start())
 	}
 }

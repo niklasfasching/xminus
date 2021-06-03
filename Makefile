@@ -5,11 +5,11 @@ cli/xminus: cli/*.go cli/go.mod cli/go.sum
 
 .PHONY: dev
 dev: cli/xminus
-	cli/xminus
+	cli/xminus -w
 
 .PHONY: bench
 bench: cli/xminus
-	cli/xminus -e test/benchmark/bench.mjs
+	cli/xminus test/benchmark/bench.mjs
 
 .PHONY: update-fixtures
 update-fixtures: cli/xminus
@@ -17,7 +17,7 @@ update-fixtures: cli/xminus
 
 .PHONY: test
 test: cli/xminus
-	cli/xminus -e test/*.mjs test/integration/*.mjs
+	cli/xminus test/*.mjs test/integration/*.mjs
 
 .PHONY: setup
 setup:
