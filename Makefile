@@ -1,7 +1,7 @@
 cli/xminus: cli/*.go cli/go.mod cli/go.sum
 	go env -w GOPROXY=direct
 	cd cli && go get -u ./...
-	cd cli && go build *.go
+	cd cli && go build -o xminus *.go
 
 .PHONY: dev
 dev: cli/xminus
