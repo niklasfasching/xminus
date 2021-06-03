@@ -276,6 +276,17 @@ function beforeCreate(method, name, f) {
   if (!root.name) root.name = getTestUrl();
 }
 
+async function writeFixtures(fixtures) {
+  for (let [path, fixture] of Object.entries(fixtures)) {
+    const [status, body] = await fetch(`/create?path=${path}`, {
+      method: "POST",
+      body: json(fixture) + "\n",
+    }).then(async (r) => [r.status, await r.text()]);
+    if (status >= 300) throw new Error(`failed to update fixture at ${path}: ${body}`);
+    console.log("Updated fixture", path);
+  }
+}
+
 async function init() {
   const parentTest = window.parent.test;
   window.test = parentTest || await import(import.meta.url);
@@ -284,7 +295,7 @@ async function init() {
     if (window.isCI && root.hasSelected) throw new Error("only not allowed in CI");
     await run(0, root);
     resolve({count, countFailed});
-    if (updateFixtures) console.warn(json(fixtures));
+    if (updateFixtures) await writeFixtures(fixtures);
     if (exitAfter) window.close(countFailed && 1);
   });
 }

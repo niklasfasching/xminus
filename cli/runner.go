@@ -1,19 +1,14 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
-	"path"
-	"strings"
 
 	"github.com/niklasfasching/headless"
 )
@@ -67,49 +62,16 @@ func (r *Runner) Bundle(basePath string) (int, error) {
 
 func (r *Runner) UpdateFixtures() (int, error) {
 	r.headless.POSTMux = http.DefaultServeMux
+	r.headless.POSTMux.HandleFunc("/create", headless.CreateHandler)
 	updatedFixtures := map[string]string{}
 	defer func() {
 		for path, fixturePath := range updatedFixtures {
 			log.Printf("Updated %s (%s)", fixturePath, path)
 		}
 	}()
-	bs := &bytes.Buffer{}
-	f := func(m headless.Message) bool {
-		if m.Method == "warning" {
-			fmt.Fprint(bs, m.Args...)
-			return true
-		}
-		return false
-	}
 	runHTML := fmt.Sprintf(runHTML, os.Getenv("CI") == "true")
 	r.html = headless.HTML(runHTML, headless.TemplateHTML("", r.Args, append(r.WindowArgs, "update-fixtures")))
-	if exitCode, err := r.run(context.Background(), f); exitCode != 0 || err != nil {
-		return exitCode, err
-	}
-	m := map[string]json.RawMessage{}
-	if err := json.Unmarshal(bs.Bytes(), &m); err != nil {
-		return 0, err
-	}
-	for fixtureURL, bs := range m {
-		lines := strings.Split(string(bs), "\n")
-		result := lines[0] + "\n"
-		for _, line := range lines[1:] {
-			result += line[2:] + "\n"
-		}
-		log.Println(fixtureURL)
-		u, err := url.Parse(fixtureURL)
-		if err != nil {
-			return 0, err
-		}
-		fixturePath := path.Join(".", u.Path)
-		if err := os.MkdirAll(path.Dir(fixturePath), os.ModePerm); err != nil {
-			return 0, err
-		}
-		if err := os.WriteFile(fixturePath, []byte(result), 0644); err != nil {
-			return 0, err
-		}
-	}
-	return 0, nil
+	return r.run(context.Background(), nil)
 }
 
 func (r *Runner) run(ctx context.Context, f func(m headless.Message) bool) (int, error) {
