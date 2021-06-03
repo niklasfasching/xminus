@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,44 +19,31 @@ import (
 )
 
 type Runner struct {
-	Paths []string
-	Args  []string
-	*Watcher
-	fs       fs.FS
-	html     string
-	headless headless.H
+	Args       []string
+	WindowArgs []string
+	fs         fs.FS
+	html       string
+	headless   headless.H
 }
 
-var setupHTML = fmt.Sprintf(`
-<script type=module>
-window.isCI = %v;
-window.isHeadless = navigator.webdriver;
-window.close = (code = 0) => isHeadless ? console.clear(code) : console.log("exit:", code);
-window.openIframe = (src) => {
-  return new Promise((resolve, reject) => {
-    const iframe = document.createElement("iframe");
-    const onerror = reject;
-    const onload = () => resolve(iframe);
-    document.body.appendChild(Object.assign(iframe, {onload, onerror, src}));
-  });
-};
-</script>`, os.Getenv("CI") == "true")
+//go:embed assets/run.html
+var runHTML string
 
-func (r *Runner) Start() (int, error) {
-	if len(r.Paths) == 0 {
+//go:embed assets/bundle.mjs
+var bundleJS string
+
+func (r *Runner) Run(w *Watcher) (int, error) {
+	if len(r.Args) == 0 {
 		return 0, nil
 	}
-	r.html = headless.HTML(setupHTML, headless.TemplateHTML("", r.Paths, r.Args))
+	runHTML := fmt.Sprintf(runHTML, os.Getenv("CI") == "true")
+	r.html = headless.HTML(runHTML, headless.TemplateHTML("", r.Args, r.WindowArgs))
 	r.headless.POSTMux = http.DefaultServeMux
-	if err := r.headless.Start(); err != nil {
-		return 0, err
-	}
-	defer r.headless.Stop()
-	if r.Watcher == nil {
+	if w == nil {
 		return r.run(context.Background(), nil)
 	}
 	for {
-		changed := r.Watcher.AwaitChange()
+		changed := w.AwaitChange()
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
 			<-changed
@@ -67,19 +55,24 @@ func (r *Runner) Start() (int, error) {
 	}
 }
 
+func (r *Runner) Bundle(basePath string) (int, error) {
+	if len(r.Args) != 2 {
+		return 0, fmt.Errorf("-b srcFile dstFile")
+	}
+	r.headless.POSTMux = http.DefaultServeMux
+	r.headless.POSTMux.HandleFunc("/create", headless.CreateHandler)
+	r.html = headless.HTML("", headless.TemplateHTML(bundleJS, nil, append(r.Args, basePath)))
+	return r.run(context.Background(), nil)
+}
+
 func (r *Runner) UpdateFixtures() (int, error) {
 	r.headless.POSTMux = http.DefaultServeMux
-	if err := r.headless.Start(); err != nil {
-		return 0, err
-	}
-	defer r.headless.Stop()
 	updatedFixtures := map[string]string{}
 	defer func() {
 		for path, fixturePath := range updatedFixtures {
 			log.Printf("Updated %s (%s)", fixturePath, path)
 		}
 	}()
-	r.html = headless.HTML(setupHTML, headless.TemplateHTML("", r.Paths, append(r.Args, "update-fixtures")))
 	bs := &bytes.Buffer{}
 	f := func(m headless.Message) bool {
 		if m.Method == "warning" {
@@ -88,6 +81,8 @@ func (r *Runner) UpdateFixtures() (int, error) {
 		}
 		return false
 	}
+	runHTML := fmt.Sprintf(runHTML, os.Getenv("CI") == "true")
+	r.html = headless.HTML(runHTML, headless.TemplateHTML("", r.Args, append(r.WindowArgs, "update-fixtures")))
 	if exitCode, err := r.run(context.Background(), f); exitCode != 0 || err != nil {
 		return exitCode, err
 	}
@@ -118,6 +113,10 @@ func (r *Runner) UpdateFixtures() (int, error) {
 }
 
 func (r *Runner) run(ctx context.Context, f func(m headless.Message) bool) (int, error) {
+	if err := r.headless.Start(); err != nil {
+		return 0, err
+	}
+	defer r.headless.Stop()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	run := r.headless.Run(ctx, r.html)

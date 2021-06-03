@@ -17,6 +17,8 @@ var listenAddress = flag.String("l", ":8000", "http listen address")
 var watch = flag.Bool("w", false, "watch and re-run on change")
 var watchInterval = flag.Int("i", 500, "watch poll interval in ms")
 var updateFixtures = flag.Bool("u", false, "update test fixtures")
+var bundle = flag.Bool("b", false, "bundle srcFile dstFile")
+var bundleBasePath = flag.String("bp", "/", "bundle rooted basePath (e.g. github pages project root /xminus)")
 var windowArgs = flag.String("a", "", "window.args = strings.Fields(a) inside executed files")
 
 func main() {
@@ -28,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	w := &Watcher{Path: "./", Interval: time.Duration(*watchInterval) * time.Millisecond}
-	r := &Runner{Paths: flag.Args(), Watcher: w, Args: strings.Fields(*windowArgs)}
+	r := &Runner{Args: flag.Args(), WindowArgs: strings.Fields(*windowArgs)}
 	s := &Server{Address: *listenAddress, Watcher: w, Runner: r}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -49,11 +51,16 @@ func main() {
 		os.Exit(exitCode)
 	} else if *watch {
 		go w.Start()
-		go r.Start()
+		go r.Run(w)
 		log.Fatal(s.Start())
+	} else if *bundle {
+		exitCode, err := r.Bundle(*bundleBasePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		os.Exit(exitCode)
 	} else {
-		r.Watcher = nil
-		exitCode, err := r.Start()
+		exitCode, err := r.Run(nil)
 		if err != nil {
 			log.Fatal(err)
 		}

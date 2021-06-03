@@ -20,13 +20,13 @@ for dir in $(ls -d examples/*/); do
     src="${dir}index.html"
     dst="docs/examples/${name}/index.html"
     echo $src $base_path $dst
-    cli/xminus -a "${src} ${base_path}" -e etc/bundle.mjs > "${dst}"
+    cli/xminus -bp "$base_path" -b "$src" "$dst"
     body="${body}
       <a href='examples/${name}/'><h1>${name}</h1></a>
       <iframe src='examples/${name}/'></iframe>"
 done
 
-tee docs/index.html  <<EOF
+tee docs/index.html <<EOF
 <!DOCTYPE html>
 <html>
   <head>

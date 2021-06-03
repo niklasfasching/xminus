@@ -1,0 +1,13 @@
+<script type=module>
+ window.isCI = %v;
+ window.isHeadless = navigator.webdriver;
+ window.close = (code = 0) => isHeadless ? console.clear(code) : console.log("exit:", code);
+ window.openIframe = (src) => {
+   return new Promise((resolve, reject) => {
+     const iframe = document.createElement("iframe");
+     const onerror = reject;
+     const onload = () => resolve(iframe);
+     document.body.appendChild(Object.assign(iframe, {onload, onerror, src}));
+   });
+ };
+</script>
