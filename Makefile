@@ -1,4 +1,4 @@
-cli/xminus: cli/*.go cli/go.mod cli/go.sum
+cli/xminus: cli/*.go cli/go.mod cli/go.sum cli/assets/*
 	go env -w GOPROXY=direct
 	cd cli && go get -u ./...
 	cd cli && go build -o xminus *.go
