@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -21,17 +22,8 @@ type Server struct {
 	*http.Server
 }
 
-var reloadSnippet = `
-<script x-dev>
-  // THIS SNIPPET IS NOT PART OF THE ORIGINAL HTML BUT INSERTED BY THE SERVER
-  function longpoll() {
-    fetch("/", {method: "POST"}).then(r => {
-      if (r.status === 204) location.reload();
-      else setTimeout(longpoll, 100);
-    }, () => setTimeout(longpoll, 100));
-  }
-  longpoll();
-</script>`
+//go:embed assets/reload.html
+var reloadSnippet string
 
 func (s *Server) Start() error {
 	mux := &http.ServeMux{}
