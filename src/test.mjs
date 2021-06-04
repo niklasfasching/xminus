@@ -1,3 +1,5 @@
+import * as exports from './test.mjs';
+
 let count = 0, countFailed = 0,
     dynamicOnly = false, exitAfter = false,
     resolve = null;
@@ -289,7 +291,7 @@ async function writeFixtures(fixtures) {
 
 async function init() {
   const parentTest = window.parent.test;
-  window.test = parentTest || await import(import.meta.url);
+  window.test = parentTest || exports;
   if (parentTest) parentTest.current.node.children.push(root);
   else setTimeout(async () => {
     if (window.isCI && root.hasSelected) throw new Error("only not allowed in CI");

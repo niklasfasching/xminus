@@ -25,8 +25,7 @@
    }
   </style>
   <script type="module">
-   import {mount, init} from "/src/runtime.mjs";
-   init(true);
+   import {mount} from "/src/runtime.mjs";
    for (let i = 0; i < 10; i++) {
      mount(document.body, "x-card", {
        title: "The title of the card",
