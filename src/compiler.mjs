@@ -17,7 +17,7 @@ const splatRegexp = /^\s*{\s*\.\.\.\s*(.+)\s*}\s*$/;
 function bindMacro(vnode, $, key, value) {
   const [_, property] = key.split(":");
   generateVnode(vnode, $);
-  const event = ["input", "textarea"].includes(vnode.tag) ? "keyup" : "change";
+  const event = ["input", "textarea"].includes(vnode.tag) && vnode.properties.type !== "checkbox" ? "keyup" : "change";
   const node = generateLocalNodeRef($, vnode, "bind");
   let getValue = `${node}["${property}"]`, setValue = `${node}["${property}"] = ${value}`;
   if (property === "options") {
