@@ -1,8 +1,6 @@
 * keyed for
 until now only unkeyed for loop (i.e. disregards state and can re-use elements independent of identity)
 keyed will allow keeping local state in looped components
-* app component
-add localstorage proxy as app.db
 * register macros / directives
 script tag with [x-compile] or [x-macros] that is executed at bundle / compile time and can register macros
 we can guard macro definitions to bundle time by setting a var in bundle and throwing e.g. if !window.bundleTime
@@ -12,3 +10,16 @@ as macros would be global and regexes rather than exact match it's hard to ensur
 - disable cache (headers/--disk-cache-size): sometimes cli needs to be restarted for changes to become visible. i guess that's due to caching
 * assumptions
 - everythting in create can close over provided variables. we must not just provide a variable with the same name in update, we must modify the original variable
+* cli
+- index page providing virtual pages (e.g. one page for each test mjs file as html for)
+* css
+debug css file (e.g. outline all elements)
+class based grid
+redacted font (fontforge)
+
+xcss can keep styles in a map key by src/text to prevent duplication
+breakpoints can be configured in config.json
+xcss requires concating all css into the index file
+
+* importMap
+serve and bundle require different import maps - i.e. build time and bundle serve time

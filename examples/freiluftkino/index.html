@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>freiluftkino</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/src/base.css" rel="stylesheet"/>
+    <link href="module.css" rel="stylesheet"/>
+    <script type="x-module" src="/modules/app/index.html"></script>
+    <script type="text/x-template" id="x-flk">
+      <nav>
+        <div id="logo">freiluftkino</div>
+        <div id="settings">
+          <input id="partialTitle"
+                 type="text"
+                 .bind:value="$.app.db.searchTitle"
+                 .on:change="$.app.update()">
+          <label for="onlyAvailable">only available</label>
+          <input id="onlyAvailable"
+                 type="checkbox"
+                 .bind:checked="$.app.db.onlyAvailable"
+                 .on:change="$.app.update()">
+          <select multiple id="cinema"
+                  .bind:options="$.app.db.selectedCinemas"
+                  .on:change:no="$.app.update()">
+            <option .for="value of $.cinemas">{value}</option>
+          </select>
+        </div>
+      </nav>
+      <div ..days>
+        <div ..day .for="[day, shows] in $.shows">
+          <div ..date>{day.slice(0, -1)}</div>
+          <div ..shows>
+            <x-show show={show} .for="show of shows"/>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/x-template" id="x-show" x-props="show">
+      <div ..cover ..bookable="!!$.show.available && $.show.reserved">
+        <img src="{$.show.img}" loading="lazy">
+        <div ..time>{$.show.time}</div>
+      </div>
+      <div ..info>
+        <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
+        <a href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
+        <div ..seats>
+          <span ..available .if="$.show.available">{$.show.available}</span>
+          <span ..reserved>{$.show.reserved}</span>
+          <span ..booked .if="!$.show.available && $.show.reserved">booked out</span>
+        </div>
+      </div>
+    </script>
+    <script type="module">
+     import {mount, define, Component} from "/src/runtime.mjs";
+
+
+     define("x-flk", class extends Component {
+       async onInit() {
+         this.showsByCinema = await fetch("https://niklasfasching.github.io/freiluftkino/showsByCinema.json").then(r => r.json());
+         this.cinemas = Object.keys(this.showsByCinema);
+         this.update();
+       }
+
+       onUpdate() {
+         const {selectedCinemas, searchTitle, onlyAvailable} = this.app.db;
+         this.shows = Object.values(this.showsByCinema).flat().sort((a, b) => a.timestamp - b.timestamp)
+                            .filter(x => {
+                              return x.timestamp >= Date.now() &&
+                                     x.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
+                                     (!Object.keys(selectedCinemas).length || selectedCinemas[x.cinemaName]) &&
+                                     (!onlyAvailable || (x.reserved && x.available))
+
+                            })
+                            .reduce((g, s) => {
+                              (g[s.date] = g[s.date] || []).push(s);
+                              g[s.date] = g[s.date].sort((x, y) => x.time > y.time);
+                              return g;
+                            }, {});
+       }
+     });
+     (async () => {
+       window.app = await mount(document.body, "x-app", {
+         routes: {"/": ["x-flk", () => ({})]},
+         db: {
+           searchTitle: "",
+           selectedCinemas: {},
+           onlyAvailable: false,
+         },
+       });
+     })()
+    </script>
+  </head>
+  <style>
+
+  </style>
+  <body></body>
+</html>

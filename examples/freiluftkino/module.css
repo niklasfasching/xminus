@@ -1,0 +1,105 @@
+html {
+    color: #eee;
+    background-color: #000;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+#logo {
+    font-size: 2em;
+}
+
+
+.days {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+}
+
+.date {
+    font-size: 2em;
+}
+
+.shows {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    gap: 1em;
+}
+
+x-show {
+    display: grid;
+    grid-template-rows: 30em 1fr;
+    flex-shrink: 0;
+    flex-grow: 0;
+    width: 20em;
+    background-color: #333;
+    border-radius: 0.5em;
+    overflow: hidden;
+}
+
+.cover:not(.bookable) {
+    filter: grayscale(1) opacity(0.5);
+}
+
+.cover {
+    position: relative;
+}
+
+img {
+    height: 100%;
+    object-fit: cover;
+}
+
+.time {
+    position: absolute;
+    padding: 0.5em;
+    top: 0;
+    font-size: 2em;
+    font-weight: bold;
+    width: 100%;
+    background: linear-gradient(to bottom, #000, #3331);
+}
+
+.info {
+    padding: 0.5em;
+    overflow: hidden;
+}
+
+.title {
+    font-weight: bold;
+    margin-bottom: 0.33em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.cinema {
+    margin-bottom: 1em;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.available, .reserved, .booked {
+    line-height: 2em;
+    font-weight: bold;
+    color: #000;
+    padding: 0.25em 0.5em;
+    border-radius: 0.25em;
+    background-color: var(--green);
+}
+
+.reserved {
+    background-color: var(--yellow);
+}
+
+.booked {
+    background-color: var(--red);
+}
