@@ -1,22 +1,24 @@
-html {
+html, body {
     box-sizing: border-box;
-}
-
-body {
+    word-break: break-word;
+    min-height: 100%;
+    padding: 0;
     margin: 0;
+    font-family: var(--font-sans);
 }
 
 *, *:before, *:after {
     box-sizing: inherit;
-    font-size: inherit;
-    font-family: inherit;
-    line-height: inherit;
 }
 
 img {
     display: block;
     height: auto;
     max-width: 100%;
+}
+
+pre {
+    white-space: pre-wrap;
 }
 
 ul[class], ol[class] {

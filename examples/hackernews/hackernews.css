@@ -87,6 +87,7 @@ nav {
 #stories .points, #stories .comments {
     --alpha: 0%;
     background-color: hsla(30, 100%, 80%, var(--alpha));
+    word-break: keep-all;
 }
 
 /* story */
