@@ -206,7 +206,7 @@
   "compiler: generateVnode: macro: should generate .for of macro (list) (0)": {
     "html": "<!---->",
     "create": [
-      "let _for_0_anchor = root, _for_0_node = xm.fragment(`<div></div>`).firstChild;",
+      "let _for_0_anchor = root, _for_0_node = xm.fragment(`<div></div>`, 0).firstChild;",
       "function _for_0_create($, ..._args) {",
       "let root = _for_0_node.cloneNode(true);",
       "let item = _args[0];",
@@ -231,7 +231,7 @@
   "compiler: generateVnode: macro: should generate .for in macro (object) (0)": {
     "html": "<!---->",
     "create": [
-      "let _for_0_anchor = root, _for_0_node = xm.fragment(`<div></div>`).firstChild;",
+      "let _for_0_anchor = root, _for_0_node = xm.fragment(`<div></div>`, 0).firstChild;",
       "function _for_0_create($, ..._args) {",
       "let root = _for_0_node.cloneNode(true);",
       "let key, value = _args[0];",
@@ -253,7 +253,7 @@
   "compiler: generateVnode: macro: should generate .if macro (0)": {
     "html": "<!---->",
     "create": [
-      "let _if_0_anchor = root, _if_0_node = xm.fragment(`<div></div>`).firstChild;",
+      "let _if_0_anchor = root, _if_0_node = xm.fragment(`<div></div>`, 0).firstChild;",
       "function _if_0_create($, ..._args) {",
       "let root = _if_0_node.cloneNode(true);",
       "let _properties_1_node = root;",

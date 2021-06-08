@@ -118,8 +118,10 @@ export function compile(name, template) {
 function generateClosure(vnode, $, _, updateKey, beforeCreate = "", beforeUpdate = "") {
   const $$ = {create: "", update: "", html: ""}, node = generateNodeRef($, vnode, "closure");
   generateVnode(vnode, $$);
+  let inSVG = false;
+  while (vnode = vnode.parent) inSVG |= vnode.tag === "svg";
   $.html += "<!---->";
-  $.create += `let ${_}anchor = ${node}, ${_}node = xm.fragment(\`${$$.html.replaceAll("`", "\\`")}\`).firstChild;
+  $.create += `let ${_}anchor = ${node}, ${_}node = xm.fragment(\`${$$.html.replaceAll("`", "\\`")}\`, ${inSVG}).firstChild;
                function ${_}create($, ..._args) {
                  let ${node} = ${_}node.cloneNode(true);
                  ${beforeCreate}

@@ -23,7 +23,8 @@ async function init() {
 }
 
 export function setProperty(node, k, v) {
-  if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
+  const inSVG = node.namespaceURI === "http://www.w3.org/2000/svg";
+  if (k in node && k !== "list" && k !== "form" && k !== "selected" && !inSVG) node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
   else node.setAttribute(k, v);
 }
@@ -96,9 +97,9 @@ export async function mount(parentNode, name, props = {}) {
   return parentNode.appendChild(app);
 }
 
-export function fragment(html) {
-  compilerTemplate.innerHTML = html;
-  return document.importNode(compilerTemplate.content, true);
+export function fragment(html, inSVG) {
+  compilerTemplate.innerHTML = inSVG ? `<svg>${html}</svg>` : html;
+  return document.importNode(inSVG ? compilerTemplate.content.firstChild : compilerTemplate.content, true);
 }
 
 export function define(name, c) {
