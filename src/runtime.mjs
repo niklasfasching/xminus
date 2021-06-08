@@ -25,6 +25,7 @@ async function init() {
 export function setProperty(node, k, v) {
   const inSVG = node.namespaceURI === "http://www.w3.org/2000/svg";
   if (k in node && k !== "list" && k !== "form" && k !== "selected" && !inSVG) node[k] = v == null ? "" : v;
+  else if (k.startsWith("_")) node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
   else node.setAttribute(k, v);
 }
