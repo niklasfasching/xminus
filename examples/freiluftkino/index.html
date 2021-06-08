@@ -50,12 +50,11 @@
           <span ..reserved>{$.show.reserved || 0}</span>
           <span ..booked .if="!$.show.available && $.show.reserved">booked out</span>
         </div>
-        <x-chart {...$.show.chart}></x-chart>
+        <x-chart {...$.show.chart} formatTooltip="{$.formatTooltip}"></x-chart>
       </div>
     </script>
     <script type="module">
      import {mount, define, Component} from "/src/runtime.mjs";
-
 
      define("x-flk", class extends Component {
        async onInit() {
@@ -88,6 +87,12 @@
                               g[s.date] = g[s.date].sort((x, y) => x.time > y.time);
                               return g;
                             }, {});
+       }
+     });
+
+     define("x-show", class extends Component {
+       formatTooltip({vx, vy}) {
+         return `${new Date(vx * 1000).toLocaleDateString("de").split(".").slice(0, 2).join(".")}. | ${vy.toFixed()} free`;
        }
      });
      (async () => {
