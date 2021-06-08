@@ -30,7 +30,7 @@ export async function loadXModules(url, basePath, loaded = {}) {
   if (loaded[url]) return [];
   else loaded[url] = true;
   const document = url === location.href ? window.document : await loadDocument(url);
-  const styles = all(document, `link[rel=stylesheet]`),
+  const styles = all(document, `style, link[rel=stylesheet]`),
         modules = all(document, `[type*=module]:not([src])`),
         xTemplates = all(document, `[type*=x-template][id]`),
         xImports = all(document, `[type*=x-module][src]`);
