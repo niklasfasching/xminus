@@ -6,6 +6,7 @@
     <link href="/src/base.css" rel="stylesheet"/>
     <link href="module.css" rel="stylesheet"/>
     <script type="x-module" src="/modules/app/index.html"></script>
+    <script type="x-module" src="/modules/chart/index.html"></script>
     <script type="text/x-template" id="x-flk">
       <nav>
         <div id="logo">freiluftkino</div>
@@ -45,10 +46,11 @@
         <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
         <a href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
         <div ..seats>
-          <span ..available .if="$.show.available">{$.show.available}</span>
-          <span ..reserved>{$.show.reserved}</span>
+          <span ..available .if="$.show.available">{$.show.available || 0}</span>
+          <span ..reserved>{$.show.reserved || 0}</span>
           <span ..booked .if="!$.show.available && $.show.reserved">booked out</span>
         </div>
+        <x-chart {...$.show.chart}></x-chart>
       </div>
     </script>
     <script type="module">
@@ -58,6 +60,7 @@
      define("x-flk", class extends Component {
        async onInit() {
          this.showsByCinema = await fetch("https://niklasfasching.github.io/freiluftkino/showsByCinema.json").then(r => r.json());
+         this.showHistory = await fetch("https://niklasfasching.github.io/freiluftkino/showHistory.json").then(r => r.json());
          this.cinemas = Object.keys(this.showsByCinema);
          this.update();
        }
@@ -73,6 +76,14 @@
 
                             })
                             .reduce((g, s) => {
+                              const values = this.showHistory[s.url];
+                              s.chart = {
+                                xMin: values[0]?.[0] || 0,
+                                xMax: Date.now() / 1000,
+                                yMin: 0,
+                                yMax: Math.max(...values.map(([x, y]) => y)),
+                                values,
+                              };
                               (g[s.date] = g[s.date] || []).push(s);
                               g[s.date] = g[s.date].sort((x, y) => x.time > y.time);
                               return g;
