@@ -1,5 +1,5 @@
 {
-  "slots: should provide slots": [
+  "slots: should provide slots (0)": [
     "<x-slots>",
     "<div class=\" rest-slot\"><div class=\"slot\">",
     "",

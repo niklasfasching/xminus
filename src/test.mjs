@@ -77,11 +77,13 @@ Object.assign(t, {
 
   assertFixture(actual, msg) {
     const {fixtures, updateFixtures, current} = window.test;
-    if (!updateFixtures) t.jsonEqual(actual, fixtures[current.node.fixtureUrl][current.id]);
+    const id = `${current.id} (${current.assertFixtureCalls})`;
+    current.assertFixtureCalls++;
+    if (!updateFixtures) t.jsonEqual(actual, fixtures[current.node.fixtureUrl][id], id);
     else {
       fixtures[current.node.fixtureUrl] = fixtures[current.node.fixtureUrl] || {};
-      if (fixtures[current.node.fixtureUrl][current.id]) t.fail(`reassignment of fixture "${current.id}"`);
-      fixtures[current.node.fixtureUrl][current.id] = actual;
+      if (fixtures[current.node.fixtureUrl][id]) t.fail(`reassignment of fixture "${id}"`);
+      fixtures[current.node.fixtureUrl][id] = actual;
     }
   },
 
@@ -212,7 +214,7 @@ async function runFn(node, f, name) {
 function getCurrent(node, name, logs) {
   let id = name, n = node;
   while (n.parent) id = `${n.name}: ${id}`, n = n.parent;
-  return {id, logs, node};
+  return {id, logs, node, assertFixtureCalls: 0};
 }
 
 function log(lvl, isFailure, color, line, err) {

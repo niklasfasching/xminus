@@ -1,5 +1,5 @@
 {
-  "compiler: generateVnode: should not generate update code for static html": {
+  "compiler: generateVnode: should not generate update code for static html (0)": {
     "html": "<div>hello <b>world</b></div>",
     "create": [
       "let _children_0_node = root.firstChild;",
@@ -9,7 +9,7 @@
     ],
     "update": ""
   },
-  "compiler: generateVnode: should generate create and update code for dynamic properties": {
+  "compiler: generateVnode: should generate create and update code for dynamic properties (0)": {
     "html": "<div>hello world</div>",
     "create": [
       "let _properties_0_node = root;",
@@ -24,7 +24,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: should generate create and update code for dynamic children": {
+  "compiler: generateVnode: should generate create and update code for dynamic children (0)": {
     "html": "<div>hello <!----></div>",
     "create": [
       "let _children_0_node = root.firstChild;",
@@ -38,7 +38,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: should generate void tags without children": {
+  "compiler: generateVnode: should generate void tags without children (0)": {
     "html": "<div><input><!----></div>",
     "create": [
       "let _children_0_node = root.firstChild;",
@@ -53,7 +53,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: should generate component tags": {
+  "compiler: generateVnode: should generate component tags (0)": {
     "html": "<x-component>foo bar <!----></x-component>",
     "create": [
       "let _children_0_node = root.firstChild;",
@@ -69,7 +69,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: should generate nested dynamic children": {
+  "compiler: generateVnode: should generate nested dynamic children (0)": {
     "html": "<div><div><!----></div><!----></div>",
     "create": [
       "let _children_0_node = root.firstChild;",
@@ -89,7 +89,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .on macro": {
+  "compiler: generateVnode: macro: should generate .on macro (0)": {
     "html": "<div></div>",
     "create": [
       "let _properties_0_node = root;",
@@ -105,7 +105,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .on:create macro": {
+  "compiler: generateVnode: macro: should generate .on:create macro (0)": {
     "html": "<div></div>",
     "create": [
       "let _on_0_node = root;",
@@ -115,7 +115,7 @@
     ],
     "update": ""
   },
-  "compiler: generateVnode: macro: should generate .on:update macro": {
+  "compiler: generateVnode: macro: should generate .on:update macro (0)": {
     "html": "<div></div>",
     "create": [
       "let _on_0_node = root;",
@@ -127,7 +127,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .on macro with no(update) modifier": {
+  "compiler: generateVnode: macro: should generate .on macro with no(update) modifier (0)": {
     "html": "<div></div>",
     "create": [
       "let _on_0_node = root;",
@@ -139,7 +139,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .bind: macro": {
+  "compiler: generateVnode: macro: should generate .bind: macro (0)": {
     "html": "<div></div>",
     "create": [
       "let _bind_0_node = root;",
@@ -152,7 +152,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .bind: macro multiple select": {
+  "compiler: generateVnode: macro: should generate .bind: macro multiple select (0)": {
     "html": "<select multiple=\"true\"><option>a</option></select>",
     "create": [
       "let _children_0_node = root.firstChild;",
@@ -167,7 +167,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .bind: macro for input elements": {
+  "compiler: generateVnode: macro: should generate .bind: macro for input elements (0)": {
     "html": [
       "<div>",
       "<input>",
@@ -203,7 +203,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .for of macro (list)": {
+  "compiler: generateVnode: macro: should generate .for of macro (list) (0)": {
     "html": "<!---->",
     "create": [
       "let _for_0_anchor = root, _for_0_node = xm.fragment(`<div></div>`).firstChild;",
@@ -228,7 +228,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .for in macro (object)": {
+  "compiler: generateVnode: macro: should generate .for in macro (object) (0)": {
     "html": "<!---->",
     "create": [
       "let _for_0_anchor = root, _for_0_node = xm.fragment(`<div></div>`).firstChild;",
@@ -250,7 +250,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .if macro": {
+  "compiler: generateVnode: macro: should generate .if macro (0)": {
     "html": "<!---->",
     "create": [
       "let _if_0_anchor = root, _if_0_node = xm.fragment(`<div></div>`).firstChild;",
@@ -273,7 +273,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .inject macro": {
+  "compiler: generateVnode: macro: should generate .inject macro (0)": {
     "html": "<div></div>",
     "create": [
       "$[\"x\"] = $.xParent.closest(\"x-component\");",
@@ -281,12 +281,12 @@
     ],
     "update": ""
   },
-  "compiler: generateVnode: macro: should generate .class macro": {
+  "compiler: generateVnode: macro: should generate .class macro (0)": {
     "html": "<div class=\"class-0 class-1 class-2 class-3\"></div>",
     "create": "",
     "update": ""
   },
-  "compiler: generateVnode: macro: should generate conditional .class macro": {
+  "compiler: generateVnode: macro: should generate conditional .class macro (0)": {
     "html": "<div></div>",
     "create": [
       "root.classList.toggle(\"conditional\", $.condition);",
@@ -299,7 +299,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate .class macro with dynamic classes": {
+  "compiler: generateVnode: macro: should generate .class macro with dynamic classes (0)": {
     "html": "<div></div>",
     "create": [
       "let _properties_0_node = root;",
@@ -311,7 +311,7 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate --cssVar macro": {
+  "compiler: generateVnode: macro: should generate --cssVar macro (0)": {
     "html": "<div></div>",
     "create": [
       "root.style.setProperty(\"x\", \"$.x\");",
@@ -324,12 +324,12 @@
       ""
     ]
   },
-  "compiler: generateVnode: macro: should generate #id macro": {
+  "compiler: generateVnode: macro: should generate #id macro (0)": {
     "html": "<div id=\"id\"></div>",
     "create": "",
     "update": ""
   },
-  "compiler: compile: should generate a component (smoke test)": {
+  "compiler: compile: should generate a component (smoke test) (0)": {
     "result": [
       "xm.register(\"x-foo-component\", `<div></div>`, function() {",
       "const $ = this;",
@@ -343,7 +343,7 @@
     "create": "",
     "update": ""
   },
-  "compiler: compile: should generate element attributes (except id, type bc used by template) from template attributes": {
+  "compiler: compile: should generate element attributes (except id, type bc used by template) from template attributes (0)": {
     "result": [
       "xm.register(\"x-foo-component\", `<p>hello <!----></p>`, function() {",
       "const $ = this;",
@@ -365,7 +365,7 @@
     "create": "",
     "update": ""
   },
-  "compiler: compile: should support splat properties on child components": {
+  "compiler: compile: should support splat properties on child components (0)": {
     "result": [
       "xm.register(\"x-foo-component\", `<x-child></x-child>`, function() {",
       "const $ = this;",

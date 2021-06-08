@@ -1,5 +1,5 @@
 {
-  "bundler: rebaseModuleImports: should rewrite relative imports": {
+  "bundler: rebaseModuleImports: should rewrite relative imports (0)": {
     "module": [
       "import * from '/rebase/module.js';",
       "import * from '/rebase/dir/module.js';",
@@ -11,7 +11,7 @@
       ""
     ]
   },
-  "bundler: rebaseModuleImports: should not modify absolute imports": {
+  "bundler: rebaseModuleImports: should not modify absolute imports (0)": {
     "module": [
       "import * from 'http://foo.bar/module.js';",
       "import {foo, bar} from 'http://foo.bar/module.js';",
@@ -20,7 +20,7 @@
       ""
     ]
   },
-  "bundler: bundle: should bundle into an html file": {
+  "bundler: bundle: should bundle into an html file (0)": {
     "html": [
       "<!DOCTYPE html>",
       "<html><head>",
@@ -67,7 +67,7 @@
       "</html>"
     ]
   },
-  "bundler: bundle: should bundle into a data url": {
+  "bundler: bundle: should bundle into a data url (0)": {
     "code": [
       "data:text/javascript,import \"data:text/javascript,//# sourceURL=xmComponents.js",
       "xm.register(\"x-main\", `",

@@ -1,5 +1,5 @@
 {
-  "fixture test": 0,
-  "describe with fixture tests: fixture test 1": 1,
-  "describe with fixture tests: fixture test 2": 2
+  "fixture test (0)": 0,
+  "describe with fixture tests: fixture test 1 (0)": 1,
+  "describe with fixture tests: fixture test 2 (0)": 2
 }
