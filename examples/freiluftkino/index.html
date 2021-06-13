@@ -39,34 +39,39 @@
 
     <script type="text/x-template" id="x-show" x-props="show">
       <div ..cover ..bookable="!!$.show.available && $.show.reserved">
-        <img src="{$.show.img}" loading="lazy">
+        <a href="#/show/{$.show.id}">
+          <img src="{$.show.img}" loading="lazy">
+        </a>
         <div ..time>{$.show.time}</div>
-      </div>
-      <div ..info>
-        <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
-        <a href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
         <div ..seats>
-          <span ..available .if="$.show.available">{$.show.available || 0}</span>
+          <span ..available>{$.show.available || 0}</span>
           <span ..reserved>{$.show.reserved || 0}</span>
-          <span ..booked .if="!$.show.available && $.show.reserved">booked out</span>
         </div>
-        <x-chart {...$.show.chart} formatTooltip="{$.formatTooltip}"></x-chart>
+        <div ..info>
+          <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
+          <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
+        </div>
       </div>
+    </script>
+
+    <script type="text/x-template" id="x-details" x-props="show history">
+      <img src="{$.show.img}">
+      <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
+      <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
+      <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"></x-chart>
     </script>
     <script type="module">
      import {mount, define, Component} from "/src/runtime.mjs";
 
      define("x-flk", class extends Component {
        async onInit() {
-         this.showsByCinema = await fetch("https://niklasfasching.github.io/freiluftkino/showsByCinema.json").then(r => r.json());
-         this.showHistory = await fetch("https://niklasfasching.github.io/freiluftkino/showHistory.json").then(r => r.json());
-         this.cinemas = Object.keys(this.showsByCinema);
-         this.update();
+         this.cinemas = Object.keys(this.props.showsByCinema);
+         this.onUpdate();
        }
 
        onUpdate() {
          const {selectedCinemas, searchTitle, onlyAvailable} = this.app.db;
-         this.shows = Object.values(this.showsByCinema).flat().sort((a, b) => a.timestamp - b.timestamp)
+         this.shows = Object.values(this.props.showsByCinema).flat().sort((a, b) => a.timestamp - b.timestamp)
                             .filter(x => {
                               return x.timestamp >= Date.now() &&
                                      x.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
@@ -75,14 +80,6 @@
 
                             })
                             .reduce((g, s) => {
-                              const values = this.showHistory[s.url];
-                              s.chart = {
-                                xMin: values[0]?.[0] || 0,
-                                xMax: Date.now() / 1000,
-                                yMin: 0,
-                                yMax: Math.max(...values.map(([x, y]) => y)),
-                                values,
-                              };
                               (g[s.date] = g[s.date] || []).push(s);
                               g[s.date] = g[s.date].sort((x, y) => x.time > y.time);
                               return g;
@@ -90,14 +87,36 @@
        }
      });
 
-     define("x-show", class extends Component {
+     define("x-details", class extends Component {
+       async onInit() {
+         this.chart = {
+           xMin: this.history[0]?.[0] || 0,
+           xMax: Date.now() / 1000,
+           yMin: 0,
+           yMax: Math.max(...this.history.map(([x, y]) => y)),
+           values: this.history,
+         };
+       }
+
        formatTooltip({vx, vy}) {
          return `${new Date(vx * 1000).toLocaleDateString("de").split(".").slice(0, 2).join(".")}. | ${vy.toFixed()} free`;
        }
      });
+
      (async () => {
+       const showsByCinema = await fetch("https://niklasfasching.github.io/freiluftkino/showsByCinema.json").then(r => r.json());
+       const showHistory = await fetch("https://niklasfasching.github.io/freiluftkino/showHistory.json").then(r => r.json());
        window.app = await mount(document.body, "x-app", {
-         routes: {"/": ["x-flk", () => ({})]},
+         routes: {
+           "/": ["x-flk", () => ({showsByCinema, showHistory})],
+           "/show/{id}": ["x-details", (app) => {
+             const show = Object.values(showsByCinema).flat().find(show => show.id === app.params.id);
+             return {
+               show,
+               history: showHistory[show?.url],
+             };
+           }],
+         },
          db: {
            searchTitle: "",
            selectedCinemas: {},

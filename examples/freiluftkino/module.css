@@ -57,6 +57,7 @@ img {
 
 .time {
     position: absolute;
+    pointer-events: none;
     padding: 0.5em;
     top: 0;
     font-size: 2em;
@@ -65,21 +66,35 @@ img {
     background: linear-gradient(to bottom, #000, #3331);
 }
 
+.seats {
+    position: absolute;
+    opacity: 0.5;
+    top: 0;
+    right: 0;
+    font-size: 0.75em;
+}
+
+
 .info {
+    position: absolute;
+    bottom: 0;
     padding: 0.5em;
+    padding-top: 1em;
     overflow: hidden;
+    background: linear-gradient(to top, #000, #3331);
+    width: 100%;
 }
 
 .title {
     font-weight: bold;
-    margin-bottom: 0.33em;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
 }
 
 .cinema {
-    margin-bottom: 1em;
+    text-transform: uppercase;
+    font-size: 0.75em;
 }
 
 a {
@@ -105,9 +120,28 @@ a {
 }
 
 x-chart svg {
-    margin-top: 0.5em;
+    margin-top: 2em;
     display: block;
     width: 100%;
     height: 2em;
     fill: var(--green);
+}
+
+x-details {
+    display: grid;
+    max-width: 50em;
+    margin: 1em auto;
+    background-color: #333;
+    border-radius: 0.25em;
+    overflow: hidden;
+}
+
+x-details img {
+    height: 30em;
+    width: 100%;
+    object-fit: cover;
+}
+
+x-details .title {
+    font-size: 2em;
 }
