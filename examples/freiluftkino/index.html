@@ -14,7 +14,7 @@
           <input id="partialTitle"
                  type="text"
                  .bind:value="$.app.db.searchTitle"
-                 .on:change="$.app.update()">
+                 .on:keyup="$.app.update()">
           <label for="onlyAvailable">only available</label>
           <input id="onlyAvailable"
                  type="checkbox"
@@ -38,7 +38,7 @@
     </script>
 
     <script type="text/x-template" id="x-show" x-props="show">
-      <div ..cover ..bookable="!!$.show.available && $.show.reserved">
+      <div ..cover ..bookable="$.show.bookable">
         <a href="#/show/{$.show.id}">
           <img src="{$.show.img}" loading="lazy">
         </a>
@@ -48,7 +48,7 @@
           <span ..reserved>{$.show.reserved || 0}</span>
         </div>
         <div ..info>
-          <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
+          <div ..title title="{$.show.title}"><a href="{$.show.url}">{$.show.title}</a></div>
           <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
         </div>
       </div>
@@ -88,10 +88,14 @@
      });
 
      define("x-details", class extends Component {
-       async onInit() {
+       onInit() {
+         this.onUpdate();
+       }
+
+       onUpdate() {
          this.chart = {
            xMin: this.history[0]?.[0] || 0,
-           xMax: Date.now() / 1000,
+           xMax: Date.now(),
            yMin: 0,
            yMax: Math.max(...this.history.map(([x, y]) => y)),
            values: this.history,
@@ -99,7 +103,7 @@
        }
 
        formatTooltip({vx, vy}) {
-         return `${new Date(vx * 1000).toLocaleDateString("de").split(".").slice(0, 2).join(".")}. | ${vy.toFixed()} free`;
+         return `${new Date(vx).toLocaleDateString("de").split(".").slice(0, 2).join(".")}. | ${vy.toFixed()} free`;
        }
      });
 
