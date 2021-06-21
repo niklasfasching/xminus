@@ -131,7 +131,7 @@ export function register(name, html, f, assignedProps) {
       this[symbols.updateComponent] = f.call(this);
       this.onCreate(this.props);
     }
-    detachedCallback() {
+    disconnectedCallback() {
       this.onRemove(this.props);
     }
     update(props = this.props) {

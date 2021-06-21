@@ -1,20 +1,33 @@
 <!DOCTYPE html>
 <head>
   <title>hackernews</title>
+
   <script type="text/x-template" id="x-no-nullish-false">
     {null} {undefined} {false}
   </script>
+
   <script type="text/x-template" id="x-slots">
     <div ..rest-slot>{$.slots.rest}</div>
     <div ..header-slot>{$.slots.header}</div>
     <div ..footer-slot>{$.slots.footer}</div>
   </script>
+
+  <script type="text/x-template" id="x-handlers"></script>
 </head>
 
 <body x-dev>
   <script type="module">
-   import {mount} from "/src/runtime.mjs";
+   import {mount, define, Component} from "/src/runtime.mjs";
    import {t} from "/src/test.mjs";
+
+   define("x-handlers", class extends Component {
+     values = [];
+     onInit() { this.values.push("init"); }
+     onCreate() { this.values.push("create"); }
+     onUpdate() { this.values.push("update"); }
+     onRemove() { this.values.push("remove"); }
+   });
+
    t.describe("render child nodes", () => {
      t("should not render nullish and false values", async () => {
        const app = await mount(document.body, "x-no-nullish-false");
@@ -31,6 +44,15 @@
                                                  <div |footer|>footer</div>
                                                </x-slots>`);
        t.assertFixture(app.innerHTML.trim().split("\n"));
+     });
+   });
+
+   t.describe("component", () => {
+     t("should call hooks / handlers", async () => {
+       const app = await mount(document.body, `x-handlers`);
+       app.update();
+       app.remove();
+       t.jsonEqual(app.values, ["init", "create", "update", "remove"])
      });
    });
   </script>
