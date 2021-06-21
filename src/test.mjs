@@ -139,8 +139,8 @@ function wrapper(name, f, key) {
 function getEachWrappers(node) {
   const befores = [], afters = [];
   do {
-    befores.push(...node.beforeEachs.reverse());
-    afters.push(...node.afterEachs.reverse());
+    befores.push(...node.beforeEachs.slice().reverse());
+    afters.push(...node.afterEachs.slice().reverse());
   } while (node = node.parent);
   return [befores.reverse(), afters.reverse()];
 }
@@ -149,10 +149,6 @@ function group(name, f, selected) {
   current.node = newNode(name, current.node, selected);
   const result = f?.();
   if (result) throw new Error(`unexpected return value from describe: ${result}`);
-  const [beforeEachs, afterEachs] = getEachWrappers(current.node);
-  for (let child of current.node.children) {
-    Object.assign(child, {beforeEachs, afterEachs});
-  }
   current.node.parent.children.push(current.node);
   current.node = current.node.parent;
 }
@@ -183,9 +179,10 @@ async function runWrapper(lvl, node, name, f, selected) {
   for (let [line, color] of logs) log(lvl+2, 1, color, line);
 }
 
-async function runTest(lvl, node, {name, f, selected, beforeEachs = [], afterEachs = []}) {
+async function runTest(lvl, node, {name, f, selected}) {
   if (root.hasSelected && !selected) return;
   count++;
+  const [beforeEachs, afterEachs] = getEachWrappers(node);
   if (f) for (let {f, name} of beforeEachs) await runWrapper(lvl, node, name, f, true);
   const [logs, ms, err] = await runFn(node, f, name);
   if (f && !err) log(lvl, 0, "green", `✓ ${name} (${ms}ms)`);

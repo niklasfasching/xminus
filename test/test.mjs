@@ -40,7 +40,7 @@ t.describe("t", () => {
         t.equal(beforeEachAfterEachString, "123");
       });
 
-      t("should run beforeEachs for each test", () => {
+      t("should run afterEachs in order and beforeEachs for each test", () => {
         t.equal(beforeEachAfterEachString, "123456123");
       });
     });
@@ -149,3 +149,8 @@ t.describe("t", () => {
     }, 200);
   });
 });
+
+let beforeEachAfterEachString = "";
+t.beforeEach(() => beforeEachAfterEachString += "1");
+t.afterEach(() => beforeEachAfterEachString = "");
+t("should run each wrappers outside group", () => t.equal(beforeEachAfterEachString, "1"));
