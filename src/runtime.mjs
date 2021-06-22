@@ -127,9 +127,9 @@ export function register(name, html, f, assignedProps) {
       }
       for (let k of assignedProps) this[k] = this.props[k];
       this.onInit(this.props);
+      this.onRender(this.props);
       this.append(document.importNode(template.content, true));
       this[symbols.updateComponent] = f.call(this);
-      this.onCreate(this.props);
     }
     disconnectedCallback() {
       this.onRemove(this.props);
@@ -138,6 +138,7 @@ export function register(name, html, f, assignedProps) {
       this.props = props;
       for (let k of assignedProps) this[k] = this.props[k];
       this.onUpdate(this.props);
+      this.onRender(this.props);
       this[symbols.updateComponent]();
     }
   });
@@ -145,7 +146,7 @@ export function register(name, html, f, assignedProps) {
 
 export class Component extends HTMLElement {
   onInit(props) {}
-  onCreate(props) {}
   onUpdate(props) {}
+  onRender(props) {}
   onRemove(props) {}
 }

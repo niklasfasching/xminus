@@ -16,16 +16,15 @@
     <script type="module">
      import {mount, define, Component} from "/src/runtime.mjs";
      define("x-chart", class extends Component {
-       onCreate() {
+       onInit() {
          const formatTooltip = this.props.formatTooltip || ((b) => `(${b.vx.toFixed(1)}, ${b.vy.toFixed(1)})`),
                tooltip = this.querySelector(".tooltip");
          this.addEventListener("pointerover", (e) => {
            if (e.target._value) tooltip.innerText = formatTooltip(e.target._value);
          });
-         this.update();
        }
 
-       onUpdate() {
+       onRender() {
          const {values, xMin, xMax, yMin, yMax} = this.props;
          this.bars = values.map(([vx, vy], i) => {
            const height = Math.min((vy / yMax) * 100, 100) || 0,

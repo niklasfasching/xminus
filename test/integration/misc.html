@@ -23,7 +23,7 @@
    define("x-handlers", class extends Component {
      values = [];
      onInit() { this.values.push("init"); }
-     onCreate() { this.values.push("create"); }
+     onRender() { this.values.push("render"); }
      onUpdate() { this.values.push("update"); }
      onRemove() { this.values.push("remove"); }
    });
@@ -52,7 +52,7 @@
        const app = await mount(document.body, `x-handlers`);
        app.update();
        app.remove();
-       t.jsonEqual(app.values, ["init", "create", "update", "remove"])
+       t.jsonEqual(app.values, ["init", "render", "update", "render", "remove"]);
      });
    });
   </script>
