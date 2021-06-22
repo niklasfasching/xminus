@@ -11,22 +11,28 @@
     <script type="text/x-template" id="x-flk">
       <nav>
         <div id="logo">freiluftkino</div>
-        <div id="settings">
-          <input id="partialTitle"
-                 type="text"
-                 .bind:value="$.app.db.searchTitle"
-                 .on:keyup="$.app.update()">
-          <label for="onlyAvailable">only available</label>
-          <input id="onlyAvailable"
-                 type="checkbox"
-                 .bind:checked="$.app.db.onlyAvailable"
-                 .on:change="$.app.update()">
-          <select multiple id="cinema"
-                  .bind:options="$.app.db.selectedCinemas"
-                  .on:change:no="$.app.update()">
-            <option .for="value of $.cinemas">{value}</option>
-          </select>
-        </div>
+        <details>
+          <summary>filters</summary>
+          <div #settings>
+            <div>
+              <input id="onlyAvailable"
+                     type="checkbox"
+                     .bind:checked="$.app.db.onlyAvailable"
+                     .on:change="$.app.update()">
+              <label for="onlyAvailable">only available</label>
+            </div>
+            <input id="partialTitle"
+                   type="text"
+                   placeholder="title"
+                   .bind:value="$.app.db.searchTitle"
+                   .on:keyup="$.app.update()">
+            <select multiple id="cinema"
+                    .bind:options="$.app.db.selectedCinemas"
+                    .on:change:no="$.app.update()">
+              <option .for="value of $.cinemas">{value}</option>
+            </select>
+          </div>
+        </details>
       </nav>
       <div ..days>
         <div ..day .for="[day, shows] in $.shows">
@@ -45,8 +51,8 @@
         </a>
         <div ..time>{$.show.time}</div>
         <div ..seats>
-          <span ..available>{$.show.available || 0}</span>
-          <span ..reserved>{$.show.reserved || 0}</span>
+          <span ..tag ..available>{$.show.available || 0}</span>
+          <span ..tag ..reserved>{$.show.reserved || 0}</span>
         </div>
         <div ..info>
           <div ..title title="{$.show.title}"><a href="{$.show.url}">{$.show.title}</a></div>
@@ -61,10 +67,10 @@
       <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
       <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
       <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"></x-chart>
-      <div ..trailer .if="$.show.trailer">
-        <span ..available>{$.show.available || 0}</span>
-        <span ..reserved>{$.show.reserved || 0}</span>
-        <a href="{$.show.trailer}" target="_blank" rel="noopener">trailer</a>
+      <div ..tags>
+        <span ..tag ..available>{$.show.available || 0}</span>
+        <span ..tag ..reserved>{$.show.reserved || 0}</span>
+        <a .if="$.show.trailer" ..trailer ..tag href="{$.show.trailer}" target="_blank" rel="noopener">trailer</a>
       </div>
       <div ..description>{$.show.description}</div>
     </script>
