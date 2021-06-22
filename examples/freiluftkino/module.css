@@ -60,7 +60,7 @@ img {
     pointer-events: none;
     padding: 0.5em;
     top: 0;
-    font-size: 2em;
+    font-size: 1.5em;
     font-weight: bold;
     width: 100%;
     background: linear-gradient(to bottom, #000, #3331);
@@ -102,7 +102,7 @@ a {
     text-decoration: none;
 }
 
-.available, .reserved, .booked {
+.available, .reserved {
     line-height: 2em;
     font-weight: bold;
     color: #000;
@@ -143,8 +143,32 @@ x-details img {
 }
 
 x-details .title {
+    margin: 0.5rem 1rem;
     font-size: 1.5em;
     white-space: initial;
+}
+
+x-details .cinema {
+    margin: 0 1rem;
+}
+
+x-details .trailer {
+    margin: 1rem;
+    position: relative;
+}
+
+x-details .trailer a {
+    padding: 0.25em;
+    background-color: var(--yellow);
+    color: #000;
+    right: 0;
+    position: absolute;
+    font-weight: bold;
+}
+
+x-details .description {
+    margin: 1rem;
+    line-height: 1.5;
 }
 
 @media (min-device-width: 768px) {

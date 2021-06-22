@@ -57,9 +57,16 @@
 
     <script type="text/x-template" id="x-details" x-props="show history">
       <img src="{$.show.img}">
+      <div ..time>{$.show.date} - {$.show.time}</div>
       <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
       <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
       <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"></x-chart>
+      <div ..trailer .if="$.show.trailer">
+        <span ..available>{$.show.available || 0}</span>
+        <span ..reserved>{$.show.reserved || 0}</span>
+        <a href="{$.show.trailer}" target="_blank" rel="noopener">trailer</a>
+      </div>
+      <div ..description>{$.show.description}</div>
     </script>
     <script type="module">
      import {mount, define, Component} from "/src/runtime.mjs";
