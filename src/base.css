@@ -36,3 +36,19 @@ ul[class], ol[class] {
     --yellow: hsl(45, 100%, 70%);
     --red: hsl(350, 85%, 60%);
 }
+
+textarea, select, input {
+    padding: 0.5em;
+    background-color: #fff;
+    border-radius: 0.25em;
+    font-size: 100%;
+}
+
+select, textarea {
+    width: 100%;
+}
+
+select option {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
