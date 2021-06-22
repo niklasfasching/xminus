@@ -14,6 +14,7 @@ import (
 )
 
 var listenAddress = flag.String("l", ":8000", "http listen address")
+var remoteListenAddress = flag.String("rl", "", "remote forward host:port pair for ssh -L")
 var watch = flag.Bool("w", false, "watch and re-run on change")
 var watchInterval = flag.Int("i", 500, "watch poll interval in ms")
 var updateFixtures = flag.Bool("u", false, "update test fixtures")
@@ -32,7 +33,7 @@ func main() {
 
 	w := &Watcher{Path: "./", Interval: time.Duration(*watchInterval) * time.Millisecond}
 	r := &Runner{Args: flag.Args(), WindowArgs: strings.Fields(*windowArgs)}
-	s := &Server{Address: *listenAddress, Watcher: w, Runner: r}
+	s := &Server{Address: *listenAddress, RemoteAddress: *remoteListenAddress, Watcher: w, Runner: r}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
