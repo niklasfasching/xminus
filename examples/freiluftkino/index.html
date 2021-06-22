@@ -89,11 +89,7 @@
      });
 
      define("x-details", class extends Component {
-       onInit() {
-         this.onUpdate();
-       }
-
-       onUpdate() {
+       onRender() {
          this.chart = {
            xMin: this.history[0]?.[0] || 0,
            xMax: Date.now(),
