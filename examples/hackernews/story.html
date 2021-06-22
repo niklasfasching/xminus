@@ -47,7 +47,7 @@
  import {define, Component} from "/src/runtime.mjs";
 
  define("x-story", class extends Component {
-   onInit(props) {
+   onRender(props) {
      this.getStory();
    }
 
@@ -67,6 +67,10 @@
 
    async getStory() {
      const id = this.app.query.id;
+     if (this.id === id) return;
+     this.id = id;
+     this.error = null;
+     this.story = null;
      try {
        this.story = await fetch("https://hn.algolia.com/api/v1/items/" + id).then(r => r.json());
      } catch(e) {
@@ -86,7 +90,7 @@
      this.story = processItem(this.story);
      if (!this.story.url) this.story.url = `https://news.ycombinator.com/item?id=${this.story.objectID}`;
      this.story.hostname = new URL(this.story.url).hostname.replace(/^(www\.)/, "");
-     this.app.update();
+     this.update();
    }
  });
 </script>
