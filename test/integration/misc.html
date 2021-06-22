@@ -26,6 +26,8 @@
      onRender() { this.values.push("render"); }
      onUpdate() { this.values.push("update"); }
      onRemove() { this.values.push("remove"); }
+
+     onclick(e) { this.click = e; }
    });
 
    t.describe("render child nodes", () => {
@@ -54,6 +56,12 @@
        app.remove();
        t.jsonEqual(app.values, ["init", "render", "update", "render", "remove"]);
      });
+
+     t("should register event handlers", async () => {
+       const app = await mount(document.body, `x-handlers`);
+       app.click();
+       t.equal(app.click.type, "click");
+     })
    });
   </script>
 </body>

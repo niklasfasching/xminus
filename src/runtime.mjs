@@ -109,11 +109,13 @@ export function define(name, c) {
 }
 
 export function register(name, html, f, assignedProps) {
+  const Class = (classes[name] || Component);
+  const handlers = Object.getOwnPropertyNames(Class.prototype).filter(k => k !== "constructor" && k in window);
   const template = document.createElement("template");
   template.innerHTML = `<div class=slot></div>`;
   const slotTemplate = template.content.firstChild;
   template.innerHTML = html;
-  customElements.define(name, class extends (classes[name] || Component) {
+  customElements.define(name, class extends Class {
     static name = name
     init(app, xParent, props) {
       this.xParent = xParent;
@@ -125,6 +127,7 @@ export function register(name, html, f, assignedProps) {
         if (slot) this.slots[slot] = this.removeChild(this.firstChild);
         else this.slots.rest.append(this.firstChild);
       }
+      for (const k of handlers) this.addEventListener(k.slice(2), (e) => void this[k](e));
       for (let k of assignedProps) this[k] = this.props[k];
       this.onInit(this.props);
       this.onRender(this.props);
