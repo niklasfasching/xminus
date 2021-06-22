@@ -14,10 +14,7 @@
          tag,
        ]);
        if (routes) {
-         this.listener = () => {
-           this.route();
-           this.update();
-         };
+         this.listener = () => this.route();
          window.addEventListener("popstate", this.listener);
          this.route();
        }
