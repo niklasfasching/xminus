@@ -79,7 +79,6 @@ img {
     font-size: 0.75em;
 }
 
-
 .info {
     position: absolute;
     bottom: 0;
@@ -125,7 +124,6 @@ a {
 }
 
 x-chart svg {
-    margin-top: 2em;
     display: block;
     width: 100%;
     height: 2em;
@@ -133,7 +131,9 @@ x-chart svg {
 }
 
 x-details {
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
     max-width: 50em;
     margin: 1em auto;
     border-radius: 0.25em;
@@ -147,26 +147,15 @@ x-details img {
 }
 
 x-details .title {
-    margin: 0.5rem 1rem;
     font-size: 1.5em;
     white-space: initial;
 }
 
-x-details .cinema {
-    margin: 0 1rem;
-}
-
-x-details .tags {
-    margin: 1rem 0 0 1rem;
-}
-
 x-details .trailer {
     background-color: orange;
-    margin-left: 1em;
 }
 
 x-details .description {
-    margin: 1rem;
     line-height: 1.5;
 }
 

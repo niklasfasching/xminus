@@ -7,8 +7,7 @@
   "theme_color": "#000",
   "icons": [
     {
-      "src": "icon.svg",
-      "type": "image/svg+xml",
+      "src": "icon.png",
       "sizes": "any"
     }
   ]

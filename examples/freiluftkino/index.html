@@ -51,8 +51,8 @@
         </a>
         <div ..time>{$.show.time}</div>
         <div ..seats>
-          <span ..tag ..available>{$.show.available || 0}</span>
-          <span ..tag ..reserved>{$.show.reserved || 0}</span>
+          <span ..tag ..available>{$.show.available === -1 ? "free" :  $.show.available || 0}</span>
+          <span ..tag ..reserved .if="$.show.available !== -1">{$.show.reserved || 0}</span>
         </div>
         <div ..info>
           <div ..title title="{$.show.title}"><a href="{$.show.url}">{$.show.title}</a></div>
@@ -64,12 +64,25 @@
     <script type="text/x-template" id="x-details" x-props="show history">
       <img src="{$.show.img}">
       <div ..time>{$.show.date} - {$.show.time}</div>
-      <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
-      <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
-      <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"></x-chart>
-      <div ..tags>
-        <span ..tag ..available>{$.show.available || 0}</span>
-        <span ..tag ..reserved>{$.show.reserved || 0}</span>
+      <div ..meta>
+        <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
+        <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
+      </div>
+      <div ..stats>
+        <div><b>Seats</b></div>
+        <small .if="$.show.available === -1">free, open seating</small>
+        <div .if="$.show.available !== -1">
+          <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"/>
+          <span>{($.show.available || 0) + ($.show.reserved || 0)} total</span> |
+          <span>{$.show.available || 0} free</span> |
+          <span>{$.show.reserved || 0} reserved</span>
+        </div>
+
+
+
+
+      </div>
+      <div ..links>
         <a .if="$.show.trailer" ..trailer ..tag href="{$.show.trailer}" target="_blank" rel="noopener">trailer</a>
       </div>
       <div ..description>{$.show.description}</div>
