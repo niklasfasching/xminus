@@ -8,6 +8,7 @@
       <svg class="chart" viewBox="0 0 100 100" role="img" preserveAspectRatio="none">
         <g .for="b of $.bars">
           <rect width="{b.width}" height="{b.height}" x="{b.x}" y="{b.y}" _value="{b}"></rect>
+          <rect fill="none" width="{b.width}" height="{b.y}" x="{b.x}" y="0" _value="{b}"></rect>
         </g>
       </svg>
       <div ..tooltip></div>
@@ -17,11 +18,11 @@
      import {mount, define, Component} from "/src/runtime.mjs";
      define("x-chart", class extends Component {
        onInit() {
-         const formatTooltip = this.props.formatTooltip || ((b) => `(${b.vx.toFixed(1)}, ${b.vy.toFixed(1)})`),
-               tooltip = this.querySelector(".tooltip");
-         this.addEventListener("pointerover", (e) => {
-           if (e.target._value) tooltip.innerText = formatTooltip(e.target._value);
-         });
+         this.formatTooltip = this.props.formatTooltip || ((b) => `(${b.vx.toFixed(1)}, ${b.vy.toFixed(1)})`);
+       }
+
+       onpointerover(e) {
+         this.querySelector(".tooltip").innerText = e.target._value ? this.formatTooltip(e.target._value) : "";
        }
 
        onRender() {
@@ -48,8 +49,18 @@
        position: relative;
      }
 
-     rect:hover {
+     rect {
+       pointer-events: all;
+     }
+
+     g:hover {
        fill: #555;
+       stroke: #fff;
+       stroke-width: 0.1px;
+     }
+
+     rect:hover + rect, rect[fill=none]:hover {
+       fill: #555a;
      }
 
      x-chart:hover .tooltip {
