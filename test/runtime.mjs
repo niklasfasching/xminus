@@ -71,7 +71,7 @@ t.describe("runtime", () => {
       await iframe.contentWindow.xm.ready;
       const p = iframe.contentDocument.querySelector("p"), div = iframe.contentDocument.querySelector("div");
       t.equal(p.innerText, "bar");
-      t.equal(div.innerText, "x-main");
+      t.equal(div.innerText, "true");
     });
 
     t("should respect x-dev templates when loaded", async () => {

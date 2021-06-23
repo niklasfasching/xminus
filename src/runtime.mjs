@@ -116,7 +116,6 @@ export function register(name, html, f, assignedProps) {
   const slotTemplate = template.content.firstChild;
   template.innerHTML = html;
   customElements.define(name, class extends Class {
-    static name = name
     init(app, xParent, props) {
       this.xParent = xParent;
       this.app = app;

@@ -5,7 +5,7 @@
     <script type="x-module" src="./module.html"></script>
     <script type="text/x-template" id="x-main" x-props="foo">
       <p>{$.foo}</p>
-      <div>{$.app.constructor.name}</div>
+      <div>{$.app === $}</div>
     </script>
     <script type="module">
      import {mount} from "/src/runtime.mjs";
