@@ -34,7 +34,10 @@
        this.params = r.exec(path).groups;
        this.query = Object.fromEntries(new URLSearchParams(query).entries());
        this.onUpdate = () => void this.active.update?.(f(this.app));
-       if (this.active && this.active === this.views[tag]) return void this.active.update?.(f(this.app));
+       if (this.active && this.active === this.views[tag]) {
+         window.scrollTo(0, 0);
+         return void this.active.update?.(f(this.app));
+       }
        if (this.active) this.active.style.display = "none";
        if (this.views[tag]) {
          this.active = this.views[tag];
