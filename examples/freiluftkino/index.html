@@ -24,7 +24,7 @@
             <input id="partialTitle"
                    type="text"
                    placeholder="title"
-                   .bind:value="$.app.db.searchTitle"
+                   .bind:value="$.searchTitle"
                    .on:keyup="$.app.update()">
             <select multiple id="cinema"
                     .bind:options="$.app.db.selectedCinemas"
@@ -93,18 +93,18 @@
      define("x-flk", class extends Component {
        async onInit() {
          this.cinemas = Object.keys(this.props.showsByCinema);
+         this.searchTitle = "";
          this.onUpdate();
        }
 
        onUpdate() {
-         const {selectedCinemas, searchTitle, onlyAvailable} = this.app.db;
+         const {selectedCinemas, onlyAvailable} = this.app.db, searchTitle = this.searchTitle || "";
          this.shows = Object.values(this.props.showsByCinema).flat().sort((a, b) => a.timestamp - b.timestamp)
                             .filter(x => {
                               return x.timestamp >= Date.now() &&
                                      x.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
                                      (!Object.keys(selectedCinemas).length || selectedCinemas[x.cinemaName]) &&
-                                     (!onlyAvailable || (x.reserved && x.available))
-
+                                     (!onlyAvailable || x.bookable)
                             })
                             .reduce((g, s) => {
                               (g[s.date] = g[s.date] || []).push(s);
