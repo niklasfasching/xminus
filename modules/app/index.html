@@ -32,6 +32,7 @@
        if (!r) throw new Error(`404 for ${path}: ${JSON.stringify(this.routes)}`);
        this.path = path;
        this.params = r.exec(path).groups;
+       for (const k in this.params) this.params[k] = decodeURIComponent(this.params[k]);
        this.query = Object.fromEntries(new URLSearchParams(query).entries());
        this.onUpdate = () => void this.active.update?.(f(this.app));
        if (this.active && this.active === this.views[tag]) {
@@ -103,6 +104,16 @@
      await new Promise(r => setTimeout(r));
      t.equal(component.active.tagName, "X-CHILD-A");
      t.equal(component.innerText, "whatever");
+   });
+
+   t("should decodeURIcomponent params", async () => {
+     const app = await mount(document.body, "x-app", {routes: {
+       "/": ["hr"],
+       "/{param}": ["hr"],
+     }});
+     location.hash = "/foo: bar/";
+     await new Promise(r => setTimeout(r));
+     t.equal(app.params.param, "foo: bar");
    });
 
    t("should persist db", async () => {
