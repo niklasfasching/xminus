@@ -3,7 +3,7 @@ set -euo pipefail
 
 rm -rf docs
 mkdir docs
-cp -r src examples modules docs/
+cp -r src modules docs/
 
 # github actions sets CI to true
 # We only need to set the base_path to xminus when built for production
@@ -17,13 +17,13 @@ body=""
 
 for dir in $(ls -d examples/*/); do
     name="$(basename $dir)"
-    src="${dir}index.html"
-    dst="docs/examples/${name}/index.html"
-    echo $src $base_path $dst
-    cli/xminus -bp "$base_path" -b "$src" "$dst"
+    index="${name}/index.html"
+    echo $dir $base_path $index
+    cp -r $dir "docs/${name}"
+    (cd docs && ../cli/xminus -bp "$base_path" -b "$index" "$index")
     body="${body}
-      <a href='examples/${name}/'><h1>${name}</h1></a>
-      <iframe src='examples/${name}/'></iframe>"
+      <a href='${name}/'><h1>${name}</h1></a>
+      <iframe src='${name}/'></iframe>"
 done
 
 tee docs/index.html <<EOF
