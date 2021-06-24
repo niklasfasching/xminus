@@ -37,7 +37,7 @@ ul[class], ol[class] {
     --red: hsl(350, 85%, 60%);
 }
 
-textarea, select, input {
+textarea, select, input, button {
     padding: 0.5em;
     background-color: #fff;
     border-radius: 0.25em;

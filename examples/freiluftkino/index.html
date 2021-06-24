@@ -10,7 +10,10 @@
     <script type="x-module" src="/modules/chart/index.html"></script>
     <script type="text/x-template" id="x-flk">
       <nav>
-        <div id="logo">freiluftkino</div>
+        <div ..links>
+          <a href="#/" id="logo">freiluftkino</a>
+          <a href="#/favorites">favs</a>
+        </div>
         <details>
           <summary>filters</summary>
           <div #settings>
@@ -62,8 +65,16 @@
     </script>
 
     <script type="text/x-template" id="x-details" x-props="show history">
-      <img src="{$.show.img}">
-      <div ..time>{$.show.date} - {$.show.time}</div>
+      <div ..cover>
+        <img src="{$.show.img}">
+        <div ..time>{$.show.date} - {$.show.time}</div>
+        <div ..actions>
+          <button ..favorite ..tag .on:click="$.toggleFavorite()">
+            {$.favorited ? "remove" : "save"}
+          </button>
+        </div>
+      </div>
+
       <div ..meta>
         <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
         <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
@@ -107,7 +118,8 @@
                               return x.timestamp >= Date.now() &&
                                      x.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
                                      (!Object.keys(selectedCinemas).length || selectedCinemas[x.cinemaName]) &&
-                                     (!onlyAvailable || x.bookable)
+                                     (!onlyAvailable || x.bookable) &&
+                                     (location.hash !== "#/favorites" || this.app.db.favorites?.includes(x.id))
                             })
                             .reduce((g, s) => {
                               (g[s.date] = g[s.date] || []).push(s);
@@ -132,6 +144,16 @@
          });
        }
 
+       toggleFavorite() {
+         this.app.db.favorites = (this.app.db.favorites || []);
+         if (this.favorited) this.app.db.favorites = this.app.db.favorites.filter(x => x !== this.show.id);
+         else this.app.db.favorites.push(this.show.id);
+       }
+
+       get favorited() {
+         return this.app.db.favorites?.includes(this.show.id);
+       }
+
        formatTooltip({vx, vy}) {
          return `${new Date(vx).toLocaleDateString("de").split(".").slice(0, 2).join(".")}. | ${vy.toFixed()} free`;
        }
@@ -143,6 +165,7 @@
        window.app = await mount(document.body, "x-app", {
          routes: {
            "/": ["x-flk", () => ({shows, history})],
+           "/favorites": ["x-flk", () => ({shows, history})],
            "/show/{id}": ["x-details", (app) => {
              const show = shows[app.params.id];
              return {shows, show, history: history[show?.url]};
