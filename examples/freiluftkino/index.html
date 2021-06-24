@@ -95,14 +95,14 @@
 
      define("x-flk", class extends Component {
        async onInit() {
-         this.cinemas = Object.keys(this.props.showsByCinema);
+         this.cinemas = [...new Set(Object.values(this.props.shows).map(x => x.cinemaName))];
          this.searchTitle = "";
          this.onUpdate();
        }
 
        onUpdate() {
          const {selectedCinemas, onlyAvailable} = this.app.db, searchTitle = this.searchTitle || "";
-         this.shows = Object.values(this.props.showsByCinema).flat().sort((a, b) => a.timestamp - b.timestamp)
+         this.shows = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp)
                             .filter(x => {
                               return x.timestamp >= Date.now() &&
                                      x.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
@@ -138,19 +138,14 @@
      });
 
      (async () => {
-       const showsByCinema = await fetch("https://niklasfasching.github.io/freiluftkino/showsByCinema.json").then(r => r.json());
-       const showHistory = await fetch("https://niklasfasching.github.io/freiluftkino/showHistory.json").then(r => r.json());
+       const shows = await fetch("https://niklasfasching.github.io/freiluftkino/shows.json").then(r => r.json());
+       const history = await fetch("https://niklasfasching.github.io/freiluftkino/history.json").then(r => r.json());
        window.app = await mount(document.body, "x-app", {
          routes: {
-           "/": ["x-flk", () => ({showsByCinema, showHistory})],
+           "/": ["x-flk", () => ({shows, history})],
            "/show/{id}": ["x-details", (app) => {
-             const shows = Object.values(showsByCinema).flat().reduce((xs, x) => Object.assign(xs, {[x.id]: x}), {});
              const show = shows[app.params.id];
-             return {
-               show,
-               shows,
-               history: showHistory[show?.url],
-             };
+             return {shows, show, history: history[show?.url]};
            }],
          },
          db: {
