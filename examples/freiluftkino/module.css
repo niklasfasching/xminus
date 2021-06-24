@@ -11,16 +11,18 @@ nav {
 nav .links{
     display: flex;
     justify-content: space-between;
+    font-size: 2em;
+}
+
+nav details summary {
+    font-size: 1.5em;
+    margin-top: 1em;
 }
 
 #settings {
     display: flex;
     flex-direction: column;
     gap: 0.5em;
-}
-
-#logo {
-    font-size: 2em;
 }
 
 .days {
