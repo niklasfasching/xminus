@@ -52,7 +52,7 @@ x-show {
     overflow: hidden;
 }
 
-x-show .cover:not(.bookable) {
+.cover:not(.bookable) {
     filter: grayscale(1) opacity(0.5);
 }
 

@@ -65,7 +65,7 @@
     </script>
 
     <script type="text/x-template" id="x-details" x-props="show history">
-      <div ..cover>
+      <div ..cover ..bookable="$.show.bookable">
         <img src="{$.show.img}">
         <div ..time>{$.show.date} - {$.show.time}</div>
         <div ..actions>
