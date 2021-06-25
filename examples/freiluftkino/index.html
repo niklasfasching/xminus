@@ -93,7 +93,6 @@
         <small .if="$.show.available === -1">free, open seating</small>
         <div .if="$.show.available !== -1">
           <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"/>
-          <span>{($.show.available || 0) + ($.show.reserved || 0)} total</span> |
           <span>{$.show.available || 0} free</span> |
           <span>{$.show.reserved || 0} reserved</span>
         </div>
@@ -168,7 +167,9 @@
        }
 
        formatTooltip({vx, vy}) {
-         return `${new Date(vx).toLocaleDateString("de").split(".").slice(0, 2).join(".")}. | ${vy.toFixed()} free`;
+         const date = new Date(vx).toLocaleDateString("de").slice(0, -5);
+         const time = new Date(vx).toLocaleTimeString("de").slice(0, -3);
+         return `${date} ${time} | ${vy.toFixed()} free`;
        }
      });
 
