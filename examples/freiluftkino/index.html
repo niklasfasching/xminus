@@ -83,29 +83,30 @@
           </div>
         </div>
       </div>
-
-      <div ..meta>
-        <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
-        <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
-      </div>
-      <div ..stats>
-        <div><b>Seats</b></div>
-        <small .if="$.show.available === -1">free, open seating</small>
-        <div .if="$.show.available !== -1">
-          <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"/>
-          <span>{$.show.available || 0} free</span> |
-          <span>{$.show.reserved || 0} reserved</span>
+      <div ..content>
+        <div ..meta>
+          <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
+          <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
         </div>
-      </div>
-      <div ..links>
-        <a .if="$.show.trailer" ..trailer ..tag href="{$.show.trailer}" target="_blank" rel="noopener">trailer</a>
-      </div>
-      <div ..description>{$.show.description}</div>
-      <div ..alternatives .if="$.alternatives.length">
-        <h3>Alternatives</h3>
-        <div .for="show of $.alternatives">
-          <h4><a href="#/show/{show.id}">{show.title}</a></h4>
-          {show.date.replaceAll(",", "")} <small><a href="{show.cinemaUrl}">{show.cinemaShortName}</a></small><br>
+        <div ..stats>
+          <div><b>Seats</b></div>
+          <small .if="$.show.available === -1">free, open seating</small>
+          <div .if="$.show.available !== -1">
+            <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"/>
+            <span>{$.show.available || 0} free</span> |
+            <span>{$.show.reserved || 0} reserved</span>
+          </div>
+        </div>
+        <div ..links>
+          <a .if="$.show.trailer" ..trailer ..tag href="{$.show.trailer}" target="_blank" rel="noopener">trailer</a>
+        </div>
+        <div ..description>{$.show.description}</div>
+        <div ..alternatives .if="$.alternatives.length">
+          <h3>Alternatives</h3>
+          <div ..alternative ..cinema-selected="$.app.db.selectedCinemas[show.cinemaName]" .for="show of $.alternatives">
+            <h4><a href="#/show/{show.id}">{show.title}</a></h4>
+            {show.date.replaceAll(",", "")} <small><a href="{show.cinemaUrl}">{show.cinemaShortName}</a></small><br>
+          </div>
         </div>
       </div>
     </script>
@@ -147,7 +148,7 @@
            values: this.history,
          };
          const key = ({title}) => title.toLowerCase().replace(/\(.*\)|-.*?film preview|open air:/g, "").trim();
-         this.alternatives = Object.values(this.props.shows).filter((show) => {
+         this.alternatives = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp).filter((show) => {
            return key(this.show) === key(show) && this.show !== show;
          });
        }

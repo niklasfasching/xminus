@@ -152,13 +152,22 @@ x-details img {
     object-fit: cover;
 }
 
+
+x-details .content {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    margin: 1em;
+}
+
 x-details .title {
     font-size: 1.5em;
     white-space: initial;
 }
 
 x-details .trailer {
-    background-color: orange;
+    border: 0.1em solid #fff;
+    color: #fff;
 }
 
 x-details .cover {
@@ -189,6 +198,10 @@ x-details .icon-share {
     right: 0;
     padding: 0.5em;
     font-size: 1.5em;
+}
+
+x-details .alternative:not(.cinema-selected) {
+    color: #888;
 }
 
 @media (min-device-width: 768px) {
