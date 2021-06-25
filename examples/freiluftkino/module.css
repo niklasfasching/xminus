@@ -4,7 +4,6 @@ html {
 }
 
 nav {
-    margin-bottom: 1em;
     padding: 0.5em;
 }
 
@@ -142,7 +141,7 @@ x-details {
     flex-direction: column;
     gap: 1em;
     max-width: 50em;
-    margin: 1em auto;
+    margin: 0 auto;
     border-radius: 0.25em;
     overflow: hidden;
 }
@@ -182,6 +181,14 @@ x-details .favorite {
 
 x-details .description {
     line-height: 1.5;
+}
+
+x-details .icon-share {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.5em;
+    font-size: 1.5em;
 }
 
 @media (min-device-width: 768px) {

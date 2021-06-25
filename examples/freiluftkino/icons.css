@@ -1,0 +1,17 @@
+/* https://boxicons.com */
+/* https://github.com/atisawd/boxicons/blob/master/css/boxicons.css */
+@font-face {
+    font-family: "boxicons";
+    font-weight: normal;
+    font-style: normal;
+    src: url('https://unpkg.com/boxicons@latest/fonts/boxicons.ttf');
+}
+
+:where(i[class*="icon-"]) {
+    display: inline-block;
+    font: 100%/1 "boxicons";
+}
+
+.icon-share:before {
+    content: "\eb60";
+}
