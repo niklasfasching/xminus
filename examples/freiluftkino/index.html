@@ -13,7 +13,10 @@
       <nav>
         <div ..links>
           <a href="#/" id="logo">freiluftkino</a>
-          <a href="#/favorites">favs</a>
+          <div ..other>
+            <a href="#/hidden">hidden ({Object.keys($.app.db.hiddenMovies || {}).length})</a> |
+            <a href="#/favorites">saved ({Object.keys($.app.db.favoriteShows || {}).length})</a>
+          </div>
         </div>
         <details>
           <summary>filters</summary>
@@ -70,6 +73,10 @@
         <nav>
           <div ..links>
             <a href="#/" id="logo">freiluftkino</a>
+            <div ..other>
+              <a href="#/hidden">hidden ({Object.keys($.app.db.hiddenMovies || {}).length})</a> |
+              <a href="#/favorites">saved ({Object.keys($.app.db.favoriteShows || {}).length})</a>
+            </div>
           </div>
         </nav>
         <div ..cover ..bookable="$.show.bookable">
@@ -77,8 +84,11 @@
           <div ..time>{$.show.date} - {$.show.time}</div>
           <i ..icon-share .on:click="{$.onShare()}" />
           <div ..actions>
-            <button ..favorite ..tag .on:click="$.toggleFavorite()">
+            <button ..favorite ..favorited="$.favorited" .on:click="$.toggleFavorite()">
               {$.favorited ? "remove" : "save"}
+            </button>
+            <button ..hide ..hidden="$.hidden" .on:click="$.toggleHideMovie()">
+              {$.hidden ? "unhide movie" : "hide movie"}
             </button>
           </div>
         </div>
@@ -113,6 +123,8 @@
     <script type="module">
      import {mount, define, Component} from "/src/runtime.mjs";
 
+     window.onerror = function(message, source, lineno, colno, error) { };
+
      define("x-flk", class extends Component {
        async onInit() {
          this.cinemas = [...new Set(Object.values(this.props.shows).map(x => x.cinemaName))];
@@ -121,14 +133,15 @@
        }
 
        onUpdate() {
-         const {selectedCinemas, onlyAvailable} = this.app.db, searchTitle = this.searchTitle || "";
+         const {selectedCinemas, favoriteShows, hiddenMovies, onlyAvailable} = this.app.db, searchTitle = this.searchTitle || "";
          this.shows = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp)
                             .filter(x => {
                               return x.timestamp >= Date.now() &&
                                      x.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
                                      (!Object.keys(selectedCinemas).length || selectedCinemas[x.cinemaName]) &&
                                      (!onlyAvailable || x.bookable) &&
-                                     (location.hash !== "#/favorites" || this.app.db.favorites?.includes(x.id))
+                                     (location.hash !== "#/favorites" || favoriteShows?.[x.id]) &&
+                                     (location.hash !== "#/hidden" ? !hiddenMovies?.[x.key] : hiddenMovies?.[x.key])
                             })
                             .reduce((g, s) => {
                               (g[s.date] = g[s.date] || []).push(s);
@@ -147,9 +160,9 @@
            yMax: Math.max(...this.history.map(([x, y]) => y)),
            values: this.history,
          };
-         const key = ({title}) => title.toLowerCase().replace(/\(.*\)|-.*?film preview|open air:/g, "").trim();
+
          this.alternatives = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp).filter((show) => {
-           return key(this.show) === key(show) && this.show !== show;
+           return this.show.key === show.key && this.show !== show;
          });
        }
 
@@ -158,13 +171,23 @@
        }
 
        toggleFavorite() {
-         this.app.db.favorites = (this.app.db.favorites || []);
-         if (this.favorited) this.app.db.favorites = this.app.db.favorites.filter(x => x !== this.show.id);
-         else this.app.db.favorites.push(this.show.id);
+         this.app.db.favoriteShows = (this.app.db.favoriteShows || {});
+         if (this.favorited) delete this.app.db.favoriteShows[this.show.id];
+         else this.app.db.favoriteShows[this.show.id] = true;
+       }
+
+       toggleHideMovie() {
+         this.app.db.hiddenMovies = (this.app.db.hiddenMovies || {});
+         if (this.hidden) delete this.app.db.hiddenMovies[this.show.key];
+         else this.app.db.hiddenMovies[this.show.key] = true;
+       }
+
+       get hidden() {
+         return this.app.db.hiddenMovies?.[this.show.key];
        }
 
        get favorited() {
-         return this.app.db.favorites?.includes(this.show.id);
+         return this.app.db.favoriteShows?.[this.show.id];
        }
 
        formatTooltip({vx, vy}) {
@@ -176,11 +199,16 @@
 
      (async () => {
        const shows = await fetch("https://niklasfasching.github.io/freiluftkino/shows.json").then(r => r.json());
+       for (const id in shows) {
+         shows[id].key = shows[id].title.toLowerCase().replace(/\(.*\)|-.*?film preview|open air:/g, "").trim();
+       }
+
        const history = await fetch("https://niklasfasching.github.io/freiluftkino/history.json").then(r => r.json());
        window.app = await mount(document.body, "x-app", {
          routes: {
            "/": ["x-flk", () => ({shows, history})],
            "/favorites": ["x-flk", () => ({shows, history})],
+           "/hidden": ["x-flk", () => ({shows, history})],
            "/show/{id}": ["x-details", (app) => {
              const show = shows[app.params.id];
              return {shows, show, history: history[show?.url]};

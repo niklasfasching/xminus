@@ -10,6 +10,9 @@ nav {
 nav .links{
     display: flex;
     justify-content: space-between;
+}
+
+nav #logo {
     font-size: 2em;
 }
 
@@ -182,10 +185,17 @@ x-details .actions {
     background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
 }
 
-x-details .favorite {
+x-details .actions button {
+    font-size: 1.5em;
+    font-weight: bold;
     color: white;
     background: none;
     border: none;
+}
+
+x-details .hide {
+    position: absolute;
+    right: 0;
 }
 
 x-details .description {
