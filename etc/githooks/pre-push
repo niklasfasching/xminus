@@ -3,4 +3,4 @@
 dirty="$(git status --porcelain)"
 git stash --include-untracked --quiet
 trap "if [[ -n '$dirty' ]]; then git stash pop --quiet; fi" EXIT
-make test
+CI=true make test
