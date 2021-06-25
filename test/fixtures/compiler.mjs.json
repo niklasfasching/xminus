@@ -289,13 +289,13 @@
   "compiler: generateVnode: macro: should generate conditional .class macro (0)": {
     "html": "<div></div>",
     "create": [
-      "root.classList.toggle(\"conditional\", $.condition);",
-      "root.classList.toggle(($.conditionalClass), $.condition);",
+      "root.classList.toggle(\"conditional\", !!($.condition));",
+      "root.classList.toggle(($.conditionalClass), !!($.condition));",
       ""
     ],
     "update": [
-      "root.classList.toggle(\"conditional\", $.condition);",
-      "root.classList.toggle(($.conditionalClass), $.condition);",
+      "root.classList.toggle(\"conditional\", !!($.condition));",
+      "root.classList.toggle(($.conditionalClass), !!($.condition));",
       ""
     ]
   },

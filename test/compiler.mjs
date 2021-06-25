@@ -254,6 +254,14 @@ t.describe("compiler", () => {
       t.assert(!xSelect.querySelectorAll("option")[2].selected);
     });
 
+    t("should support conditional class macro", () => {
+      eval(compiler.compile("x-class", `<element></element>`));
+      const [component, update] = render({}, `<x-class ..bar="$.props.bar"/>`);
+      t.equal(component.innerHTML, `<x-class></x-class>`);
+      update({bar: 1});
+      t.equal(component.innerHTML, `<x-class class="bar"></x-class>`);
+    });
+
     t("should update dynamic component tags");
   });
 
