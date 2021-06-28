@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="/src/base.css" rel="stylesheet"/>
     <link href="module.css" rel="stylesheet"/>
-    <link href="icons.css" rel="stylesheet"/>
     <script type="x-module" src="/modules/app/index.html"></script>
     <script type="x-module" src="/modules/chart/index.html"></script>
+    <script type="x-module" src="/modules/icon/index.html"></script>
     <script type="text/x-template" id="x-flk">
       <nav>
         <div ..links>
@@ -82,7 +82,7 @@
         <div ..cover ..bookable="$.show.bookable">
           <img src="{$.show.img}">
           <div ..time>{$.show.date} - {$.show.time}</div>
-          <i ..icon-share .on:click="{$.onShare()}" />
+          <x-icon-share .on:click="{$.onShare()}"/>
           <div ..actions>
             <button ..favorite ..favorited="$.favorited" .on:click="$.toggleFavorite()">
               {$.favorited ? "remove" : "save"}

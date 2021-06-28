@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>icon</title>
+    <meta name="viewport" content="width=device-width">
+
+    <script type="text/x-template" id="x-icon-heart">
+      <svg viewBox="0 0 24 24" ..icon>
+        <path d="M 12 22
+                 l 9 -10
+                 A 5 5 0 1 0 12 7
+                 A 5 5 0 1 0 3 12
+                 z"/>
+      </svg>
+    </script>
+
+    <script type="text/x-template" id="x-icon-share">
+      <svg viewBox="0 0 24 24" ..icon>
+        <circle cx="5" cy="12" r="2.5"/>
+        <circle cx="19" cy="5" r="2.5"/>
+        <circle cx="19" cy="19" r="2.5"/>
+        <polyline points="7.5 11, 16.5 6"/>
+        <polyline points="7.5 13, 16.5 18" />
+      </svg>
+    </script>
+
+    <script type="text/x-template" id="x-icon-search">
+      <svg viewBox="0 0 24 24" ..icon>
+        <circle cx="9" cy="9" r="6.5"/>
+        <polyline points="14 14, 20 20"/>
+      </svg>
+    </script>
+
+    <script type="text/x-template" id="x-icon-x">
+      <svg viewBox="0 0 24 24" ..icon>
+        <polyline points="5 5, 19 19"/>
+        <polyline points="19 5, 5 19"/>
+      </svg>
+    </script>
+
+    <script type="text/x-template" id="x-icon-star">
+      <svg viewBox="0 -1 24 24" ..icon>
+        <polyline points="21.5 8.9, 16.8 13.5, 17.9 20.1, 12.0 17.0, 6.1 20.1, 7.2 13.5, 2.5 8.9, 9.1 8.0, 12.0 2.0, 14.9 8.0, 21.5 8.9, 16.8 13.5"/>
+      </svg>
+    </script>
+
+    <script type="text/x-template" id="x-icon-more">
+      <svg viewBox="0 0 24 24" ..icon>
+        <circle cx="12" cy="6" r="0.5"/>
+        <circle cx="12" cy="12" r="0.5"/>
+        <circle cx="12" cy="18" r="0.5"/>
+      </svg>
+    </script>
+
+    <script type="text/x-template" id="x-icon-menu">
+      <svg viewBox="0 0 24 24" ..icon>
+        <polyline points="4 6, 20 6"/>
+        <polyline points="4 12, 20 12"/>
+        <polyline points="4 18, 20 18"/>
+      </svg>
+    </script>
+
+    <script type="text/x-template" id="x-icon-visibility">
+      <svg viewBox="0 0 24 24" ..icon>
+        <path d="M 2 12
+                 C 8 2 16 2 22 12
+                 C 16 22 8 22 2 12
+                 z"/>
+        <circle cx="12" cy="12" r="2" fill="currentColor"/>
+        <polyline .if="$.props.hidden" points="4 4, 20 20"/>
+      </svg>
+    </script>
+    <style>
+     :where(.icon) {
+       height: 1em;
+       width: 1em;
+       stroke: currentColor;
+       stroke-width: 2;
+       stroke-linejoin: round;
+       fill: none;
+     }
+
+     :where(x-icon-more .icon) {
+       fill: currentColor;
+     }
+    </style>
+  </head>
+
+  <body x-dev>
+    <script type="module">
+     import "/src/runtime.mjs";
+
+     function starPoints(cx, cy, rOuter, rInner, n = 5) {
+       let points = "", add = (deg, r) => {
+         const rad = deg * (Math.PI/180);
+         const x = cx + r * Math.cos(rad), y = cy + r * Math.sin(rad);
+         points += `${x.toFixed(1)} ${y.toFixed(1)}, `;
+       };
+       for (let deg = -360/n/4; deg <= 360; deg += 360/n) {
+         add(deg, rOuter);
+         add(deg + 360/n/2, rInner);
+       }
+       console.log(points)
+     }
+     // starPoints(12, 12, 10, 5, 5);
+    </script>
+    <style>
+     .icons {
+       display: flex;
+       flex-wrap: wrap;
+       gap: 1em;
+     }
+     .icon {
+       border: 1px solid #ccc;
+       font-size: 10em;
+     }
+
+     .icon:hover {
+       fill: currentColor;
+     }
+    </style>
+    <script type="text/x-mount">
+      <div ..icons>
+        <x-icon-heart/>
+        <x-icon-share/>
+        <x-icon-search/>
+        <x-icon-more/>
+        <x-icon-menu/>
+        <x-icon-x/>
+        <x-icon-star/>
+        <x-icon-visibility/>
+        <x-icon-visibility hidden></x-icon-visibility>
+      </div>
+    </script>
+  </body>
+</html>
