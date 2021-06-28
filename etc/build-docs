@@ -4,7 +4,7 @@ set -euo pipefail
 rm -rf docs
 mkdir docs
 echo www.guckschnell.de > docs/CNAME
-cp -r src modules docs/
+cp -r src modules examples docs/
 
 body=""
 
