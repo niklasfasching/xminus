@@ -276,7 +276,7 @@
   "compiler: generateVnode: macro: should generate .inject macro (0)": {
     "html": "<div></div>",
     "create": [
-      "$[\"x\"] = $.xParent.closest(\"x-component\");",
+      "$[\"x\"] = xm.inject($, \"X-COMPONENT\");",
       ""
     ],
     "update": ""

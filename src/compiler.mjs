@@ -56,7 +56,7 @@ function idMacro(vnode, $, key, value) {
 
 function injectMacro(vnode, $, key, value) {
   const [_, selector] = key.split(":");
-  $.create += `$["${value}"] = $.xParent.closest("${selector}");\n`;
+  $.create += `$["${value}"] = xm.inject($, "${selector.toUpperCase()}");\n`;
   generateVnode(vnode, $);
 }
 

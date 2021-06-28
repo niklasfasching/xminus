@@ -6,6 +6,7 @@ export const symbols = {
   updateChildNode: Symbol("updateChildNode"),
   updateIfNode: Symbol("updateIfNode"),
   updateComponent: Symbol("updateComponent"),
+  parentComponent: Symbol("parentComponent"),
 };
 
 export const ready = init();
@@ -98,6 +99,12 @@ export async function mount(parentNode, name, props = {}) {
   return parentNode.appendChild(app);
 }
 
+export function inject(component, tag) {
+  const parent = component[symbols.parentComponent];
+  if (parent && parent.tagName === tag) return parent;
+  else if (parent) return inject(parent, tag);
+}
+
 export function fragment(html, inSVG) {
   compilerTemplate.innerHTML = inSVG ? `<svg>${html}</svg>` : html;
   return document.importNode(inSVG ? compilerTemplate.content.firstChild : compilerTemplate.content, true);
@@ -116,8 +123,8 @@ export function register(name, html, f, assignedProps) {
   const slotTemplate = template.content.firstChild;
   template.innerHTML = html;
   customElements.define(name, class extends Class {
-    init(app, xParent, props) {
-      this.xParent = xParent;
+    init(app, parent, props) {
+      this[symbols.parentComponent] = parent;
       this.app = app;
       this.props = props;
       this.slots = {rest: slotTemplate.cloneNode(true)};
