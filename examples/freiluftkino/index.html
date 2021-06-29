@@ -7,224 +7,93 @@
     <link href="/src/base.css" rel="stylesheet"/>
     <link href="module.css" rel="stylesheet"/>
     <script type="x-module" src="/modules/app/index.html"></script>
-    <script type="x-module" src="/modules/chart/index.html"></script>
-    <script type="x-module" src="/modules/icon/index.html"></script>
-    <script type="text/x-template" id="x-flk">
-      <nav>
-        <div ..links>
-          <a href="#/" id="logo">freiluftkino</a>
-          <div ..other>
-            <a href="#/hidden">hidden ({Object.keys($.app.db.hiddenMovies || {}).length})</a> |
-            <a href="#/favorites">saved ({Object.keys($.app.db.favoriteShows || {}).length})</a>
-          </div>
-        </div>
-        <details>
-          <summary>filters</summary>
-          <div #settings>
-            <div>
-              <input id="onlyAvailable"
-                     type="checkbox"
-                     .bind:checked="$.app.db.onlyAvailable"
-                     .on:change="$.app.update()">
-              <label for="onlyAvailable">only available</label>
-            </div>
-            <input id="partialTitle"
-                   type="text"
-                   placeholder="title"
-                   .bind:value="$.searchTitle"
-                   .on:keyup="$.app.update()">
-            <select multiple id="cinema"
-                    .bind:options="$.app.db.selectedCinemas"
-                    .on:change:no="$.app.update()">
-              <option .for="value of $.cinemas">{value}</option>
-            </select>
-          </div>
-        </details>
-      </nav>
-      <div ..days>
-        <div ..day .for="[day, shows] in $.shows">
-          <div ..date>{day.slice(0, -1)}</div>
-          <div ..shows>
-            <x-show show={show} .for="show of shows"/>
-          </div>
+    <script type="x-module" src="list.html"></script>
+    <script type="x-module" src="details.html"></script>
+    <script type="text/x-template" id="x-nav">
+      <div ..links>
+        <a href="#/" id="logo">freiluftkino</a>
+        <div ..other>
+          <a href="#/hidden">hidden ({Object.keys($.app.db.hiddenMovies || {}).length})</a> |
+          <a href="#/favorites">saved ({Object.keys($.app.db.favoriteShows || {}).length})</a>
         </div>
       </div>
+      <details>
+        <summary>filters</summary>
+        <div #settings>
+          <div>
+            <input id="onlyAvailable"
+                   type="checkbox"
+                   .bind:checked="$.app.db.onlyAvailable"
+                   .on:change="$.app.update()">
+            <label for="onlyAvailable">only available</label>
+          </div>
+          <input id="partialTitle"
+                 type="text"
+                 placeholder="title"
+                 .bind:value="$.app.searchTitle"
+                 .on:keyup="$.app.update()">
+          <select multiple id="cinema"
+                  .bind:options="$.app.db.selectedCinemas"
+                  .on:change:no="$.app.update()">
+            <option .for="value of $.app.props.cinemas">{value}</option>
+          </select>
+        </div>
+      </details>
     </script>
 
-    <script type="text/x-template" id="x-show" x-props="show">
-      <div ..cover ..bookable="$.show.bookable">
-        <a href="#/show/{$.show.id}">
-          <img src="{$.show.img}" loading="lazy">
-        </a>
-        <div ..time>{$.show.time}</div>
-        <div ..seats>
-          <span ..tag ..available>{$.show.available === -1 ? "free" :  $.show.available || 0}</span>
-          <span ..tag ..reserved .if="$.show.available !== -1">{$.show.reserved || 0}</span>
-        </div>
-        <div ..info>
-          <div ..title title="{$.show.title}"><a href="{$.show.url}">{$.show.title}</a></div>
-          <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
-        </div>
-      </div>
-    </script>
+    <style>
+     x-nav {
+       padding: 0.5em;
+     }
 
-    <script type="text/x-template" id="x-details" x-props="show history">
-      <div>
-        <nav>
-          <div ..links>
-            <a href="#/" id="logo">freiluftkino</a>
-            <div ..other>
-              <a href="#/hidden">hidden ({Object.keys($.app.db.hiddenMovies || {}).length})</a> |
-              <a href="#/favorites">saved ({Object.keys($.app.db.favoriteShows || {}).length})</a>
-            </div>
-          </div>
-        </nav>
-        <div ..cover ..bookable="$.show.bookable">
-          <img src="{$.show.img}">
-          <div ..time>{$.show.date} - {$.show.time}</div>
-          <x-icon-share .on:click="{$.onShare()}"/>
-          <div ..actions>
-            <button ..favorite ..favorited="$.favorited" .on:click="$.toggleFavorite()">
-              {$.favorited ? "remove" : "save"}
-            </button>
-            <button ..hide ..hidden="$.hidden" .on:click="$.toggleHideMovie()">
-              {$.hidden ? "unhide movie" : "hide movie"}
-            </button>
-          </div>
-        </div>
-      </div>
-      <div ..content>
-        <div ..meta>
-          <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
-          <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
-        </div>
-        <div ..stats>
-          <div><b>Seats</b></div>
-          <small .if="$.show.available === -1">free, open seating</small>
-          <div .if="$.show.available !== -1">
-            <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"/>
-            <span>{$.show.available || 0} free</span> |
-            <span>{$.show.reserved || 0} reserved</span>
-          </div>
-        </div>
-        <div ..links>
-          <a .if="$.show.trailer" ..trailer ..tag href="{$.show.trailer}" target="_blank" rel="noopener">trailer</a>
-        </div>
-        <div ..description>{$.show.description}</div>
-        <div ..alternatives .if="$.alternatives.length">
-          <h3>Alternatives</h3>
-          <div ..alternative ..cinema-selected="$.app.db.selectedCinemas[show.cinemaName]" .for="show of $.alternatives">
-            <h4><a href="#/show/{show.id}">{show.title}</a></h4>
-            {show.date.replaceAll(",", "")} <small><a href="{show.cinemaUrl}">{show.cinemaShortName}</a></small><br>
-          </div>
-        </div>
-      </div>
-    </script>
+     x-nav .links{
+       display: flex;
+       justify-content: space-between;
+     }
+
+     x-nav #logo {
+       font-size: 2em;
+     }
+
+     x-nav details summary {
+       font-size: 1.5em;
+       margin-top: 1em;
+     }
+
+     x-nav #settings {
+       display: flex;
+       flex-direction: column;
+       gap: 0.5em;
+     }
+    </style>
+
     <script type="module">
-     import {mount, define, Component} from "/src/runtime.mjs";
-
-     window.onerror = function(message, source, lineno, colno, error) { };
-
-     define("x-flk", class extends Component {
-       async onInit() {
-         this.cinemas = [...new Set(Object.values(this.props.shows).map(x => x.cinemaName))];
-         this.searchTitle = "";
-         this.onUpdate();
-       }
-
-       onUpdate() {
-         const {selectedCinemas, favoriteShows, hiddenMovies, onlyAvailable} = this.app.db, searchTitle = this.searchTitle || "";
-         this.shows = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp)
-                            .filter(x => {
-                              return x.timestamp >= Date.now() &&
-                                     x.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
-                                     (!Object.keys(selectedCinemas).length || selectedCinemas[x.cinemaName]) &&
-                                     (!onlyAvailable || x.bookable) &&
-                                     (location.hash !== "#/favorites" || favoriteShows?.[x.id]) &&
-                                     (location.hash !== "#/hidden" ? !hiddenMovies?.[x.key] : hiddenMovies?.[x.key])
-                            })
-                            .reduce((g, s) => {
-                              (g[s.date] = g[s.date] || []).push(s);
-                              g[s.date] = g[s.date].sort((x, y) => x.time > y.time);
-                              return g;
-                            }, {});
-       }
-     });
-
-     define("x-details", class extends Component {
-       onRender() {
-         this.chart = {
-           xMin: this.history[0]?.[0] || 0,
-           xMax: Date.now(),
-           yMin: 0,
-           yMax: Math.max(...this.history.map(([x, y]) => y)),
-           values: this.history,
-         };
-
-         this.alternatives = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp).filter((show) => {
-           return this.show.key === show.key && this.show !== show;
-         });
-       }
-
-       onShare() {
-         return navigator.share({title: this.show.title, url: location.href});
-       }
-
-       toggleFavorite() {
-         this.app.db.favoriteShows = (this.app.db.favoriteShows || {});
-         if (this.favorited) delete this.app.db.favoriteShows[this.show.id];
-         else this.app.db.favoriteShows[this.show.id] = true;
-       }
-
-       toggleHideMovie() {
-         this.app.db.hiddenMovies = (this.app.db.hiddenMovies || {});
-         if (this.hidden) delete this.app.db.hiddenMovies[this.show.key];
-         else this.app.db.hiddenMovies[this.show.key] = true;
-       }
-
-       get hidden() {
-         return this.app.db.hiddenMovies?.[this.show.key];
-       }
-
-       get favorited() {
-         return this.app.db.favoriteShows?.[this.show.id];
-       }
-
-       formatTooltip({vx, vy}) {
-         const date = new Date(vx).toLocaleDateString("de").slice(0, -5);
-         const time = new Date(vx).toLocaleTimeString("de").slice(0, -3);
-         return `${date} ${time} | ${vy.toFixed()} free`;
-       }
-     });
-
+     import {mount} from "/src/runtime.mjs";
      (async () => {
+       const history = await fetch("https://niklasfasching.github.io/freiluftkino/history.json").then(r => r.json());
        const shows = await fetch("https://niklasfasching.github.io/freiluftkino/shows.json").then(r => r.json());
        for (const id in shows) {
          shows[id].key = shows[id].title.toLowerCase().replace(/\(.*\)|-.*?film preview|open air:/g, "").trim();
        }
-
-       const history = await fetch("https://niklasfasching.github.io/freiluftkino/history.json").then(r => r.json());
-       window.app = await mount(document.body, "x-app", {
+       await mount(document.body, "x-app", {
+         header: "x-nav",
          routes: {
-           "/": ["x-flk", () => ({shows, history})],
-           "/favorites": ["x-flk", () => ({shows, history})],
-           "/hidden": ["x-flk", () => ({shows, history})],
+           "/": ["x-list", () => ({shows, history})],
+           "/favorites": ["x-list", () => ({shows, history})],
+           "/hidden": ["x-list", () => ({shows, history})],
            "/show/{id}": ["x-details", (app) => {
              const show = shows[app.params.id];
              return {shows, show, history: history[show?.url]};
            }],
          },
+         cinemas: [...new Set(Object.values(shows).map(x => x.cinemaName))],
          db: {
            searchTitle: "",
            selectedCinemas: {},
            onlyAvailable: false,
          },
        });
-     })()
+     })();
     </script>
   </head>
-  <style>
-
-  </style>
-  <body></body>
 </html>
