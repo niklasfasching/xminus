@@ -27,13 +27,15 @@
                    .on:change="$.app.update()">
             <label for="onlyAvailable">only available</label>
           </div>
+          <label for="partialTitle">title</label>
           <input id="partialTitle"
                  type="text"
                  placeholder="title"
                  .bind:value="$.app.searchTitle"
                  .on:keyup="$.app.update()">
+          <label for="cinema">excluded cinemas</label>
           <select multiple id="cinema"
-                  .bind:options="$.app.db.selectedCinemas"
+                  .bind:options="$.app.db.excludedCinemas"
                   .on:change:no="$.app.update()">
             <option .for="value of $.app.props.cinemas">{value}</option>
           </select>
@@ -89,7 +91,7 @@
          cinemas: [...new Set(Object.values(shows).map(x => x.cinemaName))],
          db: {
            searchTitle: "",
-           selectedCinemas: {},
+           excludedCinemas: {},
            onlyAvailable: false,
          },
        });

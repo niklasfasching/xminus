@@ -119,12 +119,12 @@
      import {define, Component} from "/src/runtime.mjs";
      define("x-list", class extends Component {
        onRender() {
-         const {selectedCinemas, favoriteShows, hiddenMovies, onlyAvailable} = this.app.db, searchTitle = this.app.searchTitle || "";
+         const {excludedCinemas, favoriteShows, hiddenMovies, onlyAvailable} = this.app.db, searchTitle = this.app.searchTitle || "";
          this.shows = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp)
                             .filter(x => {
                               return x.timestamp >= Date.now() &&
                                      x.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
-                                     (!Object.keys(selectedCinemas).length || selectedCinemas[x.cinemaName]) &&
+                                     !excludedCinemas[x.cinemaName] &&
                                      (!onlyAvailable || x.bookable) &&
                                      (location.hash !== "#/favorites" || favoriteShows?.[x.id]) &&
                                      (location.hash !== "#/hidden" ? !hiddenMovies?.[x.key] : hiddenMovies?.[x.key])

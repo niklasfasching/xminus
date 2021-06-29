@@ -40,7 +40,7 @@
         <div ..description>{$.show.description}</div>
         <div ..alternatives .if="$.alternatives.length">
           <h3>Alternatives</h3>
-          <div ..alternative ..cinema-selected="$.app.db.selectedCinemas[show.cinemaName]" .for="show of $.alternatives">
+          <div ..alternative ..cinema-excluded="$.app.db.excludedCinemas[show.cinemaName]" .for="show of $.alternatives">
             <h4><a href="#/show/{show.id}">{show.title}</a></h4>
             {show.date.replaceAll(",", "")} <small><a href="{show.cinemaUrl}">{show.cinemaShortName}</a></small><br>
           </div>
@@ -132,7 +132,7 @@
        font-size: 1.5em;
      }
 
-     x-details .alternative:not(.cinema-selected) {
+     x-details .alternative.cinema-excluded {
        color: #888;
      }
 
