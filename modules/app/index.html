@@ -29,7 +29,10 @@
      route() {
        const [path, query] = location.hash.slice(1).split("?");
        const [r, [tag, f = (app) => ({})]] = this.routeList.find(([r]) => r.test(path)) || [null, []];
-       if (!r) throw new Error(`404 for ${path}: ${JSON.stringify(this.routes)}`);
+       if (!r) {
+         location.hash = "#/";
+         return void console.log(`404 for ${path}: ${JSON.stringify(this.routeList.map(([r]) => r.toString()))}`);
+       }
        this.path = path;
        this.params = r.exec(path).groups;
        for (const k in this.params) this.params[k] = decodeURIComponent(this.params[k]);
