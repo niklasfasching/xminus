@@ -156,13 +156,14 @@ export function generateVnode(vnode, $) {
     generateChildren(vnode, $);
     $.html += `</${rawTag}>`;
   } else if (isComponentTag(rawTag)) {
-    $.html += `<${rawTag}>`;
+    const [splats, attrs, kvs] = Object.entries(vnode.properties).reduce(([splats, attrs, kvs], [k, v]) => {
+      if (splatRegexp.test(k)) return [splats.concat(k.match(splatRegexp)[1]), attrs, kvs];
+      else if (k === "id" || k === "class") return [splats, attrs.concat(`${k}="${v}"`), kvs];
+      return [splats, attrs, kvs.concat(`[${parseValue(k)[0]}]: ${parseValue(v)[0]}`)];
+    }, [[], [], []]);
+    $.html += `<${rawTag}${attrs.length ? " " + attrs.join(" ") : ""}>`;
     generateChildren(vnode, $);
     $.html += `</${rawTag}>`;
-    const [splats, kvs] = Object.entries(vnode.properties).reduce(([splats, props], [k, v]) => {
-      if (!splatRegexp.test(k)) return [splats, props.concat(`[${parseValue(k)[0]}]: ${parseValue(v)[0]}`)];
-      return [splats.concat(k.match(splatRegexp)[1]), props];
-    }, [[], []]);
     const props = splats.length ? `Object.assign({}, ${splats.join(", ")}, {${kvs.join(", ")}})` : `{${kvs.join(", ")}}`;
     $.create += `${vnode.ref}.init($.app, $, ${props});\n`;
     $.update += `${vnode.ref}.update(${props});\n`;

@@ -143,6 +143,10 @@ t.describe("compiler", () => {
       test(`<x-child key=value {...$.props} />`);
     });
 
+    t("should support id and class attributes on child components", () => {
+      test(`<x-child id=id class="foo" ..bar {...$.props} key=value/>`);
+    });
+
     t("should throw on splat properties on non child-components", () => {
       t.throws(() => run("compile", "x-foo-component", `<element><div {...$.props}></div></element>`),
                /splat properties.*<div>/);

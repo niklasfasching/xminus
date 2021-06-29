@@ -380,5 +380,21 @@
     "html": "",
     "create": "",
     "update": ""
+  },
+  "compiler: compile: should support id and class attributes on child components (0)": {
+    "result": [
+      "xm.register(\"x-foo-component\", `<x-child id=\"id\" class=\"foo bar\"></x-child>`, function() {",
+      "const $ = this;",
+      "let _children_0_node = this.firstChild;",
+      "_children_0_node.init($.app, $, Object.assign({}, $.props, {[\"key\"]: \"value\"}));",
+      "return () => {",
+      "_children_0_node.update(Object.assign({}, $.props, {[\"key\"]: \"value\"}));",
+      "};",
+      "}, []);",
+      ""
+    ],
+    "html": "",
+    "create": "",
+    "update": ""
   }
 }
