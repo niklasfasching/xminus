@@ -35,7 +35,14 @@
           <h3>Alternatives</h3>
           <div ..alternative ..cinema-excluded="$.app.db.excludedCinemas[show.cinemaName]" .for="show of $.alternatives">
             <h4><a href="#/show/{show.id}">{show.title}</a></h4>
-            {show.date.replaceAll(",", "")} <small><a href="{show.cinemaUrl}">{show.cinemaShortName}</a></small><br>
+            <div>{show.date.replaceAll(",", "")} <a href="{show.cinemaUrl}">{show.cinemaShortName}</a></div>
+            <div ..seats>
+              <small .if="show.available === -1">free, open seating</small>
+              <div .if="show.available !== -1">
+                <span>{show.available || 0} free</span> |
+                <span>{show.reserved || 0} reserved</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -112,7 +119,7 @@
        font-size: 1.5em;
      }
 
-     x-details .alternative.cinema-excluded {
+     x-details .alternative.cinema-excluded, x-details .alternative .seats {
        color: #888;
      }
 
