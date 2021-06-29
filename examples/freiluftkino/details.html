@@ -1,23 +1,16 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>list</title>
+    <title>details</title>
     <script type="x-module" src="/modules/icon/index.html"></script>
     <script type="x-module" src="/modules/chart/index.html"></script>
+    <script type="x-module" src="actions.html"></script>
     <script type="text/x-template" id="x-details" x-props="show history">
       <div>
         <div ..cover ..bookable="$.show.bookable">
           <img src="{$.show.img}">
           <div ..time>{$.show.date} - {$.show.time}</div>
-          <x-icon-share .on:click="{$.onShare()}"/>
-          <div ..actions>
-            <button ..favorite ..favorited="$.favorited" .on:click="$.toggleFavorite()">
-              {$.favorited ? "remove" : "save"}
-            </button>
-            <button ..hide ..hidden="$.hidden" .on:click="$.toggleHideMovie()">
-              {$.hidden ? "unhide movie" : "hide movie"}
-            </button>
-          </div>
+          <x-actions show="{$.show}" visibility share heart/>
         </div>
       </div>
       <div ..content>
@@ -84,6 +77,14 @@
        white-space: initial;
      }
 
+     x-details x-actions {
+       position: absolute;
+       top: 0;
+       right: 0;
+       padding: 0.5em;
+       font-size: 1.5em;
+     }
+
      x-details .cover {
        position: relative;
      }
@@ -99,32 +100,11 @@
        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
      }
 
-     x-details .actions {
-       position: absolute;
-       bottom: 0;
-       width: 100%;
-       padding-top: 0.5em;
-       background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
-     }
-
-     x-details .actions button {
-       font-size: 1.5em;
-       font-weight: bold;
-       color: white;
-       background: none;
-       border: none;
-     }
-
-     x-details .hide {
-       position: absolute;
-       right: 0;
-     }
-
      x-details .description {
        line-height: 1.5;
      }
 
-     x-details x-icon-share {
+     x-details .actions {
        position: absolute;
        top: 0;
        right: 0;
@@ -153,30 +133,6 @@
          this.alternatives = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp).filter((show) => {
            return this.show.key === show.key && this.show !== show;
          });
-       }
-
-       onShare() {
-         return navigator.share({title: this.show.title, url: location.href});
-       }
-
-       toggleFavorite() {
-         this.app.db.favoriteShows = (this.app.db.favoriteShows || {});
-         if (this.favorited) delete this.app.db.favoriteShows[this.show.id];
-         else this.app.db.favoriteShows[this.show.id] = true;
-       }
-
-       toggleHideMovie() {
-         this.app.db.hiddenMovies = (this.app.db.hiddenMovies || {});
-         if (this.hidden) delete this.app.db.hiddenMovies[this.show.key];
-         else this.app.db.hiddenMovies[this.show.key] = true;
-       }
-
-       get hidden() {
-         return this.app.db.hiddenMovies?.[this.show.key];
-       }
-
-       get favorited() {
-         return this.app.db.favoriteShows?.[this.show.id];
        }
 
        formatTooltip({vx, vy}) {

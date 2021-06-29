@@ -19,9 +19,11 @@
          this.route();
        }
        if (header) {
-         this.header = document.createElement(header);
+         const [tag, f = (app) => ({})] = header;
+         this.header = document.createElement(tag);
+         this.headerF = f;
          this.prepend(this.header);
-         this.header.init?.(this.app, this);
+         this.header.init?.(this.app, this, f(this.app));
        }
      }
 
@@ -43,7 +45,7 @@
        this.params = r.exec(path).groups;
        for (const k in this.params) this.params[k] = decodeURIComponent(this.params[k]);
        this.query = Object.fromEntries(new URLSearchParams(query).entries());
-       if (this.header) this.header.update?.();
+       if (this.header) this.header.update?.(this.headerF(this.app));
        if (this.active && this.active === this.views[tag]) {
          window.scrollTo(0, 0);
          return void this.active.update?.(f(this.app));
@@ -63,7 +65,7 @@
 
      onUpdate() {
        if (this.active) this.active.update?.(this.f(this.app));
-       if (this.header) this.header.update?.();
+       if (this.header) this.header.update?.(this.headerF(this.app));
      }
 
      proxy(x, cb) {
@@ -196,7 +198,7 @@
 
    t.only("should render header", async () => {
      const app = await mount(document.body, "x-app", {
-       header: "x-nav",
+       header: ["x-nav"],
        routes: {
          "/div": ["div"],
          "/": ["hr"],

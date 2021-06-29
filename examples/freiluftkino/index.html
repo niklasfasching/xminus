@@ -13,8 +13,8 @@
       <div ..links>
         <a href="#/" id="logo">freiluftkino</a>
         <div ..other>
-          <a href="#/hidden">hidden ({Object.keys($.app.db.hiddenMovies || {}).length})</a> |
-          <a href="#/favorites">saved ({Object.keys($.app.db.favoriteShows || {}).length})</a>
+          <a href="#/hidden" ..active="$.app.path === '/hidden'">hidden ({$.hiddenCount})</a> |
+          <a href="#/favorites" ..active="$.app.path === '/favorites'">favorites ({$.favoriteCount})</a>
         </div>
       </div>
       <details>
@@ -53,6 +53,10 @@
        justify-content: space-between;
      }
 
+     x-nav .links .active {
+       text-decoration: underline;
+     }
+
      x-nav #logo {
        font-size: 2em;
      }
@@ -70,7 +74,14 @@
     </style>
 
     <script type="module">
-     import {mount} from "/src/runtime.mjs";
+     import {mount, define, Component} from "/src/runtime.mjs";
+
+     define("x-nav", class extends Component {
+       onRender() {
+         this.favoriteCount = Object.entries(this.app.db.favoriteShows || {}).filter(([id, x]) => x && this.props.shows[id]).length;
+         this.hiddenCount = Object.entries(this.app.db.hiddenMovies || {}).filter(([key, x]) => x && Object.values(this.props.shows).find(x => x.key === key)).length;
+       }
+     });
      (async () => {
        const history = await fetch("https://niklasfasching.github.io/freiluftkino/history.json").then(r => r.json());
        const shows = await fetch("https://niklasfasching.github.io/freiluftkino/shows.json").then(r => r.json());
@@ -78,7 +89,7 @@
          shows[id].key = shows[id].title.toLowerCase().replace(/\(.*\)|-.*?film preview|open air:/g, "").trim();
        }
        await mount(document.body, "x-app", {
-         header: "x-nav",
+         header: ["x-nav", () => ({shows})],
          routes: {
            "/": ["x-list", () => ({shows, history})],
            "/favorites": ["x-list", () => ({shows, history})],

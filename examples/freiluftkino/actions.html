@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>actions</title>
+    <script type="x-module" src="/modules/icon/index.html"></script>
+    <script type="text/x-template" id="x-actions" x-props="show">
+      <x-icon-share .if="$.props.share" .on:click="{$.onShare()}"/>
+      <x-icon-heart .if="$.props.heart" ..favorited="$.favorited" .on:click="$.toggleFavorite()"/>
+      <x-icon-visibility .if="$.props.visibility" hidden="{$.hidden}" .on:click="$.toggleHideMovie()"/>
+    </script>
+
+    <style>
+     x-actions {
+       color: #ccc;
+       display: flex;
+       gap: 0.5em;
+     }
+
+     x-actions svg:hover {
+       stroke: #fff;
+     }
+    </style>
+    <script type="module">
+     import {define, Component} from "/src/runtime.mjs";
+
+     define("x-actions", class extends Component {
+       onInit() {
+         if (!this.app.db.favoriteShows) this.app.db.favoriteShows = {};
+         if (!this.app.db.hiddenMovies) this.app.db.hiddenMovies = {};
+       }
+
+       onShare() {
+         return navigator.share({title: this.show.title, url: location.href});
+       }
+
+       toggleFavorite() {
+         if (this.favorited) this.app.db.favoriteShows[this.show.id] = false;
+         else this.app.db.favoriteShows[this.show.id] = true;
+         if (this.favorited) this.app.db.hiddenMovies[this.show.key] = false;
+       }
+
+       toggleHideMovie() {
+         if (this.hidden) this.app.db.hiddenMovies[this.show.key] = false;
+         else this.app.db.hiddenMovies[this.show.key] = true;
+         if (this.hidden) this.app.db.favoriteShows[this.show.id] = false;
+       }
+
+       get hidden() {
+         return this.app.db.hiddenMovies[this.show.key];
+       }
+
+       get favorited() {
+         return this.app.db.favoriteShows[this.show.id];
+       }
+     });
+    </script>
+  </head>
+</html>
