@@ -148,7 +148,7 @@
       ""
     ],
     "update": [
-      "if (document.activeElement !== _bind_0_node) _bind_0_node[\"value\"] = $.value;",
+      "if (document.activeElement !== _bind_0_node && $.value !== undefined) _bind_0_node[\"value\"] = $.value;",
       ""
     ]
   },
@@ -163,7 +163,7 @@
       ""
     ],
     "update": [
-      "if (document.activeElement !== _bind_2_node) for (let o of _bind_2_node.options) o.selected = ($.value)?.[o.value] || false;",
+      "if (document.activeElement !== _bind_2_node && $.value !== undefined) for (let o of _bind_2_node.options) o.selected = ($.value)?.[o.value] || false;",
       ""
     ]
   },
@@ -197,9 +197,9 @@
       ""
     ],
     "update": [
-      "if (document.activeElement !== _bind_2_node) _bind_2_node[\"value\"] = $.value;",
-      "if (document.activeElement !== _bind_5_node) _bind_5_node[\"value\"] = $.value;",
-      "if (document.activeElement !== _bind_10_node) _bind_10_node[\"value\"] = $.value;",
+      "if (document.activeElement !== _bind_2_node && $.value !== undefined) _bind_2_node[\"value\"] = $.value;",
+      "if (document.activeElement !== _bind_5_node && $.value !== undefined) _bind_5_node[\"value\"] = $.value;",
+      "if (document.activeElement !== _bind_10_node && $.value !== undefined) _bind_10_node[\"value\"] = $.value;",
       ""
     ]
   },

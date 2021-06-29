@@ -26,7 +26,7 @@ function bindMacro(vnode, $, key, value) {
   }
   $.create += `if (${value} !== undefined) ${setValue};\n
                ${node}.addEventListener("${event}", () => ${value} = ${getValue});\n`;
-  $.update += `if (document.activeElement !== ${node}) ${setValue};\n`;
+  $.update += `if (document.activeElement !== ${node} && ${value} !== undefined) ${setValue};\n`;
 }
 
 function classMacro(vnode, $, key, value) {
