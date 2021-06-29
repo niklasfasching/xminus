@@ -99,5 +99,17 @@
         "void": false
       }
     ]
+  },
+  "parser: should ignore comments (0)": {
+    "vnodes": [
+      {
+        "tag": "div",
+        "properties": {},
+        "children": [
+          "foo"
+        ],
+        "void": false
+      }
+    ]
   }
 }

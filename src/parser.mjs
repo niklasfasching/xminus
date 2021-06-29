@@ -72,7 +72,8 @@ export function lex(template) {
         if (lvl) tmp += `{${part}}`, i += part.length + 1;
       }, 2);
     } else if ($ === "child" && c === "<") {
-      push(template[i+1] === "/" ? "close" : "open");
+      if (template.slice(i+1, i+4) === "!--") i = skipComment(template, i);
+      else push(template[i+1] === "/" ? "close" : "open");
     } else if ($ !== "child" && (c === ">" || c === "/" && template[i+1] === ">")) {
       push("child");
       if (c === "/") i++;
@@ -91,4 +92,10 @@ export function lex(template) {
   }
   push();
   return tokens;
+}
+
+function skipComment(template, i) {
+  const j = template.indexOf("-->", i);
+  if (j === -1) throw new Error(`unclosed comment: ${template.slice(i, i+20)}[...]`);
+  return j + 2;
 }

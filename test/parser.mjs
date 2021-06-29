@@ -30,6 +30,14 @@ t.describe("parser", () => {
     test(`<{foo bar}>{foo bar}</>`);
   });
 
+  t("should ignore comments", () => {
+    test(`<div><!---->foo<!-- comment --></div>`);
+  });
+
+  t("should throw on unclosed comments", () => {
+    t.throws(() => parse(`<div><!-- comment</div>`));
+  });
+
   t("should link the parent vnode from child vnodes", () => {
     const [p] = parse(`<p>hello <b>world</b></p>`);
     t.equal(p.children[1].parent, p);
