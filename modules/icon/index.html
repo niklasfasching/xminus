@@ -4,8 +4,8 @@
     <title>icon</title>
     <meta name="viewport" content="width=device-width">
 
-    <script type="text/x-template" id="x-icon-heart">
-      <svg viewBox="0 0 24 24" ..icon>
+    <script type="text/x-template" id="x-icon-heart" x-icon>
+      <svg viewBox="0 1 24 24">
         <path d="M 12 22
                  l 9 -10
                  A 5 5 0 1 0 12 7
@@ -14,8 +14,8 @@
       </svg>
     </script>
 
-    <script type="text/x-template" id="x-icon-share">
-      <svg viewBox="0 0 24 24" ..icon>
+    <script type="text/x-template" id="x-icon-share" x-icon>
+      <svg viewBox="0 0 24 24">
         <circle cx="5" cy="12" r="2.5"/>
         <circle cx="19" cy="5" r="2.5"/>
         <circle cx="19" cy="19" r="2.5"/>
@@ -24,44 +24,58 @@
       </svg>
     </script>
 
-    <script type="text/x-template" id="x-icon-search">
-      <svg viewBox="0 0 24 24" ..icon>
+    <script type="text/x-template" id="x-icon-search" x-icon>
+      <svg viewBox="0 0 24 24">
         <circle cx="9" cy="9" r="6.5"/>
         <polyline points="14 14, 20 20"/>
       </svg>
     </script>
 
-    <script type="text/x-template" id="x-icon-x">
-      <svg viewBox="0 0 24 24" ..icon>
+    <script type="text/x-template" id="x-icon-x" x-icon>
+      <svg viewBox="0 0 24 24">
         <polyline points="5 5, 19 19"/>
         <polyline points="19 5, 5 19"/>
       </svg>
     </script>
 
-    <script type="text/x-template" id="x-icon-star">
-      <svg viewBox="0 -1 24 24" ..icon>
+    <script type="text/x-template" id="x-icon-star" x-icon>
+      <svg viewBox="0 -1 24 24">
         <polyline points="21.5 8.9, 16.8 13.5, 17.9 20.1, 12.0 17.0, 6.1 20.1, 7.2 13.5, 2.5 8.9, 9.1 8.0, 12.0 2.0, 14.9 8.0, 21.5 8.9, 16.8 13.5"/>
       </svg>
     </script>
 
-    <script type="text/x-template" id="x-icon-more">
-      <svg viewBox="0 0 24 24" ..icon>
+    <script type="text/x-template" id="x-icon-more" x-icon>
+      <svg viewBox="0 0 24 24">
         <circle cx="12" cy="6" r="0.5"/>
         <circle cx="12" cy="12" r="0.5"/>
         <circle cx="12" cy="18" r="0.5"/>
       </svg>
     </script>
 
-    <script type="text/x-template" id="x-icon-menu">
-      <svg viewBox="0 0 24 24" ..icon>
+    <script type="text/x-template" id="x-icon-drawer" x-icon>
+      <svg viewBox="0 0 24 24">
+        <circle cx="6" cy="6" r="0.5"/>
+        <circle cx="6" cy="12" r="0.5"/>
+        <circle cx="6" cy="18" r="0.5"/>
+        <circle cx="12" cy="6" r="0.5"/>
+        <circle cx="12" cy="12" r="0.5"/>
+        <circle cx="12" cy="18" r="0.5"/>
+        <circle cx="18" cy="6" r="0.5"/>
+        <circle cx="18" cy="12" r="0.5"/>
+        <circle cx="18" cy="18" r="0.5"/>
+      </svg>
+    </script>
+
+    <script type="text/x-template" id="x-icon-menu" x-icon>
+      <svg viewBox="0 0 24 24">
         <polyline points="4 6, 20 6"/>
         <polyline points="4 12, 20 12"/>
         <polyline points="4 18, 20 18"/>
       </svg>
     </script>
 
-    <script type="text/x-template" id="x-icon-visibility">
-      <svg viewBox="0 0 24 24" ..icon>
+    <script type="text/x-template" id="x-icon-visibility" x-icon>
+      <svg viewBox="0 0 24 24">
         <path d="M 2 12
                  C 8 2 16 2 22 12
                  C 16 22 8 22 2 12
@@ -71,7 +85,7 @@
       </svg>
     </script>
     <style>
-     :where(.icon) {
+     :where([x-icon]) {
        height: 1em;
        width: 1em;
        stroke: currentColor;
@@ -80,7 +94,7 @@
        fill: none;
      }
 
-     :where(x-icon-more .icon) {
+     :where(x-icon-more, x-icon-drawer) {
        fill: currentColor;
      }
     </style>
@@ -125,11 +139,12 @@
         <x-icon-share/>
         <x-icon-search/>
         <x-icon-more/>
+        <x-icon-drawer/>
         <x-icon-menu/>
         <x-icon-x/>
         <x-icon-star/>
         <x-icon-visibility/>
-        <x-icon-visibility hidden></x-icon-visibility>
+        <x-icon-visibility hidden/>
       </div>
     </script>
   </body>
