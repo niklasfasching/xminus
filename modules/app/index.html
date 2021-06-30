@@ -5,7 +5,7 @@
   <script type="module">
    import {define, Component} from "../../src/runtime.mjs";
    define("x-app", class extends Component {
-     onInit({db, routes, header}) {
+     onInit({db, routes}) {
        this.views = {};
        this.db = this.initDB(db);
        if (!location.hash) history.replaceState(null, null, "#/");
@@ -17,13 +17,6 @@
          this.listener = () => this.route();
          window.addEventListener("popstate", this.listener);
          this.route();
-       }
-       if (header) {
-         const [tag, f = (app) => ({})] = header;
-         this.header = document.createElement(tag);
-         this.headerF = f;
-         this.prepend(this.header);
-         this.header.init?.(this.app, this, f(this.app));
        }
      }
 
@@ -45,7 +38,6 @@
        this.params = r.exec(path).groups;
        for (const k in this.params) this.params[k] = decodeURIComponent(this.params[k]);
        this.query = Object.fromEntries(new URLSearchParams(query).entries());
-       if (this.header) this.header.update?.(this.headerF(this.app));
        if (this.active && this.active === this.views[tag]) {
          window.scrollTo(0, 0);
          return void this.active.update?.(f(this.app));
@@ -65,7 +57,6 @@
 
      onUpdate() {
        if (this.active) this.active.update?.(this.f(this.app));
-       if (this.header) this.header.update?.(this.headerF(this.app));
      }
 
      proxy(x, cb) {
@@ -199,20 +190,6 @@
      location.hash = "/x-child-a/whatever";
      await new Promise(r => setTimeout(r));
      t.equal(window.pageYOffset, 0);
-   });
-
-   t.only("should render header", async () => {
-     const app = await mount(document.body, "x-app", {
-       header: ["x-nav"],
-       routes: {
-         "/div": ["div"],
-         "/": ["hr"],
-       },
-     });
-     t.equal(app.innerHTML, `<x-nav><nav>/</nav></x-nav><hr>`);
-     location.hash = "/div";
-     await new Promise(r => setTimeout(r));
-     t.equal(app.innerHTML, `<x-nav><nav>/div</nav></x-nav><hr style="display: none;"><div></div>`);
    });
   </script>
 </body>

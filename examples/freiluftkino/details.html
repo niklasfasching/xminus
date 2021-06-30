@@ -6,50 +6,53 @@
     <script type="x-module" src="/modules/chart/index.html"></script>
     <script type="x-module" src="actions.html"></script>
     <script type="text/x-template" id="x-details" x-props="show history">
-      <div>
-        <div ..cover ..bookable="$.show.bookable">
-          <img src="{$.show.img}">
-          <div ..time>{$.show.date} - {$.show.time}</div>
-          <x-actions show="{$.show}" visibility share heart/>
-        </div>
-      </div>
-      <div ..content>
-        <div ..meta>
-          <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
-          <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
-        </div>
-        <div ..stats>
-          <div><b>Seats</b></div>
-          <small .if="$.show.available === -1">free, open seating</small>
-          <div .if="$.show.available !== -1">
-            <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"/>
-            <span>{$.show.available || 0} free</span> |
-            <span>{$.show.reserved || 0} reserved</span>
+      <x-nav/>
+      <main>
+        <div>
+          <div ..cover ..bookable="$.show.bookable">
+            <img src="{$.show.img}">
+            <div ..time>{$.show.date} - {$.show.time}</div>
+            <x-actions show="{$.show}" visibility share heart/>
           </div>
         </div>
-        <div ..links>
-          <a .if="$.show.trailer" ..button href="{$.show.trailer}" target="_blank" rel="noopener">trailer</a>
-        </div>
-        <div ..description>{$.show.description}</div>
-        <div ..alternatives .if="$.alternatives.length">
-          <h3>Alternatives</h3>
-          <div ..alternative ..cinema-excluded="$.app.db.excludedCinemas[show.cinemaName]" .for="show of $.alternatives">
-            <h4><a href="#/show/{show.id}">{show.title}</a></h4>
-            <div>{show.date.replaceAll(",", "")} <a href="{show.cinemaUrl}">{show.cinemaShortName}</a></div>
-            <div ..seats>
-              <small .if="show.available === -1">free, open seating</small>
-              <div .if="show.available !== -1">
-                <span>{show.available || 0} free</span> |
-                <span>{show.reserved || 0} reserved</span>
+        <div ..content>
+          <div ..meta>
+            <div ..title><a href="{$.show.url}">{$.show.title}</a></div>
+            <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
+          </div>
+          <div ..stats>
+            <div><b>Seats</b></div>
+            <small .if="$.show.available === -1">free, open seating</small>
+            <div .if="$.show.available !== -1">
+              <x-chart {...$.chart} formatTooltip="{$.formatTooltip}"/>
+              <span>{$.show.available || 0} free</span> |
+              <span>{$.show.reserved || 0} reserved</span>
+            </div>
+          </div>
+          <div ..links>
+            <a .if="$.show.trailer" ..button href="{$.show.trailer}" target="_blank" rel="noopener">trailer</a>
+          </div>
+          <div ..description>{$.show.description}</div>
+          <div ..alternatives .if="$.alternatives.length">
+            <h3>Alternatives</h3>
+            <div ..alternative ..cinema-excluded="$.app.db.excludedCinemas[show.cinemaName]" .for="show of $.alternatives">
+              <h4><a href="#/show/{show.id}">{show.title}</a></h4>
+              <div>{show.date.replaceAll(",", "")} <a href="{show.cinemaUrl}">{show.cinemaShortName}</a></div>
+              <div ..seats>
+                <small .if="show.available === -1">free, open seating</small>
+                <div .if="show.available !== -1">
+                  <span>{show.available || 0} free</span> |
+                  <span>{show.reserved || 0} reserved</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </script>
 
     <style>
-     x-details {
+     x-details main {
        display: flex;
        flex-direction: column;
        gap: 1em;
