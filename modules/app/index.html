@@ -80,6 +80,11 @@
            cb();
            return true;
          },
+         deleteProperty(x, key) {
+           const deleted = delete x[key];
+           if (deleted) cb();
+           return deleted;
+         },
        })
      }
 
