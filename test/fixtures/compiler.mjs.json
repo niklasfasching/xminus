@@ -347,7 +347,7 @@
     "result": [
       "xm.register(\"x-foo-component\", `<p>hello <!----></p>`, function() {",
       "const $ = this;",
-      "xm.setProperty(this, \"class\", \"abc xyz\");",
+      "xm.setTemplateProperty(this, \"class\", \"abc xyz\");",
       "let _properties_0_node = this;",
       "let _properties_1_key = (foo); xm.setProperty(_properties_0_node, _properties_1_key, (bar));",
       "let _children_2_node = this.firstChild;",

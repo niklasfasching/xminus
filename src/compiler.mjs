@@ -178,7 +178,7 @@ function generateProperties(vnode, $) {
     const [key, rawKey, isDynamicKey] = parseValue(k),
           [value, rawValue, isDynamicValue] = parseValue(vnode.properties[k]);
     if (splatRegexp.test(k)) throw new Error(`splat properties are only allowed on component tags, not <${vnode.tag}>`);
-    else if (!isDynamicKey && !isDynamicValue && vnode.ref === "this") $.create += `xm.setProperty(${vnode.ref}, ${key}, ${value});\n`;
+    else if (!isDynamicKey && !isDynamicValue && vnode.ref === "this") $.create += `xm.setTemplateProperty(${vnode.ref}, ${key}, ${value});\n`;
     else if (!isDynamicKey && !isDynamicValue) $.html += ` ${rawKey}=${value}`;
     else dynamicProperties.push({key, value, isDynamicKey, isDynamicValue});
   }

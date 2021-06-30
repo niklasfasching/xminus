@@ -37,6 +37,11 @@ export function setDynamicKeyProperty(node, k, updatedK, v) {
   return updatedK;
 }
 
+export function setTemplateProperty(node, k, v) {
+  if (k === "class") node.classList.add(...v.split(" "));
+  else setProperty(node, k, v);
+}
+
 export function replaceWith(oldNode, newNode) {
   oldNode.replaceWith(newNode);
   return newNode;

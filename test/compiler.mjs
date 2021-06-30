@@ -266,6 +266,13 @@ t.describe("compiler", () => {
       t.equal(component.innerHTML, `<x-class class="bar"></x-class>`);
     });
 
+    t("should merge template class attribute rather than overwrite", () => {
+      eval(compiler.compile("x-tpl-class", `<element class=tpl-1 ..tpl-2 other></element>`));
+      const [component, update] = render({}, `<x-tpl-class class=instance-1 ..instance-2/>`);
+      t.equal(component.innerHTML,
+             `<x-tpl-class class="instance-1 instance-2 tpl-1 tpl-2" other="true"></x-tpl-class>`);
+    });
+
     t("should update dynamic component tags");
   });
 
