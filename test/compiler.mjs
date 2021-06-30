@@ -136,7 +136,7 @@ t.describe("compiler", () => {
     });
 
     t("should generate element attributes (except id, type bc used by template) from template attributes", () => {
-      test(`<p>hello {world}</p>`, `id="x-foo" type="x-template" {foo}={bar}`);
+      test(`<p>hello {world}</p>`, `id="x-foo" type="x-template" ..xyz class=abc {foo}={bar}`);
     });
 
     t("should support splat properties on child components", () => {
