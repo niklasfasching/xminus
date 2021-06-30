@@ -17,6 +17,14 @@
           <a href="#/favorites" ..active="$.app.path === '/favorites'">favorites ({$.favoriteCount})</a>
         </div>
       </div>
+      <details open="{$.app.path.startsWith('/cinema/')}">
+        <summary>cinemas</summary>
+        <ul>
+          <li .for="[id, name] in $.app.props.cinemas">
+            <a ..active="$.app.params?.id === id" href="#/cinema/{id}">{name}</a>
+          </li>
+        </ul>
+      </details>
       <details>
         <summary>filters</summary>
         <div #settings>
@@ -37,7 +45,7 @@
           <select multiple id="cinema"
                   .bind:options="$.app.db.excludedCinemas"
                   .on:change:no="$.app.update()">
-            <option .for="value of $.app.props.cinemas">{value}</option>
+            <option .for="[_, name] in $.app.props.cinemas">{name}</option>
           </select>
         </div>
       </details>
@@ -45,6 +53,9 @@
 
     <style>
      x-nav {
+       display: flex;
+       flex-direction: column;
+       gap: 0.5em;
        padding: 0.5em;
      }
 
@@ -53,7 +64,7 @@
        justify-content: space-between;
      }
 
-     x-nav .links .active {
+     x-nav .active {
        text-decoration: underline;
      }
 
@@ -63,7 +74,6 @@
 
      x-nav details summary {
        font-size: 1.5em;
-       margin-top: 1em;
      }
 
      x-nav #settings {
@@ -94,12 +104,13 @@
            "/": ["x-list", () => ({shows, history})],
            "/favorites": ["x-list", () => ({shows, history})],
            "/hidden": ["x-list", () => ({shows, history})],
+           "/cinema/{id}": ["x-list", () => ({shows, history})],
            "/show/{id}": ["x-details", (app) => {
              const show = shows[app.params.id];
              return {shows, show, history: history[show?.url]};
            }],
          },
-         cinemas: [...new Set(Object.values(shows).map(x => x.cinemaName))],
+         cinemas: Object.fromEntries(Object.values(shows).map(x => [x.cinemaId, x.cinemaShortName])),
          db: {
            searchTitle: "",
            excludedCinemas: {},

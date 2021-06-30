@@ -136,7 +136,8 @@
                                      !excludedCinemas[x.cinemaName] &&
                                      (!onlyAvailable || x.bookable) &&
                                      (location.hash !== "#/favorites" || favoriteShows?.[x.id]) &&
-                                     (location.hash !== "#/hidden" ? !hiddenMovies?.[x.key] : hiddenMovies?.[x.key])
+                                     (location.hash !== "#/hidden" ? !hiddenMovies?.[x.key] : hiddenMovies?.[x.key]) &&
+                                     (!location.hash.startsWith("#/cinema/") || x.cinemaId === this.app.params.id);
                             })
                             .reduce((g, s) => {
                               (g[s.date] = g[s.date] || []).push(s);
