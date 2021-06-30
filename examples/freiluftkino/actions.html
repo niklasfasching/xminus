@@ -24,25 +24,20 @@
      import {define, Component} from "/src/runtime.mjs";
 
      define("x-actions", class extends Component {
-       onInit() {
-         if (!this.app.db.favoriteShows) this.app.db.favoriteShows = {};
-         if (!this.app.db.hiddenMovies) this.app.db.hiddenMovies = {};
-       }
-
        onShare() {
          return navigator.share({title: this.show.title, url: location.href});
        }
 
        toggleFavorite() {
-         if (this.favorited) this.app.db.favoriteShows[this.show.id] = false;
+         if (this.favorited) delete this.app.db.hiddenMovies[this.show.key];
+         if (this.favorited) delete this.app.db.favoriteShows[this.show.id];
          else this.app.db.favoriteShows[this.show.id] = true;
-         if (this.favorited) this.app.db.hiddenMovies[this.show.key] = false;
        }
 
        toggleHideMovie() {
-         if (this.hidden) this.app.db.hiddenMovies[this.show.key] = false;
+         if (this.hidden) delete this.app.db.favoriteShows[this.show.id];
+         if (this.hidden) delete this.app.db.hiddenMovies[this.show.key];
          else this.app.db.hiddenMovies[this.show.key] = true;
-         if (this.hidden) this.app.db.favoriteShows[this.show.id] = false;
        }
 
        get hidden() {

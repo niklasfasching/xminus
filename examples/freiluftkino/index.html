@@ -112,9 +112,10 @@
          },
          cinemas: Object.fromEntries(Object.values(shows).map(x => [x.cinemaId, x.cinemaShortName])),
          db: {
-           searchTitle: "",
            excludedCinemas: {},
            onlyAvailable: false,
+           favoriteShows: {},
+           hiddenMovies: {},
          },
        });
      })();
