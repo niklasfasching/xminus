@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>nav</title>
+    <script type="text/x-template" id="x-nav">
+      <div ..links>
+        <a href="#/" id="logo">freiluftkino</a>
+        <div ..other>
+          <a href="#/hidden" ..active="$.app.path === '/hidden'">hidden ({$.hiddenCount})</a> |
+          <a href="#/favorites" ..active="$.app.path === '/favorites'">favorites ({$.favoriteCount})</a>
+        </div>
+      </div>
+      <details open="{$.app.path.startsWith('/cinema/')}">
+        <summary>cinemas</summary>
+        <ul>
+          <li .for="[id, name] in $.app.props.cinemas">
+            <a ..active="$.app.params?.id === id" href="#/cinema/{id}">{name}</a>
+          </li>
+        </ul>
+      </details>
+      <details>
+        <summary>filters</summary>
+        <div #settings>
+          <div>
+            <input id="onlyAvailable"
+                   type="checkbox"
+                   .bind:checked="$.app.db.onlyAvailable"
+                   .on:change="$.app.update()">
+            <label for="onlyAvailable">only available</label>
+          </div>
+          <label for="partialTitle">title</label>
+          <input id="partialTitle"
+                 type="text"
+                 placeholder="title"
+                 .bind:value="$.app.searchTitle"
+                 .on:keyup="$.app.update()">
+          <label for="cinema">excluded cinemas</label>
+          <select multiple id="cinema"
+                  .bind:options="$.app.db.excludedCinemas"
+                  .on:change:no="$.app.update()">
+            <option .for="[_, name] in $.app.props.cinemas">{name}</option>
+          </select>
+        </div>
+      </details>
+    </script>
+
+    <style>
+     x-nav {
+       display: flex;
+       flex-direction: column;
+       gap: 0.5em;
+       padding: 0.5em;
+     }
+
+     x-nav .links{
+       display: flex;
+       justify-content: space-between;
+     }
+
+     x-nav .active {
+       text-decoration: underline;
+     }
+
+     x-nav #logo {
+       font-size: 2em;
+     }
+
+     x-nav details summary {
+       font-size: 1.5em;
+     }
+
+     x-nav #settings {
+       display: flex;
+       flex-direction: column;
+       gap: 0.5em;
+     }
+    </style>
+
+    <script type="module">
+     import {define, Component} from "/src/runtime.mjs";
+
+     define("x-nav", class extends Component {
+       onRender() {
+         const shows = this.app.props.shows, favoriteShows = this.app.db.favoriteShows, hiddenMovies = this.app.db.hiddenMovies;
+         this.favoriteCount = Object.entries(favoriteShows).filter(([id, x]) => x && shows[id]).length;
+         this.hiddenCount = Object.entries(hiddenMovies).filter(([key, x]) => x && Object.values(shows).find(x => x.key === key)).length;
+       }
+     });;
+    </script>
+  </head>
+</html>

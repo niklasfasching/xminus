@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>freiluftkino</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/src/base.css" rel="stylesheet"/>
+    <link href="module.css" rel="stylesheet"/>
+    <script type="x-module" src="/modules/app/index.html"></script>
+    <script type="x-module" src="list.html"></script>
+    <script type="x-module" src="details.html"></script>
+    <script type="x-module" src="nav.html"></script>
+
+    <script type="module">
+     import {mount} from "/src/runtime.mjs";
+
+     (async () => {
+       const history = await fetch("https://niklasfasching.github.io/freiluftkino/history.json").then(r => r.json());
+       const shows = await fetch("https://niklasfasching.github.io/freiluftkino/shows.json").then(r => r.json());
+       for (const id in shows) {
+         shows[id].key = shows[id].title.toLowerCase().replace(/\(.*\)|-.*?film preview|open air:/g, "").trim();
+       }
+       await mount(document.body, "x-app", {
+         routes: {
+           "/": ["x-list", () => ({shows, history})],
+           "/favorites": ["x-list", () => ({shows, history})],
+           "/hidden": ["x-list", () => ({shows, history})],
+           "/cinema/{id}": ["x-list", () => ({shows, history})],
+           "/show/{id}": ["x-details", (app) => {
+             const show = shows[app.params.id];
+             return {shows, show, history: history[show?.url]};
+           }],
+         },
+         cinemas: Object.fromEntries(Object.values(shows).map(x => [x.cinemaId, x.cinemaShortName])),
+         shows,
+         history,
+         db: {
+           excludedCinemas: {},
+           onlyAvailable: false,
+           favoriteShows: {},
+           hiddenMovies: {},
+         },
+       });
+     })();
+    </script>
+  </head>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>hackernews</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="manifest" href="manifest.json">
+    <link href="/src/base.css" rel="stylesheet"/>
+    <link href="hackernews.css" rel="stylesheet"/>
+    <script type="x-module" src="/modules/app/index.html"></script>
+    <script type="x-module" src="./stories.html"></script>
+    <script type="x-module" src="./story.html"></script>
+    <script type="module">
+     import {mount} from "/src/runtime.mjs";
+     mount(document.body, "x-app", {
+       routes: {
+         "/story": ["x-story"],
+         "/": ["x-stories"],
+       },
+     });
+    </script>
+  </head>
+  <body></body>
+</html>

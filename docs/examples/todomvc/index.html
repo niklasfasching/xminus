@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link href="/src/base.css" rel="stylesheet"/>
+    <link href="todomvc.css" rel="stylesheet"/>
+    <script type="x-module" src="/modules/app/index.html"></script>
+    <script type="text/x-template" id="x-todomvc" x-props="store">
+      <section class="todoapp">
+        <header class="header">
+          <h1>todos</h1>
+          <input class="new-todo" placeholder="What needs to be done?"
+                 .on:create="this.focus()"
+                 .on:keydown:no="$.onInput($event)"/>
+        </header>
+        <section class="main" .if="$.store.items.length">
+          <input id="toggle-all" class="toggle-all" type="checkbox"
+                 .on:click="$.toggleAll($event)" checked="{!$.store.remaining.length}">
+		  <label for="toggle-all"></label>
+          <ul class="todo-list">
+            <x-todo-item item={item} store={$.store} .for="item of $.store.routeItems($.app.path)"/>
+          </ul>
+          <footer class="footer" .if="$.store.items.length">
+            <span class="todo-count">{$.store.remaining.length} item{$.store.remaining.length === 1 ? '' : 's'} left</span>
+            <ul class="filters">
+			  <li><a class="{$.app.path === '/' && 'selected'}" href="#/">All</a></li>
+			  <li><a class="{$.app.path === '/active' && 'selected'}" href="#/active">Active</a></li>
+			  <li><a class="{$.app.path === '/completed' && 'selected'}" href="#/completed">Completed</a></li>
+		    </ul>
+            <button class="clear-completed"
+                    .if="$.store.completed.length"
+                    .on:click="$.store.clearCompleted()">Clear completed</button>
+          </footer>
+        </section>
+      </section>
+      <footer class="info">
+		<p>Double-click to edit a todo</p>
+		<p>Adapted from <a href="http://todomvc.com">TodoMVC</a></p>
+	  </footer>
+    </script>
+
+    <script type="text/x-template" id="x-todo-item" x-props="item store">
+      <li class="todo-item {$.item.completed ? 'completed' : ''} {$.item.editing ? 'editing' : ''}">
+        <input class="toggle" type="checkbox"
+               checked="{$.item.completed}"
+               .on:click="$.item.completed = !$.item.completed">
+        <label .on:dblclick="$.item.editing = true"
+               .if="!$.item.editing">{$.item.title}</label>
+        <input .if="$.item.editing" class="edit"
+               .bind:value="$.item.title"
+               .on:blur:no="$.onEditInput($event)"
+               .on:keydown:no="$.onEditInput($event)"
+               .on:create="if ($.item.editing) this.focus()">
+        <button class="destroy" .on:click="$.store.remove($.item)"></button>
+      </li>
+    </script>
+
+    <script type="module">
+     import {mount, define, Component} from "/src/runtime.mjs";
+
+     define("x-todomvc", class extends Component {
+       onInit({store}) {
+         store.items = JSON.parse(localStorage.getItem("items") || "[]");
+       }
+
+       onUpdate({store}) {
+         localStorage.setItem("items", JSON.stringify(store.items));
+       }
+
+       onInput({target, key}) {
+         if (key !== "Enter") return
+         this.store.add(target.value.trim());
+         target.value = "";
+         this.update();
+       }
+
+       toggleAll({target}) {
+         for (const item of this.store.items) item.completed = target.checked;
+       }
+     })
+
+
+     define("x-todo-item", class extends Component {
+       onEditInput({type, target, key}) {
+         if (key === 'Escape') {
+           this.item.editing = false;
+           this.app.update();
+         } else if (key === "Enter" || type === "blur") {
+           this.item.title = target.value.trim();
+           this.item.editing = false;
+           if (!this.item.title) this.store.remove(this.item);
+           this.app.update();
+         }
+       }
+     })
+
+     class Store {
+       id = 0
+       items = []
+
+       add(title) {
+         if (title) this.items.push({id: this.id++, title, completed: false});
+       }
+
+       routeItems(path) {
+         if (path === "/") return this.items;
+         else if (path === "/active") return this.remaining;
+         else return this.completed;
+       }
+
+       remove(item) {
+         this.items = this.items.filter(_ => _ !== item);
+       }
+
+       toggleCompleted(item) {
+         item.completed = !item.completed;
+       }
+
+       clearCompleted() {
+         this.items = this.items.filter(_ => !_.completed);
+       }
+
+       get remaining() {
+         return this.items.filter(_ => !_.completed);
+       }
+
+       get completed() {
+         return this.items.filter(_ => _.completed);
+       }
+     }
+
+     window.store = new Store();
+     mount(document.body, "x-app", {
+       routes: {".*": ["x-todomvc", () => ({store})]},
+     });
+    </script>
+  </head>
+  <body></body>
+</html>

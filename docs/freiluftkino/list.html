@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>list</title>
+    <script type="x-module" src="actions.html"></script>
+    <script type="text/x-template" id="x-list">
+      <x-nav/>
+      <div ..days>
+        <div ..day .for="[day, shows] in $.shows">
+          <div ..date>{day.slice(0, -1)}</div>
+          <div ..shows>
+            <x-show show={show} .for="show of shows"/>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/x-template" id="x-show" x-props="show">
+      <div ..cover ..bookable="$.show.bookable">
+        <a href="#/show/{$.show.id}">
+          <img src="{$.show.img}" loading="lazy">
+        </a>
+        <div ..time>{$.show.time}</div>
+        <x-actions show="{$.show}" heart visibility="{$.app.path === '/hidden'}"/>
+        <div ..info>
+          <div ..title title="{$.show.title}"><a href="{$.show.url}">{$.show.title}</a></div>
+          <a ..cinema href="{$.show.cinemaUrl}">{$.show.cinemaShortName}</a>
+          <div ..seats>
+            <span>{$.show.available === -1 ? "" :  `${$.show.available || 0}`} available</span>
+            <span .if="$.show.available !== -1">| {$.show.reserved || 0} reserved</span>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <style>
+     x-list .days {
+       display: flex;
+       flex-direction: column;
+       gap: 2em;
+     }
+
+     x-list .date {
+       font-size: 1.5em;
+     }
+
+     x-list .shows {
+       display: flex;
+       width: 100%;
+       overflow-x: auto;
+       gap: 1em;
+     }
+
+     x-show {
+       font-size: 0.75em;
+       display: grid;
+       grid-template-rows: 12rem 1fr;
+       flex-shrink: 0;
+       flex-grow: 0;
+       width: 8rem;
+       background-color: #333;
+       border-radius: 0.5em;
+       overflow: hidden;
+     }
+
+     x-show .cover:not(.bookable) {
+       filter: grayscale(0.75) opacity(0.5);
+     }
+
+     x-show .cover {
+       position: relative;
+     }
+
+     x-show .time {
+       position: absolute;
+       pointer-events: none;
+       padding: 0.5em;
+       top: 0;
+       font-size: 1.5em;
+       font-weight: bold;
+       width: 100%;
+       background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+     }
+
+     x-show x-actions {
+       position: absolute;
+       top: 0;
+       right: 0;
+       font-size: 1.5em;
+       padding: 0.5em;
+     }
+
+     x-show .seats {
+       font-size: 0.75em;
+     }
+
+     x-show .info {
+       position: absolute;
+       bottom: 0;
+       padding: 0.5em;
+       padding-top: 1em;
+       overflow: hidden;
+       background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+       width: 100%;
+     }
+
+     x-show .title {
+       font-weight: bold;
+       white-space: nowrap;
+       text-overflow: ellipsis;
+       overflow: hidden;
+     }
+
+     x-show .cinema {
+       font-size: 0.75em;
+     }
+
+     @media (min-device-width: 768px) {
+       x-show {
+         font-size: 1em;
+         grid-template-rows: 20rem 1fr;
+         width: 13rem;
+       }
+     }
+
+    </style>
+
+    <script type="module">
+     import {define, Component} from "/src/runtime.mjs";
+     define("x-list", class extends Component {
+       onRender() {
+         const {excludedCinemas, favoriteShows, hiddenMovies, onlyAvailable} = this.app.db, searchTitle = this.app.searchTitle || "";
+         this.shows = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp)
+                            .filter(x => {
+                              return x.timestamp >= Date.now() &&
+                                     x.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
+                                     !excludedCinemas[x.cinemaName] &&
+                                     (!onlyAvailable || x.bookable) &&
+                                     (location.hash !== "#/favorites" || favoriteShows[x.id]) &&
+                                     (location.hash !== "#/hidden" ? !hiddenMovies[x.key] : hiddenMovies[x.key]) &&
+                                     (!location.hash.startsWith("#/cinema/") || x.cinemaId === this.app.params.id);
+                            })
+                            .reduce((g, s) => {
+                              (g[s.date] = g[s.date] || []).push(s);
+                              g[s.date] = g[s.date].sort((x, y) => x.time > y.time);
+                              return g;
+                            }, {});
+       }
+     });
+    </script>
+  </head>
+</html>

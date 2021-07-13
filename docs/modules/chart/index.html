@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>chart</title>
+    <meta name="viewport" content="width=device-width">
+    <link rel="manifest" href="manifest.json">
+    <script type="text/x-template" id="x-chart">
+      <svg class="chart" viewBox="0 0 100 100" role="img" preserveAspectRatio="none">
+        <g .for="b of $.bars">
+          <rect width="{b.width}" height="{b.height}" x="{b.x}" y="{b.y}" _value="{b}"></rect>
+          <rect fill="none" width="{b.width}" height="{b.y}" x="{b.x}" y="0" _value="{b}"></rect>
+        </g>
+      </svg>
+      <div ..tooltip></div>
+    </script>
+
+    <script type="module">
+     import {mount, define, Component} from "/src/runtime.mjs";
+     define("x-chart", class extends Component {
+       onInit() {
+         this.formatTooltip = this.props.formatTooltip || ((b) => `(${b.vx.toFixed(1)}, ${b.vy.toFixed(1)})`);
+       }
+
+       onpointerover(e) {
+         this.querySelector(".tooltip").innerText = e.target._value ? this.formatTooltip(e.target._value) : "";
+       }
+
+       onRender() {
+         const {values, xMin, xMax, yMin, yMax} = this.props;
+         this.bars = values.map(([vx, vy], i) => {
+           const height = Math.min((vy / yMax) * 100, 100) || 0,
+                 start = ((vx-xMin) / (xMax-xMin)) * 95,
+                 end = values[i+1] ? (values[i+1][0]-xMin) / (xMax-xMin) * 95 : 100;
+           return {
+             vx,
+             vy,
+             width: end-start,
+             height,
+             x: start,
+             y: 100-height,
+           };
+         });
+       }
+     })
+    </script>
+    <style>
+     x-chart {
+       display: block;
+       position: relative;
+     }
+
+     rect {
+       pointer-events: all;
+     }
+
+     g:hover {
+       fill: #555;
+       stroke: #fff;
+       stroke-width: 0.1px;
+     }
+
+     rect:hover + rect, rect[fill=none]:hover {
+       fill: #555a;
+     }
+
+     x-chart:hover .tooltip {
+       display: block;
+     }
+
+     .tooltip {
+       pointer-events: none;
+       font-size: 0.75em;
+       display: none;
+       position: absolute;
+       opacity: 0.9;
+       left: 0;
+       bottom: 0;
+       background-color: #555;
+       padding: 0.25em;
+       font-weight: bold;
+       color: white;
+     }
+    </style>
+  </head>
+
+  <body x-dev>
+    <script type="module">
+     window.props = (async () => {
+       const showHistory = await fetch("https://niklasfasching.github.io/freiluftkino/showHistory.json").then(r => r.json());
+       for (let id in showHistory) {
+         const values = showHistory[id]
+           .map(([timestamp, available, reserved]) => [timestamp, available])
+           .filter(([timestamp, available]) => available != null);
+         showHistory[id] = {
+           xMin: values[0]?.[0] || 0,
+           xMax: Date.now() / 1000,
+           yMin: 0,
+           yMax: Math.max(...values.map(([x, y]) => y)),
+           values,
+         };
+       }
+
+       return {
+         showHistory,
+         formatTooltip: ({vx, vy}) => `${new Date(vx * 1000).toLocaleDateString()}, ${vy.toFixed()}`,
+       };
+     })()
+    </script>
+    <style>
+     x-chart svg {
+       width: 50em;
+       height: 10em;
+     }
+    </style>
+    <script type="text/x-mount">
+      <div .for="[url, history] in $.props.showHistory">
+        <div>{url}</div>
+        <x-chart {...history} formatTooltip={$.props.formatTooltip}></x-chart>
+      </div>
+    </script>
+  </body>
+</html>
