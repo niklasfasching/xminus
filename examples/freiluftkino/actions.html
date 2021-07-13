@@ -29,15 +29,15 @@
        }
 
        toggleFavorite() {
-         if (this.favorited) delete this.app.db.hiddenMovies[this.show.key];
          if (this.favorited) delete this.app.db.favoriteShows[this.show.id];
          else this.app.db.favoriteShows[this.show.id] = true;
+         if (this.favorited) delete this.app.db.hiddenMovies[this.show.key];
        }
 
        toggleHideMovie() {
-         if (this.hidden) delete this.app.db.favoriteShows[this.show.id];
          if (this.hidden) delete this.app.db.hiddenMovies[this.show.key];
          else this.app.db.hiddenMovies[this.show.key] = true;
+         if (this.hidden) delete this.app.db.favoriteShows[this.show.id];
        }
 
        get hidden() {
