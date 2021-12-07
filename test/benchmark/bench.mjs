@@ -72,4 +72,4 @@ async function main() {
   close(0);
 }
 
-main();
+setTimeout(main);

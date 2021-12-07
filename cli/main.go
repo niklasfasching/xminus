@@ -1,14 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
-	"path"
 	"strings"
 	"time"
 )
@@ -31,20 +27,17 @@ func main() {
 	}
 	flag.Parse()
 
-	w := &Watcher{Path: "./", Interval: time.Duration(*watchInterval) * time.Millisecond}
-	r := &Runner{Args: flag.Args(), WindowArgs: strings.Fields(*windowArgs)}
-	s := &Server{Address: *listenAddress, RemoteAddress: *remoteListenAddress, Watcher: w, Runner: r}
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		is, _ := ioutil.ReadDir(path.Join("./", r.URL.Path))
-		files := []string{}
-		for _, i := range is {
-			files = append(files, i.Name())
+	if *create {
+		if err := CreateScaffold(flag.Args()); err != nil {
+			log.Fatal(err)
 		}
-		json.NewEncoder(w).Encode(files)
-	})
+		os.Exit(0)
+	}
 
+	w := &Watcher{Path: "./", Interval: time.Duration(*watchInterval) * time.Millisecond}
+	r := &Runner{Args: flag.Args(), WindowArgs: strings.Fields(*windowArgs), Address: *listenAddress}
+	s := &Server{Address: *listenAddress, RemoteAddress: *remoteListenAddress, Watcher: w, Runner: r}
+	go func() { log.Fatal(s.Start()) }()
 	if *updateFixtures {
 		exitCode, err := r.UpdateFixtures()
 		if err != nil {
@@ -53,19 +46,13 @@ func main() {
 		os.Exit(exitCode)
 	} else if *watch {
 		go w.Start()
-		go r.Run(w)
-		log.Fatal(s.Start())
+		r.Run(w)
 	} else if *bundle {
 		exitCode, err := r.Bundle(*bundleBasePath)
 		if err != nil {
 			log.Fatal(err)
 		}
 		os.Exit(exitCode)
-	} else if *create {
-		if err := CreateScaffold(flag.Args()); err != nil {
-			log.Fatal(err)
-		}
-		os.Exit(0)
 	} else {
 		exitCode, err := r.Run(nil)
 		if err != nil {

@@ -279,12 +279,8 @@ function beforeCreate(method, name, f) {
 
 async function writeFixtures(fixtures) {
   for (let [path, fixture] of Object.entries(fixtures)) {
-    const [status, body] = await fetch(`/create?path=${path}`, {
-      method: "POST",
-      body: json(fixture) + "\n",
-    }).then(async (r) => [r.status, await r.text()]);
-    if (status >= 300) throw new Error(`failed to update fixture at ${path}: ${body}`);
-    console.log("Updated fixture", path);
+    await window.writeFile(path, json(fixture) + "\n");
+    console.log(`Updated fixture ${path}`);
   }
 }
 

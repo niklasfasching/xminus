@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	_ "embed"
-	"io/fs"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"mime"
@@ -12,8 +12,6 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-
-	"github.com/niklasfasching/headless"
 )
 
 type Server struct {
@@ -42,13 +40,17 @@ func (s *Server) Start() error {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		} else if r.Method == "POST" {
-			http.DefaultServeMux.ServeHTTP(w, r)
+			w.Header().Set("Content-Type", "application/json")
+			is, _ := ioutil.ReadDir(path.Join("./", r.URL.Path))
+			files := []string{}
+			for _, i := range is {
+				files = append(files, i.Name())
+			}
+			json.NewEncoder(w).Encode(files)
 			return
 		}
 		bs := []byte{}
-		if strings.HasPrefix(r.URL.Path, "/_headless/") {
-			bs, _ = fs.ReadFile(headless.Etc, strings.TrimPrefix(r.URL.Path, "/_headless/"))
-		} else if r.URL.Path == "/run" {
+		if r.URL.Path == "/run" {
 			bs = []byte(s.Runner.html)
 		} else {
 			p, err := path.Join("./", path.Clean(r.URL.Path)), error(nil)
