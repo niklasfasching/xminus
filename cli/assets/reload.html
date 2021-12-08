@@ -6,5 +6,6 @@
      else setTimeout(longpoll, 100);
    }, () => setTimeout(longpoll, 100));
  }
- longpoll();
+ const insideIframe = window.top !== window.self
+ if (!insideIframe) longpoll();
 </script>
