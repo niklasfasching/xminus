@@ -8,6 +8,9 @@
       <a href="{$.story.url}">{$.story.title}</a>
       <a href="https://news.ycombinator.com/from?site={$.story.hostname}"><small>({$.story.hostname})</small></a>
     </h1>
+    <div>
+      {$.toNode($.story.text)}
+    </div>
     <div id="meta">
       <div>
         <b>{$.story.points} points</b> |
@@ -49,6 +52,7 @@
  define("x-story", class extends Component {
    onRender(props) {
      this.getStory();
+     if (this.story) document.title = this.story.title;
    }
 
    toNode(html) {
@@ -88,7 +92,7 @@
        return item;
      }
      this.story = processItem(this.story);
-     if (!this.story.url) this.story.url = `https://news.ycombinator.com/item?id=${this.story.objectID}`;
+     if (!this.story.url) this.story.url = `https://news.ycombinator.com/item?id=${this.story.id}`;
      this.story.hostname = new URL(this.story.url).hostname.replace(/^(www\.)/, "");
      this.update();
    }
