@@ -1,5 +1,5 @@
-github.com/niklasfasching/headless v0.0.0-20211211124730-61720fd29c54 h1:HgO/NkoQkjsP2DsKi1toRJeQGvJUNtOyxDYx/87IKDU=
-github.com/niklasfasching/headless v0.0.0-20211211124730-61720fd29c54/go.mod h1:eNtgWNWLiNx0s72IxtwQ/09AThEdyHlaGOJGY1TAxN0=
+github.com/niklasfasching/headless v0.0.0-20220326235830-76ca08a9d47b h1:ukfnm7QYflGkISH6AhGAgk8YNN4v5+YltVgwW2kZSFM=
+github.com/niklasfasching/headless v0.0.0-20220326235830-76ca08a9d47b/go.mod h1:eNtgWNWLiNx0s72IxtwQ/09AThEdyHlaGOJGY1TAxN0=
 golang.org/x/net v0.0.0-20210525063256-abc453219eb5/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210423082822-04245dca01da/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

@@ -95,7 +95,7 @@ func (r *Runner) run(ctx context.Context) (int, error) {
 	s.Bind("console.error", func(args ...interface{}) { fmt.Fprintln(os.Stderr, headless.Colorize(args)) })
 	s.Bind("window.close", func(code int) { exitc <- code })
 	s.Handle("Runtime.exceptionThrown", func(m json.RawMessage) { errc <- fmt.Errorf(headless.FormatException(m)) })
-	if err := s.Open(fmt.Sprintf("http://localhost:%s/run", strings.Split(r.Address, ":")[1])); err != nil {
+	if err := s.Visit(fmt.Sprintf("http://localhost:%s/run", strings.Split(r.Address, ":")[1])); err != nil {
 		return 0, err
 	}
 	select {
