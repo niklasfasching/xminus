@@ -1,0 +1,187 @@
+{
+  "jsxy: html: simple tags (0)": {
+    "children": [
+      {
+        "children": [],
+        "props": {},
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {},
+        "tag": "p"
+      },
+      {
+        "children": [],
+        "props": {},
+        "tag": "b"
+      },
+      {
+        "children": [],
+        "props": {},
+        "tag": "span"
+      },
+      {
+        "children": [],
+        "props": {},
+        "tag": "span"
+      },
+      {
+        "children": [],
+        "props": {},
+        "tag": "p"
+      }
+    ],
+    "props": {},
+    "tag": "body"
+  },
+  "jsxy: html: component tags (0)": {
+    "children": [],
+    "props": {},
+    "tag": "<<() => {}>>"
+  },
+  "jsxy: html: simple attributes (0)": {
+    "children": [
+      {
+        "children": [],
+        "props": {
+          "a": true,
+          "b": true,
+          "c": "value",
+          "d": 42
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {
+          "a": true
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {
+          "a": 42
+        },
+        "tag": "div"
+      }
+    ],
+    "props": {},
+    "tag": "body"
+  },
+  "jsxy: html: quoted attributes (0)": {
+    "children": [],
+    "props": {
+      "a": "q u o t e d",
+      "b": "q u o t e d",
+      "c": "q u o t e d",
+      "d": ""
+    },
+    "tag": "div"
+  },
+  "jsxy: html: dynamic attribute keys (0)": {
+    "children": [],
+    "props": {
+      "a": "1",
+      "b": "2"
+    },
+    "tag": "div"
+  },
+  "jsxy: html: ...spread props (0)": {
+    "children": [],
+    "props": {
+      "a": true,
+      "b": "1",
+      "c": 2,
+      "d": 3,
+      "e": 4
+    },
+    "tag": "div"
+  },
+  "jsxy: html: class and id props (0)": {
+    "children": [
+      {
+        "children": [],
+        "props": {
+          "classList": " foo bar",
+          "id": "baz"
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {},
+        "tag": "div"
+      }
+    ],
+    "props": {},
+    "tag": "div"
+  },
+  "jsxy: html: children (0)": {
+    "children": [
+      {
+        "children": [
+          "\n          ",
+          "dynamic",
+          " div text\n          ",
+          {
+            "children": [
+              "and a node"
+            ],
+            "props": {},
+            "tag": "b"
+          }
+        ],
+        "props": {},
+        "tag": "div"
+      },
+      "dynamic",
+      "\n         body text\n      "
+    ],
+    "props": {},
+    "tag": "body"
+  },
+  "jsxy: html: array html children (0)": {
+    "children": [
+      {
+        "children": [
+          1
+        ],
+        "props": {},
+        "tag": "div"
+      },
+      {
+        "children": [
+          2
+        ],
+        "props": {},
+        "tag": "div"
+      },
+      {
+        "children": [
+          3
+        ],
+        "props": {},
+        "tag": "div"
+      }
+    ],
+    "props": {},
+    "tag": "div"
+  },
+  "jsxy: render: static render (0)": "<div>hello world</div>",
+  "jsxy: render: vnode/vnode array children render (0)": "<ul>\n            <li>1</li><li>2</li><li>3</li><li>4</li></ul>",
+  "jsxy: render: useEffect (0)": "<div>1,2,3</div>",
+  "jsxy: render: useEffect (1)": "<div>2,3,4</div>",
+  "jsxy: render: useEffect recursive cleanup (0)": "<div><div>1,2,3</div></div>",
+  "jsxy: render: sibling hooks (0)": "<div><div id=\"a\">\n            Count: 0</div><div id=\"b\">\n            Count: 0</div></div>",
+  "jsxy: render: sibling hooks (1)": "<div><div id=\"a\">\n            Count: 2</div><div id=\"b\">\n            Count: 1</div></div>",
+  "jsxy: render: dynamic render (0)": "<div>\n            Count: 0</div>",
+  "jsxy: render: dynamic render (1)": "<div>\n            Count: 1<b>(uneven!)</b></div>",
+  "jsxy: render: dynamic render (2)": "<div>\n            Count: 2</div>",
+  "jsxy: render: dynamic render (3)": "<div>\n            Count: 3<b>(uneven!)</b></div>",
+  "jsxy: render: @handlers (0)": "<div>0</div>",
+  "jsxy: render: @handlers (1)": "<div>1</div>",
+  "jsxy: render: custom event handlers (0)": "<div>0</div>",
+  "jsxy: render: custom event handlers (1)": "<div>1</div>"
+}
