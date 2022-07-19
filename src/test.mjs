@@ -238,13 +238,17 @@ function timer() {
 }
 
 function json(x, set = new WeakSet(), indent = 2) {
-  return JSON.stringify(x, (k, v) => {
+  const _ = Function.prototype.toJSON;
+  Function.prototype.toJSON = function() { return `<<${this.toString()}>>` };
+  const s = JSON.stringify(x, (k, v) => {
     if (Object(v) === v) {
       if (set.has(v)) return "[circular]";
       set.add(v);
     }
     return v;
   }, indent);
+  Function.prototype.toJSON = _;
+  return s;
 }
 
 async function loadFixtures(node) {
