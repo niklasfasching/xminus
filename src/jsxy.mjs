@@ -80,83 +80,79 @@ export function useState(initialValue) {
   return getHook({value: initialValue}).value;
 }
 
-export function useEffect(cb, args = []) {
+export function useEffect(mount, args = []) {
   const hook = getHook({});
-  if (hook.args?.every((arg, i) => arg === args[i])) return;
-  hook.args = args, hook.cb = cb;
+  hook.changed = !hook.args || hook.args.some((a, i) => a !== args[i]);
+  hook.args = args, hook.mount = mount;
 }
 
 export function getHook(v) {
   if (!hookKey) throw new Error(`getting hook from unkeyed component`);
-  if (!hooks) hooks = {};
   if (!hooks[hookKey]) hooks[hookKey] = [];
   let keyHooks = hooks[hookKey], hook = keyHooks[hookIndex++];
-  if (hook) return hook;
-  return keyHooks[keyHooks.push(v) - 1];
+  return hook ? hook : keyHooks[keyHooks.push(v) - 1];
 }
 
 export function render(parentNode, vnode) {
-  _render(parentNode, vnode, parentNode.firstChild)
+  const f = () => renderChildren(parentNode, [vnode], vnode, f);
+  f();
 }
 
-function _render(parentNode, vnode, node, renderComponent) {
-  hooks = node?.hooks
-  let newHooks;
-  while (vnode != null && typeof vnode.tag === "function") {
+function renderChildren(parentNode, vnodes, renderComponent) {
+  let oldHooks = parentNode.hooks || {}, newHooks = {};
+  hooks = oldHooks, hookIndex = 0, parentNode.hooks = newHooks;
+  for (let i = 0; i < vnodes.length; i++) {
+    renderChild(parentNode, vnodes[i], parentNode.childNodes[i], renderComponent);
+  }
+  for (let k in oldHooks) {
+    if (!(k in newHooks)) for (let h of oldHooks[k]) h.unmount?.();
+  }
+  for (let n = parentNode.childNodes.length - vnodes.length; n > 0; n--) {
+    unmount(parentNode.lastChild);
+    parentNode.lastChild.remove()
+  }
+  hooks = undefined;
+}
+
+function renderChild(parentNode, vnode, node, renderComponent) {
+  if (!hooks) hooks = parentNode.hooks;
+  while (typeof vnode?.tag === "function") {
     let component = vnode;
-    renderComponent = () => _render(parentNode, component, node, renderComponent);
+    renderComponent = () => renderChild(parentNode, component, node, renderComponent);
     hookIndex = 0, hookKey = vnode.props.key || vnode.props.id;
     vnode = vnode.tag(vnode.props, renderComponent);
-    if (hooks?.[hookKey]) {
-      if (!newHooks) newHooks = {};
-      newHooks[hookKey] = hooks[hookKey];
-    }
-  }
-  if (hooks) {
-    for (let k in hooks) {
-      if (!(k in newHooks)) for (let h of hooks[k]) h.unmount?.(node);
-    }
+    if (hookIndex) parentNode.hooks[hookKey] = hooks[hookKey];
   }
   if (vnode == null) {
-    for (let child of parentNode.childNodes) unmount(child);
-    parentNode.innerHTML = "";
+    if (node) unmount(node), node.remove();
   } else if (!vnode.tag) {
     if (node?.nodeType === 3) node.data = vnode;
-    else appendNode(parentNode, document.createTextNode(vnode), node);
+    else replaceNode(parentNode, document.createTextNode(vnode), node);
   } else {
     if (!node || vnode.tag !== node.vnode?.tag) {
-      node = appendNode(parentNode, document.createElement(vnode.tag), node);
+      node = replaceNode(parentNode, document.createElement(vnode.tag), node);
     }
     setProperties(node, vnode, renderComponent);
-    for (let i = 0; i < vnode.children.length; i++) {
-      _render(node, vnode.children[i], node.childNodes[i], renderComponent);
+    if (hookIndex) {
+      for (let h of parentNode.hooks[hookKey]) {
+        if (h.mount && (h.changed || h.node !== node)) {
+          if (h.unmount) h.unmount();
+          h.unmount = h.mount(node), h.node = node, h.changed = false;
+        }
+      }
     }
-    for (let n = node.childNodes.length - vnode.children.length; n > 0; n--) {
-      unmount(node.lastChild);
-      node.lastChild.remove();
-    }
+    renderChildren(node, vnode.children, renderComponent);
   }
-  if (newHooks) {
-    node.hooks = newHooks;
-    for (let k in newHooks) {
-      for (let h of newHooks[k]) if (h.cb) mount(parentNode, node, h);
-    }
-  }
-}
-
-function mount(parentNode, node, hook) {
-  hook.unmount = hook.cb(node);
-  delete hook.cb;
 }
 
 function unmount(node) {
   for (let k in node.hooks) {
-    for (let h of node.hooks[k]) h.unmount?.(node);
+    for (let h of node.hooks[k]) h.unmount?.();
   }
   for (let child of node.childNodes) unmount(child);
 }
 
-function appendNode(parentNode, newNode, oldNode) {
+function replaceNode(parentNode, newNode, oldNode) {
   if (oldNode) unmount(oldNode), parentNode.replaceChild(newNode, oldNode);
   else parentNode.append(newNode);
   return newNode;

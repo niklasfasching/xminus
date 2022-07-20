@@ -104,37 +104,19 @@ t.describe("jsxy", () => {
       t.assertFixture(document.body.innerHTML);
     });
 
-    t("useEffect", () => {
+    t("useEffect (even nested)", () => {
       let v;
       const Component = (props) => {
         useEffect((el) => {
-          el.innerText = props.list.join(",");
-          return (el) => v = el.innerText;
+          v = "effect";
+          return () => v = "cleanup";
         }, []);
         return html`<div></div>`;
       };
-      render(document.body, html`<${Component} key=1 list=${[1,2,3]}/>`);
-      t.assertFixture(document.body.innerHTML);
-      render(document.body, html`<${Component} key=2 list=${[2,3,4]}/>`);
-      t.assertFixture(document.body.innerHTML);
-      t.assert(v === "1,2,3");
-    });
-
-    t("useEffect recursive cleanup", () => {
-      let v;
-      const Component = (props) => {
-        useEffect((el) => {
-          el.innerText = props.list.join(",");
-          return (el) => {
-            v = el.innerText;
-          }
-        }, []);
-        return html`<div></div>`;
-      };
-      render(document.body, html`<div><${Component} key=1 list=${[1,2,3]}/></div>`);
-      t.assertFixture(document.body.innerHTML);
+      render(document.body, html`<div><${Component} key=1/></div>`);
+      t.assert(v === "effect", v);
       render(document.body, null);
-      t.assert(v === "1,2,3");
+      t.assert(v === "cleanup", v);
     });
 
     t("sibling hooks", () => {
