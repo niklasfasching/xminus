@@ -76,6 +76,12 @@ export function html(strings, ...values) {
   return children[0];
 }
 
+export function css(strings, ...values) {
+  const sheet = new CSSStyleSheet()
+  sheet.replaceSync(String.raw(strings, ...values));
+  document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+}
+
 export function useState(initialValue) {
   return getHook({value: initialValue}).value;
 }
@@ -220,9 +226,9 @@ function renderRoute(x) {
   const params = r.exec(path).groups;
   for (const k in params) props[k] = decodeURIComponent(params[k]);
   render(x.parentNode, {tag, props: f(props)});
-  if (hash !== location.hash) {
+  if (oldHash !== location.hash) {
     window.scrollTo(0, 0);
     document.activeElement?.blur?.();
-    hash = location.hash;
+    oldHash = location.hash;
   }
 }
