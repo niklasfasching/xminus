@@ -182,7 +182,7 @@ function setProperty(node, k, v) {
   if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
   else if (k[0] === "@") setEventListener(node, k.slice(1), eventListener, eventListener);
-  else if (k[0] == "o" && k [1] == "n") setEventListener(node, k.slice(2), v, node.vnode?.props[k]);
+  else if (k[0] == "o" && k [1] == "n") setEventListener(node, k.slice(2), eventListener, eventListener);
   else node.setAttribute(k, v);
 }
 
@@ -192,8 +192,11 @@ function setEventListener(node, type, f, g) {
 }
 
 function eventListener(e) {
-  e.target.vnode.props["@"+e.type](e);
-  e.target.renderComponent();
+  const props = e.target.vnode.props;
+  const v = props["on"+e.type] || props["@"+e.type];
+  if (Array.isArray(v)) v[0](e, ...v.slice(1));
+  else v(e);
+  if (props["@"+e.type]) e.target.renderComponent();
 }
 
 export function db(v) {
