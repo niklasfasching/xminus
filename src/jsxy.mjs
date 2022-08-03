@@ -102,6 +102,7 @@ export function getHook(v) {
 export function render(parentNode, vnode) {
   const f = () => renderChildren(parentNode, [vnode], vnode, f);
   f();
+  return f;
 }
 
 function renderChildren(parentNode, vnodes, renderComponent) {
