@@ -1,0 +1,85 @@
+:root {
+  --hl: hsla(95, 40%, 60%, 50%);
+  --bg: #fff;
+  --fg: #000;
+  --disabled: #aaa;
+  --bghl: #ddd;
+}
+
+html {
+  box-sizing: border-box;
+  height: 100%;
+}
+
+*, ::after, ::before {
+  box-sizing: inherit;
+}
+
+body {
+  font-family: sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0;
+  min-height: 100%;
+}
+
+h1, h2, h3 {
+  position: relative;
+  display: inline-block;
+}
+
+:is(h1, h2, h3)::after {
+  position: absolute;
+  content: '';
+  background: var(--hl);
+  inset: 60% -.2em -.2em -.2em; /* top right bottom left */
+  z-index: -1;
+}
+
+button {
+  display: inline-block;
+  font: inherit;
+  padding: .25em .5em;
+  background: var(--bg);
+  color: var(--fg);
+  border: .125rem solid var(--fg);
+  box-shadow: .125rem .125rem 0 var(--fg);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+button:is(:hover, :active, :focus) {
+  background: var(--bghl);
+}
+
+button:is(:active, :focus) {
+  outline: .125rem solid var(--hl);
+  box-shadow: none;
+  transform: translate(.125rem, 0);
+}
+
+button:disabled:is(:disabled, :hover, :focus) {
+  outline: none;
+  box-shadow: none;
+  transform: none;
+  color: var(--bg);
+  background: var(--disabled);
+  border-color: var(--fg);
+  cursor: not-allowed;
+}
+
+input, textarea, select {
+  font: inherit;
+  appearance: none;
+  box-shadow: none;
+  font-size: 1em;
+  color: var(--fg);
+  background-color: var(--bg);
+  border: .125rem solid var(--fg);
+  border-radius: 0;
+  padding: .25em .5em;
+}
+
+:is(input, textarea, select):is(:active, :focus) {
+  outline: .125rem solid var(--hl);
+}
