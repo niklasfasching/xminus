@@ -100,6 +100,7 @@ export function getHook(v) {
 }
 
 export function render(parentNode, vnode) {
+  if (vnode?.props) vnode.props = Object.assign({key: "render"}, vnode.props);
   const f = () => renderChildren(parentNode, [vnode], vnode, f);
   f();
   return f;
