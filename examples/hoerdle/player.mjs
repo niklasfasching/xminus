@@ -2,10 +2,10 @@ import {html, css} from "../../src/jsxy.mjs";
 
 css`
   x-bar {
-  width: 100%;
   height: .5em;
   display: block;
   position: relative;
+  overflow: hidden;
   }
 
   x-bar .marker {
@@ -23,12 +23,10 @@ css`
   position: absolute;
   background: black;
   height: 100%;
-  width: 0%;
   }
 
   x-player button {
   width: 100%;
-  margin-bottom: 1em;
   }
 `
 
@@ -53,8 +51,8 @@ export function Player({src, i, n}) {
   }
 
   const bars = new Array(n).fill().map((_, j) => html`
-    <span .current=${i === j} .marker
-          style="left: ${((j+1)**2/n**2)*100}%"/>
+    <span .current=${i === j-1} .marker
+          style="left: ${((j)**2/n**2)*100}%"/>
   `);
   return html`
     <x-player>

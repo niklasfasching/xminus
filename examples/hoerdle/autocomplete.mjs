@@ -1,28 +1,20 @@
 import {html, css} from "../../src/jsxy.mjs";
 
-
 css`
   x-autocomplete form {
   display: flex;
   }
-  x-autocomplete form input {
-  flex: 1;
-  }
 `;
 
 export function Autocomplete({key = "_", values, cb}, render) {
-  const options = values.map(v => html`<option>${v}</option>`);
-
   function onKeyDown(e) {
     if (e.key === "Enter") e.preventDefault();
   }
 
   function onClick(e) {
     const input = e.target.closest("x-autocomplete").querySelector("input");
-    const x = input.value.toLowerCase();
-    const suggestions = values.filter(v => v.toLowerCase().includes(x));
-    if (!x) cb("<skip>"), e.target.blur();
-    else if (suggestions.length) cb(suggestions[0]), e.target.blur();
+    if (!input.value) cb("<skip>"), e.target.blur();
+    else if (values.includes(input.value)) cb(input.value), e.target.blur();
     else alert("bad guess");
     input.value = "";
   }
@@ -32,7 +24,6 @@ export function Autocomplete({key = "_", values, cb}, render) {
       <form>
         <${Input} list=${values}/>
         <button type=button onclick=${onClick}>Ok</button>
-        <datalist id=${key}>${options}</datalist>
       </form>
     </x-autocomplete>
   `;
@@ -41,6 +32,11 @@ export function Autocomplete({key = "_", values, cb}, render) {
 css`
   x-input {
   position: relative;
+  width: 100%;
+  }
+
+  x-input input {
+  width: 100%;
   }
 
   x-input .results {
@@ -56,23 +52,35 @@ css`
   }
 
   x-input .results div:hover {
-  background: #999;
+  background: #eee;
   }
 `;
 
 function Input({list}) {
   let suggestions = [];
+
+  function onKeyDown(e) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (suggestions.length) e.target.value = suggestions[0];
+    onBlur(e);
+  }
+
   function onKeyUp(e) {
-    suggestions = list.filter(x => x.toLowerCase().includes(e.target.value.toLowerCase()));
+    if (e.key === "Escape") return void onBlur(e);
+    const v = e.target.value.toLowerCase();
+    suggestions = list.filter(x => x.toLowerCase().includes(v));
+
     const el = e.target.parentNode.querySelector(".results");
     el.style.visibility = "initial";
-    el.innerHTML = suggestions.slice(0, 5).map(x => `<div>${x}</div>`).join("")
+    el.innerHTML = suggestions
+      .sort((a, b) => a.toLowerCase().indexOf(v) - b.toLowerCase().indexOf(v))
+      .slice(0, 5).map(x => `<div>${x}</div>`).join("")
   }
 
   function onBlur(e) {
     const el = e.target.parentNode.querySelector(".results");
     setTimeout(() => el.style.visibility = "hidden", 100);
-
   }
 
   function onClick(e) {
@@ -84,6 +92,7 @@ function Input({list}) {
     <x-input>
       <input onblur=${onBlur}
              onkeyup=${onKeyUp}
+             onkeydown=${onKeyDown}
              autocomplete=off/>
       <div .results onclick=${onClick}/>
     </x-input>`

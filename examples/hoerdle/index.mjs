@@ -5,7 +5,24 @@ import {Autocomplete} from "./autocomplete.mjs";
 const rawTracks = await fetch("tracks.json").then(r => r.json())
 const tracks = rawTracks.reduce((m, x) => Object.assign(m, {[`${x.artist} - ${x.track}`]: x}), {});
 
-render(document.body, html`<${App} tracks=${tracks}/>`);
+render(document.body, html`<main><${App} tracks=${tracks}/></main>`);
+
+css`
+  x-app .guesses {
+  display: grid;
+  gap: 1em;
+  grid-auto-rows: 1fr;
+  }
+
+  x-app .guesses div {
+  border: .125em solid black;
+  padding: 1em;
+  }
+
+  x-app .guesses .filled {
+  background: #eee;
+  }
+`
 
 export function App({tracks}, renderComponent) {
   const options = Object.keys(tracks);
@@ -31,25 +48,36 @@ export function App({tracks}, renderComponent) {
   }
 
   const list = Array(n).fill("").map((_, i) => {
-    return html`<li>${guesses[i] || ""}</li>`
+    return html`<div .filled=${guesses[i]}>${guesses[i] || "⠀"}</div>`
   });
   return html`
-    <div>
-      <${Player}
-        key=player
-        i=${guesses.length}
-        n=${n}
-        src=${trackUrl}/>
-      <${Autocomplete}
-        values=${options.filter(o => !guesses.includes(o))}
-        cb=${onGuess}/>
-      <h1>Guesses</h1>
-      <ol>${list}</ol>
-    </div>`;
+    <x-app>
+      <section>
+        <${Player}
+              key=player
+              i=${guesses.length}
+              n=${n}
+              src=${trackUrl}/>
+        <${Autocomplete}
+              values=${options.filter(o => !guesses.includes(o))}
+              cb=${onGuess}/>
+        <h2>Guesses</h2>
+        <div .guesses>
+          ${list}
+        </div>
+      </section>
+    </x-app>
+  `;
 }
 
-function Resolution({guesses, n, track, trackID, today}) {
+css`
+  x-resolution .stats {
+  font-size: 1.5em;
+  letter-spacing: 0.2em;
+  }
+`;
 
+function Resolution({guesses, n, track, trackID, today}) {
   const stats = Array(5).fill("")
                         .map((_, i) => guesses[i] === track ? "🟩" :
                                        guesses[i] === "<skip>" ? "🟨" :
@@ -60,10 +88,11 @@ function Resolution({guesses, n, track, trackID, today}) {
   }
 
   return html`
-    <div>
-      <h1>You ${guesses.includes(track) ? "won" : "lost"} today</h1>
+    <x-resolution>
+      <h2>You ${guesses.includes(track) ? "won" : "lost"} today</h2>
       <iframe src="https://open.spotify.com/embed/track/${trackID}"
-              frameBorder="0" allow="autoplay; encrypted-media;"/>
-      <div>Results: ${stats} <button onclick=${copy}>Copy</button></div>
-    </div>`;
+              width="100%" frameBorder="0" allow="autoplay; encrypted-media;"/>
+      <div .stats>${stats}</div>
+      <button onclick=${copy}>Copy results</button>
+    </x-resolution>`;
 }
