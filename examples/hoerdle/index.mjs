@@ -24,13 +24,9 @@ export function App({tracks}, renderComponent) {
   }
 
   if (guesses.includes(track) || guesses.length >= n) {
-    const reset = () => {
-      db({[today]: null});
-      renderComponent();
-    }
     const trackID = tracks[track].uri.split(":")[2];
     return html`<${Resolution} ...=${state[today]}
-                               today=${today} reset=${reset}
+                               today=${today}
                                trackID=${trackID}/>`
   }
 
@@ -52,7 +48,7 @@ export function App({tracks}, renderComponent) {
     </div>`;
 }
 
-function Resolution({guesses, n, track, trackID, today, reset}) {
+function Resolution({guesses, n, track, trackID, today}) {
 
   const stats = Array(5).fill("")
                         .map((_, i) => guesses[i] === track ? "🟩" :
@@ -69,6 +65,5 @@ function Resolution({guesses, n, track, trackID, today, reset}) {
       <iframe src="https://open.spotify.com/embed/track/${trackID}"
               frameBorder="0" allow="autoplay; encrypted-media;"/>
       <div>Results: ${stats} <button onclick=${copy}>Copy</button></div>
-      <button onclick=${reset}>Reset</button>
     </div>`;
 }
