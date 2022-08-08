@@ -26,11 +26,12 @@ css`
 
 export function App({tracks}, renderComponent) {
   const options = Object.keys(tracks);
-  const i = Math.floor((Date.now() - new Date("2022-01-01").getTime()) / 1000 / 60 / 60 / 24);
+  const now = new Date(Date.now() - (new Date().getTimezoneOffset() * 1000 * 60));
+  const today = now.toISOString().slice(0, 10);
+  const i = Math.floor((now.getTime() - new Date("2022-01-01").getTime()) / 1000 / 60 / 60 / 24);
   const track = options[i % options.length];
   const trackUrl = `https://www-growth.scdn.co/static/games/tracks/${tracks[track].transcoded_file_id}.mp3`;
 
-  const today = new Date().toISOString().substring(0,10);
   const state = db();
   if (!state[today]) db({...state, [today]: {guesses: [], n: 5, track}})
   const {guesses, n} = state[today];
