@@ -5,7 +5,7 @@ import {Autocomplete} from "./autocomplete.mjs";
 const rawTracks = await fetch("tracks.json").then(r => r.json())
 const tracks = rawTracks.reduce((m, x) => Object.assign(m, {[`${x.artist} - ${x.track}`]: x}), {});
 
-render(document.body, html`<main><${App} tracks=${tracks}/></main>`);
+render(html`<main><${App} tracks=${tracks}/></main>`, document.body);
 
 css`
   x-app .guesses {
@@ -24,7 +24,7 @@ css`
   }
 `
 
-export function App({tracks}, renderComponent) {
+export function App({tracks, $}) {
   const options = Object.keys(tracks);
   const now = new Date(Date.now() - (new Date().getTimezoneOffset() * 1000 * 60));
   const today = now.toISOString().slice(0, 10);
@@ -38,7 +38,7 @@ export function App({tracks}, renderComponent) {
   function onGuess(guess) {
     guesses.push(guess);
     db(true);
-    renderComponent();
+    render($);
   }
 
   if (guesses.includes(track) || guesses.length >= n) {

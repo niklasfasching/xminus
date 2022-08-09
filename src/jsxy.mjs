@@ -16,6 +16,7 @@ export function html(strings, ...values) {
         }
       } else if (($ === "close" && c === ">")) {
         const x = xs.pop(), props = {};
+        if (typeof x.tag === "function") props.$ = {component: x};
         if (tmp && tmp !== "/" && tmp.slice(1) !== x.tag) {
           throw new Error(`unexpected <${tmp}> in <${x.tag}>`);
         }
@@ -24,6 +25,7 @@ export function html(strings, ...values) {
           if (k === "...") Object.assign(props, v);
           else if (k[0] === ".") v && (props.classList = (props.classList || "") + " " + k.slice(1));
           else if (k[0] === "#") v && (props.id = k.slice(1));
+          else if (k[0] === "$") v && (x.ref = k.slice(1));
           else props[k] = v;
         }
         x.props = props;
@@ -98,18 +100,17 @@ export function getHook(v) {
   return hook ? hook : keyHooks[keyHooks.push(v) - 1];
 }
 
-export function render(parentNode, vnode) {
-  if (vnode?.props) vnode.props = Object.assign({key: "render"}, vnode.props);
-  const f = () => renderChildren(parentNode, [vnode], vnode, f);
-  f();
-  return f;
+export function render(vnode, parentNode) {
+  if (parentNode) return void renderChildren(parentNode, [vnode], vnode);
+  if (vnode.component) vnode = vnode.component;
+  renderChild(vnode.node.parentNode, vnode, vnode.node, vnode);
 }
 
-function renderChildren(parentNode, vnodes, renderComponent) {
+function renderChildren(parentNode, vnodes, component) {
   let oldHooks = parentNode.hooks || {}, newHooks = {};
   hooks = oldHooks, hookIndex = 0, parentNode.hooks = newHooks;
   for (let i = 0; i < vnodes.length; i++) {
-    renderChild(parentNode, vnodes[i], parentNode.childNodes[i], renderComponent);
+    renderChild(parentNode, vnodes[i], parentNode.childNodes[i], component);
   }
   for (let k in oldHooks) {
     if (!(k in newHooks)) for (let h of oldHooks[k]) h.unmount?.();
@@ -121,25 +122,23 @@ function renderChildren(parentNode, vnodes, renderComponent) {
   hooks = undefined;
 }
 
-function renderChild(parentNode, vnode, node, renderComponent) {
-  if (!hooks) hooks = parentNode.hooks;
-  while (typeof vnode?.tag === "function") {
-    let component = vnode;
-    renderComponent = () => renderChild(parentNode, component, node, renderComponent);
-    hookIndex = 0, hookKey = vnode.props.key || vnode.props.id;
-    vnode = vnode.tag(vnode.props, renderComponent);
-    if (hookIndex) parentNode.hooks[hookKey] = hooks[hookKey];
-  }
+function renderChild(parentNode, vnode, node, component) {
   if (vnode == null) {
     if (node) unmount(node), node.remove();
+  } else if (typeof vnode.tag === "function") {
+    if (!hooks) hooks = parentNode.hooks;
+    hookIndex = 0, hookKey = vnode.props.key || vnode.props.id;
+    const _vnode = vnode.tag(vnode.props);
+    if (hookIndex) parentNode.hooks[hookKey] = hooks[hookKey];
+    node = renderChild(parentNode, _vnode, node, vnode);
   } else if (!vnode.tag) {
     if (node?.nodeType === 3) node.data = vnode;
-    else replaceNode(parentNode, document.createTextNode(vnode), node);
+    else node = replaceNode(parentNode, document.createTextNode(vnode), node);
   } else {
     if (!node || vnode.tag !== node.vnode?.tag) {
       node = replaceNode(parentNode, document.createElement(vnode.tag), node);
     }
-    setProperties(node, vnode, renderComponent);
+    setProperties(node, vnode, component);
     if (hookIndex) {
       for (let h of parentNode.hooks[hookKey]) {
         if (h.mount && (h.changed || h.node !== node)) {
@@ -148,8 +147,13 @@ function renderChild(parentNode, vnode, node, renderComponent) {
         }
       }
     }
-    renderChildren(node, vnode.children, renderComponent);
+    renderChildren(node, vnode.children, component);
   }
+  if (Object(vnode) === vnode) {
+    if (vnode.ref) component.props.$[vnode.ref] = node;
+    vnode.node = node;
+  }
+  return node;
 }
 
 function unmount(node) {
@@ -165,17 +169,16 @@ function replaceNode(parentNode, newNode, oldNode) {
   return newNode;
 }
 
-function setProperties(node, vnode, renderComponent) {
+function setProperties(node, vnode, component) {
   for (let k in vnode.props) {
-    setProperty(node, k, vnode.props[k], renderComponent);
+    setProperty(node, k, vnode.props[k]);
   }
   if (node.vnode) {
     for (let k in node.vnode.props) {
-      if (!(k in vnode.props)) setProperty(node, k, "", renderComponent);
+      if (!(k in vnode.props)) setProperty(node, k, "");
     }
   }
-  node.renderComponent = renderComponent;
-  node.vnode = vnode;
+  node.vnode = vnode, node.component = component;
 }
 
 function setProperty(node, k, v) {
@@ -196,7 +199,7 @@ function eventListener(e) {
   const v = props["on"+e.type] || props["@"+e.type];
   if (Array.isArray(v)) v[0](e, ...v.slice(1));
   else v(e);
-  if (props["@"+e.type]) e.target.renderComponent();
+  if (props["@"+e.type]) render(e.target.component);
 }
 
 export function db(v) {
@@ -208,7 +211,7 @@ export function db(v) {
   return dbMap;
 }
 
-export function route(parentNode, routes) {
+export function route(routes, parentNode) {
   const x = {
     parentNode,
     routes: Object.entries(routes || []).map(([path, component]) => [
@@ -229,7 +232,7 @@ function renderRoute(x) {
   const props = Object.assign({}, new URLSearchParams(query).entries());
   const params = r.exec(path).groups;
   for (const k in params) props[k] = decodeURIComponent(params[k]);
-  render(x.parentNode, {tag, props: f(props)});
+  render({tag, props: f(props)}, x.parentNode);
   if (oldHash !== location.hash) {
     window.scrollTo(0, 0);
     document.activeElement?.blur?.();

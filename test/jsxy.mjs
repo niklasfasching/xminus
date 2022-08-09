@@ -87,7 +87,7 @@ t.describe("jsxy", () => {
       const Component = () => {
         return html`<div>hello world</div>`;
       };
-      render(document.body, html`<${Component} />`);
+      render(html`<${Component} />`, document.body);
       t.assertFixture(document.body.innerHTML);
     });
 
@@ -100,7 +100,7 @@ t.describe("jsxy", () => {
             ${html`<li>4</li>`}
           </ul>`;
       };
-      render(document.body, html`<${Component} list=${[1,2,3]}/>`);
+      render(html`<${Component} list=${[1,2,3]}/>`, document.body);
       t.assertFixture(document.body.innerHTML);
     });
 
@@ -111,11 +111,11 @@ t.describe("jsxy", () => {
           v = "effect";
           return () => v = "cleanup";
         }, []);
-        return html`<div></div>`;
+        return html`<div/>`;
       };
-      render(document.body, html`<div><${Component} key=1/></div>`);
+      render(html`<div><${Component} key=1/></div>`, document.body);
       t.assert(v === "effect", v);
-      render(document.body, null);
+      render(null, document.body);
       t.assert(v === "cleanup", v);
     });
 
@@ -130,10 +130,10 @@ t.describe("jsxy", () => {
         `;
       };
 
-      render(document.body, html`<div>
+      render(html`<div>
         <${Component} key=a/>
         <${Component} key=b/>
-      </div>`);
+      </div>`, document.body);
       t.assertFixture(document.body.innerHTML);
       document.body.querySelector("#a").click();
       document.body.querySelector("#a").click();
@@ -143,15 +143,15 @@ t.describe("jsxy", () => {
 
 
     t("dynamic render", () => {
-      const Component = (props, render) => {
+      const Component = ({$}) => {
         const state = useState({n: 0});
         return html`
-          <div onclick=${() => { state.n++;  render() } }>
+          <div onclick=${() => { state.n++;  render($) } }>
             Count: ${state.n} ${state.n%2 === 1 && html`<b>(uneven!)</b>`}
           </div>
         `;
       };
-      render(document.body, html`<${Component} key=counter/>`);
+      render(html`<${Component} key=counter/>`, document.body);
       t.assertFixture(document.body.innerHTML);
       document.body.querySelector("div").click()
       t.assertFixture(document.body.innerHTML);
@@ -166,7 +166,7 @@ t.describe("jsxy", () => {
         const state = useState({n: 0});
         return html`<div @click=${() => state.n++}>${state.n}</div>`;
       };
-      render(document.body, html`<${Component} key=x/>`);
+      render(html`<${Component} key=x/>`, document.body);
       t.assertFixture(document.body.innerHTML);
       document.body.querySelector("div").click();
       t.assertFixture(document.body.innerHTML);
@@ -178,12 +178,28 @@ t.describe("jsxy", () => {
         return html`<div onfoo=${() => state.n++ }>${state.n}</div>`;
       };
       // render twice to set event listener twice (i.e. test if previous is removed)
-      render(document.body, html`<${Component} key=x/>`);
-      render(document.body, html`<${Component} key=x/>`);
+      render(html`<${Component} key=x/>`, document.body);
+      render(html`<${Component} key=x/>`, document.body);
       t.assertFixture(document.body.innerHTML);
       document.body.querySelector("div").dispatchEvent(new Event("foo"));
-      render(document.body, html`<${Component} key=x/>`);
+      render(html`<${Component} key=x/>`, document.body);
       t.assertFixture(document.body.innerHTML);
+    });
+
+    t("$references", () => {
+      let $;
+      const Component = (props) => {
+        $ = props.$;
+        return html`
+          <div>
+            <button $a>a</button>
+            <div><button $b>b</button></div>
+          </div>
+        `;
+      }
+      render(html`<${Component}/>`, document.body);
+      t.assert($.a.innerText === "a");
+      t.assert($.b.innerText === "b");
     });
   });
 });
