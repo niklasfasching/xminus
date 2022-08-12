@@ -5,8 +5,10 @@
   --hl: hsla(95, 50%, 70%, 50%);
   --ll: #ddd;
 
-  --hf: serif;
-  --bf: sans-serif;
+  --hf: sans-serif;
+  --bf: system-ui;
+
+  --bw: .1rem;
 }
 
 *, ::after, ::before {
@@ -18,7 +20,7 @@ html {
 }
 
 body {
-  font: normal 1.2em/1.4 var(--bf);
+  font: normal 1.2em/1.6 var(--bf);
   background: var(--bg);
   color: var(--fg);
   min-height: 100%;
@@ -31,22 +33,23 @@ section {
   gap: 1em;
 }
 
-h1 { font: bold 3em var(--hf); }
+h1 { font: bold 3em    var(--hf); }
 h2 { font: bold 1.75em var(--hf); }
 h3 { font: bold 1.25em var(--hf); }
+h4 { font: bold 0.75em var(--hf); }
 
 h1, h2, h3 {
   color: var(--mg);
-  position: relative;
+  display: inline;
+  background: linear-gradient(180deg, var(--bg) 60%, var(--hl) 60%) no-repeat;
+  background-position: .25em;
+  line-height: 1.2;
   width: max-content;
 }
 
-:is(h1, h2, h3)::before {
-  position: absolute;
-  content: '';
-  background: var(--hl);
-  inset: 60% -.25em -.25em 0;
-  z-index: -1;
+:is(h1, h2, h3)::before, :is(h1, h2, h3)::after {
+  content: "";
+  display: block;
 }
 
 p {
@@ -64,10 +67,11 @@ button {
   display: inline-block;
   font: inherit;
   padding: .25em .5em;
+  margin: .5em 0;
   background: var(--bg);
   color: var(--fg);
-  border: .125rem solid var(--fg);
-  box-shadow: .125rem .125rem 0 var(--fg);
+  border: var(--bw) solid var(--fg);
+  box-shadow: var(--bw) var(--bw) 0 var(--fg);
   border-radius: 0;
   cursor: pointer;
 }
@@ -76,21 +80,14 @@ button:is(:active, :focus) {
   filter: brightness(90%);
 }
 
-@media (pointer: fine) {
-  button:hover {
-    filter: brightness(90%);
-  }
-}
-
 button:is(:active, :focus) {
   outline: .25rem solid var(--hl);
   box-shadow: none;
-  transform: translate(.125rem, 0);
+  transform: translate(var(--bw), 0);
 }
 
 :is(button,input):disabled:is(:disabled, :hover, :focus) {
   color: var(--mg);
-  background: var(--ll);
   border-color: var(--mg);
   outline: none;
   box-shadow: none;
@@ -101,14 +98,28 @@ button:is(:active, :focus) {
 
 input, textarea, select {
   font: inherit;
-  appearance: none;
   box-shadow: none;
   font-size: 1em;
   color: var(--fg);
   background-color: var(--bg);
-  border: .125rem solid var(--fg);
+  border: var(--bw) solid var(--fg);
   border-radius: 0;
   padding: .25em .5em;
+  margin: .5em 0;
+}
+
+input:not([type=checkbox], [type=radio]) {
+  width: 100%;
+  appearance: none;
+}
+
+input:is([type=checkbox], [type=radio]) {
+  transform: scale(1.5);
+  margin: 1em;
+}
+
+input:not(:placeholder-shown):invalid {
+  border-color: red;
 }
 
 :is(input, textarea, select):is(:active, :focus) {
@@ -120,7 +131,7 @@ a {
   background: var(--hl);
   padding: 0 .25em;
   text-decoration: none;
-  box-shadow: .125rem .125rem 0 var(--fg);
+  box-shadow: 0 var(--bw) 0 var(--fg);
 }
 
 a:visited {
@@ -128,31 +139,21 @@ a:visited {
 }
 
 table {
+  text-align: left;
   font-size: 1rem;
+  border-collapse: collapse;
   width: 100%;
   border-spacing: 0;
-  text-align: left;
   margin: 2em 0;
 }
 
-td, th {
-  padding: .75em;
-}
-
-td {
-  border-bottom: .1em solid var(--fg);
-}
-
-th {
-  border-bottom: .2em solid var(--fg);
-}
-
-td:first-child, th:first-child {
-  padding-left: 0;
+table td, th {
+  padding: .5em;
+  border: var(--bw) solid var(--fg);
 }
 
 code {
-  border: .125em solid var(--fg);
+  border: var(--bw) solid var(--fg);
   padding: .1em .2em;
 }
 
@@ -171,21 +172,12 @@ blockquote {
   color: var(--mg);
 }
 
-fieldset {
-  border: .125em solid var(--fg);
-}
-
-label {
-  font-weight: bold;
-  padding: 3em;
-}
-
 .row {
   display: flex;
 }
 
 .space {
-  gap: 0.5em;
+  gap: .5em;
   margin: 1em;
 }
 
@@ -197,15 +189,40 @@ label {
   color: var(--hl);
 }
 
+form {
+  width: 100%;
+}
+
+fieldset {
+  border: var(--bw) solid var(--fg);
+  padding: 1em;
+}
+
+label {
+  font-weight: bold;
+  padding: 3em;
+}
+
+ul {
+  padding: 0 2ch;
+}
+
+
 .debug * {
   outline: 1px solid #f00 !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
 
-@media (min-width: 48em) {
+@media (pointer: fine) {
+  a:hover, button:hover {
+    filter: brightness(90%);
+  }
+}
+
+@media (min-width: 70ch) {
   main {
-    width: 42em;
+    width: 70ch;
     margin: 0 auto;
   }
 
