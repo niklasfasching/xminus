@@ -1,4 +1,4 @@
-let hooks, hookKey, hookIndex, dbMap, oldHash;
+let hooks, hookKey, hookIndex, dbMap, oldHash, style;
 
 export function html(strings, ...values) {
   let $ = "child", xs = [{children: []}], tmp = "";
@@ -77,9 +77,8 @@ export function html(strings, ...values) {
 }
 
 export function css(strings, ...values) {
-  const sheet = new CSSStyleSheet()
-  sheet.replaceSync(String.raw(strings, ...values));
-  document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+  if (!style) style = document.head.appendChild(document.createElement("style"));
+  style.innerHTML += String.raw(strings, ...values);
 }
 
 export function useState(initialValue) {
