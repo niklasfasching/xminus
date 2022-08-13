@@ -1,3 +1,4 @@
+const attributes = new Set("list", "form", "selected");
 let hooks, hookKey, hookIndex, dbMap, oldHash, style;
 
 export function html(strings, ...values) {
@@ -182,11 +183,12 @@ function setProperties(node, vnode, component) {
 }
 
 function setProperty(node, k, v) {
-  if (k in node && k !== "list" && k !== "form" && k !== "selected") node[k] = v == null ? "" : v;
+  if (k in node && !attributes.has(k)) { if (node[k] !== v) node[k] = v == null ? "" : v; }
   else if (v == null || v === false) node.removeAttribute(k);
   else if (k[0] === "@") setEventListener(node, k.slice(1), eventListener, eventListener);
   else if (k[0] == "o" && k [1] == "n") setEventListener(node, k.slice(2), eventListener, eventListener);
   else node.setAttribute(k, v);
+
 }
 
 function setEventListener(node, type, f, g) {
