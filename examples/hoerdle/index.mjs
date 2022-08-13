@@ -15,7 +15,7 @@ css`
   }
 
   x-app .guesses div {
-  border: .125em solid black;
+  border: var(--bw) solid black;
   padding: 1em;
   }
 
