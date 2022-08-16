@@ -141,6 +141,13 @@ t.describe("jsxy", () => {
       t.assertFixture(document.body.innerHTML);
     });
 
+    t("render array of vnodes", () => {
+      render([1,2,3].map(x => html`<div>${x}</div>`), document.body)
+      t.assertFixture(document.body.innerHTML);
+      render([4,5].map(x => html`<div>${x}</div>`), document.body)
+      t.assertFixture(document.body.innerHTML);
+    });
+
 
     t("dynamic render", () => {
       const Component = ({$}) => {

@@ -37,11 +37,7 @@
   },
   "jsxy: html: component tags (0)": {
     "children": [],
-    "props": {
-      "$": {
-        "component": "[circular]"
-      }
-    },
+    "props": {},
     "tag": "<<() => {}>>"
   },
   "jsxy: html: simple attributes (0)": {
@@ -177,6 +173,8 @@
   "jsxy: render: vnode/vnode array children render (0)": "<ul>\n            <li>1</li><li>2</li><li>3</li><li>4</li></ul>",
   "jsxy: render: sibling hooks (0)": "<div><div id=\"a\">\n            Count: 0</div><div id=\"b\">\n            Count: 0</div></div>",
   "jsxy: render: sibling hooks (1)": "<div><div id=\"a\">\n            Count: 2</div><div id=\"b\">\n            Count: 1</div></div>",
+  "jsxy: render: render array of vnodes (0)": "<div>1</div><div>2</div><div>3</div>",
+  "jsxy: render: render array of vnodes (1)": "<div>4</div><div>5</div>",
   "jsxy: render: dynamic render (0)": "<div>\n            Count: 0</div>",
   "jsxy: render: dynamic render (1)": "<div>\n            Count: 1<b>(uneven!)</b></div>",
   "jsxy: render: dynamic render (2)": "<div>\n            Count: 2</div>",

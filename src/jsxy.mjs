@@ -17,7 +17,6 @@ export function html(strings, ...values) {
         }
       } else if (($ === "close" && c === ">")) {
         const x = xs.pop(), props = {};
-        if (typeof x.tag === "function") props.$ = {component: x};
         if (tmp && tmp !== "/" && tmp.slice(1) !== x.tag) {
           throw new Error(`unexpected <${tmp}> in <${x.tag}>`);
         }
@@ -102,12 +101,13 @@ export function getHook(v) {
 }
 
 export function render(vnode, parentNode) {
-  if (parentNode) return void renderChildren(parentNode, [vnode], vnode);
+  if (parentNode) return void renderChildren(parentNode, vnode, vnode);
   if (vnode.component) vnode = vnode.component;
   renderChild(vnode.node.parentNode, vnode, vnode.node, vnode);
 }
 
 function renderChildren(parentNode, vnodes, component) {
+  if (!Array.isArray(vnodes)) vnodes = [vnodes];
   let oldHooks = parentNode.hooks || {}, newHooks = {};
   hooks = oldHooks, hookIndex = 0, parentNode.hooks = newHooks;
   for (let i = 0; i < vnodes.length; i++) {
@@ -129,6 +129,7 @@ function renderChild(parentNode, vnode, node, component) {
   } else if (typeof vnode.tag === "function") {
     if (!hooks) hooks = parentNode.hooks;
     hookIndex = 0, hookKey = vnode.props.key || vnode.props.id;
+    vnode.props.$ = {component: vnode};
     const _vnode = vnode.tag(vnode.props);
     if (hookIndex) parentNode.hooks[hookKey] = hooks[hookKey];
     node = renderChild(parentNode, _vnode, node, vnode);
