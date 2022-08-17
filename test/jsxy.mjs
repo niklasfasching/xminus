@@ -50,6 +50,10 @@ t.describe("jsxy", () => {
       <div a b=1 ...=${{c: 2, d: 3}} ...=${{e: 4}}></div>
     `);
 
+    test("--css-var props", html`
+      <div --size=1em></div>
+    `);
+
     test("class and id props", html`
       <div>
       <div .foo .bar #baz/>

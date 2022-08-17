@@ -26,6 +26,7 @@ export function html(strings, ...values) {
           else if (k[0] === ".") v && (props.classList = (props.classList || "") + " " + k.slice(1));
           else if (k[0] === "#") v && (props.id = k.slice(1));
           else if (k[0] === "$") v && (x.ref = k.slice(1));
+          else if (k[0] === "-" && k[1] === "-") props.style = (props.style || "") + `;${k}:${v};`;
           else props[k] = v;
         }
         x.props = props;

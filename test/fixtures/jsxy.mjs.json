@@ -99,6 +99,13 @@
     },
     "tag": "div"
   },
+  "jsxy: html: --css-var props (0)": {
+    "children": [],
+    "props": {
+      "style": ";--size:1em;"
+    },
+    "tag": "div"
+  },
   "jsxy: html: class and id props (0)": {
     "children": [
       {
