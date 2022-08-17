@@ -212,5 +212,16 @@ t.describe("jsxy", () => {
       t.assert($.a.innerText === "a");
       t.assert($.b.innerText === "b");
     });
+
+    t("render root/app from any child", () => {
+      let i = 0;
+      const App = () => html`<div><${Component}/>${i++}</div>`;
+      const Component = ({$}) => html`<button onclick=${() => render($.app)}></button>`;
+
+      render(html`<${App}/>`, document.body);
+      t.assertFixture(document.body.innerHTML);
+      document.body.querySelector("button").click();
+      t.assertFixture(document.body.innerHTML);
+    });
   });
 });

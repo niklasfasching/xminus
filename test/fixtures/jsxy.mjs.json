@@ -189,5 +189,7 @@
   "jsxy: render: @handlers (0)": "<div>0</div>",
   "jsxy: render: @handlers (1)": "<div>1</div>",
   "jsxy: render: custom event handlers (0)": "<div>0</div>",
-  "jsxy: render: custom event handlers (1)": "<div>1</div>"
+  "jsxy: render: custom event handlers (1)": "<div>1</div>",
+  "jsxy: render: render root/app from any child (0)": "<div><button></button>0</div>",
+  "jsxy: render: render root/app from any child (1)": "<div><button></button>1</div>"
 }

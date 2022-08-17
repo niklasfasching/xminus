@@ -133,7 +133,7 @@ function renderChild(parentNode, vnode, node, component) {
     renderChildren(node, vnode.children, component);
     return node;
   }
-  vnode.props.$ = {self: vnode};
+  vnode.props.$ = {self: vnode, app: component.props?.$?.app || component};
   hookIndex = 0, hookKey = vnode.props.key || vnode.props.id;
   const _vnode = vnode.tag(vnode.props), _hooks = hooks[hookKey];
   node = vnode.node = renderChild(parentNode, _vnode, node, vnode);
