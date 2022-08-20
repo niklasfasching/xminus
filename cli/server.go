@@ -71,7 +71,7 @@ func (s *Server) Start() error {
 		w.Header().Set("Expires", "0")
 		w.Header().Set("Content-Type", contentType)
 		if strings.HasPrefix(contentType, "text/html") {
-			bs = bytes.Replace(bs, []byte("</head>"), []byte(reloadSnippet+"\n</head>"), -1)
+			bs = bytes.Replace(bs, []byte("<html>"), []byte("<html>\n"+reloadSnippet), -1)
 		}
 		w.Write(bs)
 	})
