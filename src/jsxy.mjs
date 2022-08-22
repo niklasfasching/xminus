@@ -1,5 +1,16 @@
 const attributes = new Set("list", "form", "selected");
-let hooks, hookKey, hookIndex, dbMap, oldHash, style;
+let hooks, hookKey, hookIndex, oldHash, style;
+
+export const directives = {
+  db: applyDBDirective,
+}
+
+export const db = new Proxy(localStorage, {
+  get: (t, k) => JSON.parse(t.getItem(k)),
+  set: (t, k, v) => (t.setItem(k, JSON.stringify(v)), true),
+  ownKeys: (t) => Reflect.ownKeys(t),
+  getOwnPropertyDescriptor: (t, k) => Reflect.getOwnPropertyDescriptor(t, k),
+});
 
 export function html(strings, ...values) {
   let $ = "child", xs = [{children: []}], tmp = "";
@@ -16,7 +27,7 @@ export function html(strings, ...values) {
           $ = "open";
         }
       } else if (($ === "close" && c === ">")) {
-        const x = xs.pop(), props = {};
+        const x = xs.pop(), props = x.props.length || typeof x.tag === "function" ? {} : undefined;
         if (tmp && tmp !== "/" && tmp.slice(1) !== x.tag) {
           throw new Error(`unexpected <${tmp}> in <${x.tag}>`);
         }
@@ -27,6 +38,7 @@ export function html(strings, ...values) {
           else if (k[0] === "#") v && (props.id = k.slice(1));
           else if (k[0] === "$") v && (x.ref = k.slice(1));
           else if (k[0] === "-" && k[1] === "-") props.style = (props.style || "") + `;${k}:${v};`;
+          else if (k[0] === ":") x.dirs = {...x.dirs, [k]: v}
           else props[k] = v;
         }
         x.props = props;
@@ -129,8 +141,9 @@ function renderChild(parentNode, vnode, node, component) {
   if (typeof vnode.tag !== "function") {
     if (!node || vnode.tag !== node.vnode?.tag) node = createNode(parentNode, vnode.tag, node);
     if (vnode.ref) component.props.$[vnode.ref] = node;
-    setProperties(node, vnode, component);
+    if (vnode.props) setProperties(node, vnode, component);
     renderChildren(node, vnode.children, component);
+    if (vnode.dirs) applyDirectives(node, vnode)
     return node;
   }
   vnode.props.$ = {self: vnode, app: component.props?.$?.app || component};
@@ -176,8 +189,7 @@ function replaceNode(parentNode, newNode, oldNode) {
 
 function setProperties(node, vnode, component) {
   for (let k in vnode.props) {
-    if (node.vnode && (k in node.vnode.props) && node.vnode.props[k] === vnode.props[k]) continue;
-    setProperty(node, k, vnode.props[k]);
+    if (node.vnode?.props[k] !== vnode.props[k]) setProperty(node, k, vnode.props[k]);
   }
   if (node.vnode) {
     for (let k in node.vnode.props) {
@@ -208,13 +220,36 @@ function eventListener(e) {
   if (props["@"+e.type]) render(e.target.component);
 }
 
-export function db(v) {
-  if (!dbMap) dbMap = Object.assign({}, JSON.parse(localStorage.getItem("db") || "{}"));
-  if (v !== undefined) {
-    Object.assign(dbMap, v);
-    localStorage.setItem("db", JSON.stringify(dbMap));
+function applyDirectives(node, vnode) {
+  for (const kv in vnode.dirs) {
+    const [_, k, ...args] = kv.split(":"), f = directives[k];
+    if (f) node.dataset[k] = f(node, vnode, args, node.dataset[k]);
   }
-  return dbMap;
+}
+
+function applyDBDirective(node, {tag, props}, [key], data) {
+  if (tag !== "form") throw new Error(`:db on non-form tag '${tag}'`)
+  else if (!key) throw new Error(":db without :db:<key>");
+  if (!data) {
+    node.addEventListener("submit", (e) => e.preventDefault());
+    node.addEventListener("input", (e) => {
+      const fd = new FormData(node), m = {};
+      for (let k of fd.keys()) {
+        const el = node.elements[k];
+        if (!el.multiple && !(!el.type && el[0].type === "checkbox")) m[k] = fd.get(k)
+        else m[k] = Object.fromEntries(fd.getAll(k).map(k => [k, true]));
+      }
+      db[key] = m;
+    });
+  }
+  const m = db[key];
+  for (let k in m) {
+    const el = node.elements[k], v = m[k];
+    if (!el) continue;
+    else if (Object(v) !== v) node.elements[k].value = v;
+    else for (const x of (el.options || el)) x[x.type ? "checked" : "selected"] = v[x.value];
+  }
+  return true;
 }
 
 export function route(routes, parentNode) {
