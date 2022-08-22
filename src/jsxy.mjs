@@ -200,10 +200,10 @@ function setProperties(node, vnode, component) {
 }
 
 function setProperty(node, k, v) {
-  if (k in node && !attributes.has(k)) node[k] = v == null ? "" : v;
-  else if (v == null || v === false) node.removeAttribute(k);
+  if (k[0] == "o" && k [1] == "n") setEventListener(node, k.slice(2), eventListener, eventListener);
   else if (k[0] === "@") setEventListener(node, k.slice(1), eventListener, eventListener);
-  else if (k[0] == "o" && k [1] == "n") setEventListener(node, k.slice(2), eventListener, eventListener);
+  else if (k in node && !attributes.has(k)) node[k] = v == null ? "" : v;
+  else if (v == null || v === false) node.removeAttribute(k);
   else node.setAttribute(k, v);
 }
 
