@@ -142,6 +142,7 @@ function renderChild(parentNode, vnode, node, component) {
     if (!node || vnode.tag !== node.vnode?.tag) node = createNode(parentNode, vnode.tag, node);
     if (vnode.ref) component.props.$[vnode.ref] = node;
     if (vnode.props) setProperties(node, vnode, component);
+    vnode.node = node, node.vnode = vnode, node.component = component;
     renderChildren(node, vnode.children, component);
     if (vnode.dirs) applyDirectives(node, vnode)
     return node;
@@ -196,7 +197,6 @@ function setProperties(node, vnode, component) {
       if (!(k in vnode.props)) setProperty(node, k, "");
     }
   }
-  vnode.node = node, node.vnode = vnode, node.component = component;
 }
 
 function setProperty(node, k, v) {
@@ -213,7 +213,7 @@ function setEventListener(node, type, f, g) {
 }
 
 function eventListener(e) {
-  const props = e.target.vnode.props;
+  const props = this.vnode.props;
   const v = props["on"+e.type] || props["@"+e.type];
   if (Array.isArray(v)) v[0](e, ...v.slice(1));
   else v(e);
