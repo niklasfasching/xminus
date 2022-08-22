@@ -56,6 +56,10 @@ func (s *Server) Start() error {
 				}
 				p += "index.html"
 				bs, err = ioutil.ReadFile(p)
+				if err == nil && !strings.HasSuffix(r.URL.Path, "/") {
+					http.Redirect(w, r, r.URL.Path+"/", 302)
+					return
+				}
 			}
 			if err != nil {
 				w.WriteHeader(http.StatusNotFound)
