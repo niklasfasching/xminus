@@ -243,11 +243,10 @@ function applyDBDirective(node, {tag, props}, [key], data) {
     });
   }
   const m = db[key];
-  for (let k in m) {
-    const el = node.elements[k], v = m[k];
-    if (!el) continue;
-    else if (Object(v) !== v) node.elements[k].value = v;
-    else for (const x of (el.options || el)) x[x.type ? "checked" : "selected"] = v[x.value];
+  for (let k of new Set([...node.elements].map(el => el.name).filter(Boolean))) {
+    const el = node.elements[k], v = m && m[k];
+    if (typeof v === "string") node.elements[k].value = v;
+    else for (const x of (el.options || el)) x[x.type ? "checked" : "selected"] = v && v[x.value];
   }
   return true;
 }
