@@ -1,0 +1,7 @@
+* WIP frontend explorations
+
+- a vue-ish and a react-ish framework
+- a cli for building, (test-)running & bundling
+- a test framework with awesome json snapshots
+
+probably more. just playing around with all the footguns i can find.
