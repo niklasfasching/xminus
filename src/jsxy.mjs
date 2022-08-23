@@ -286,30 +286,36 @@ function iterateForm(form, f) {
 }
 
 export function route(routes, parentNode) {
-  const x = {
-    parentNode,
-    routes: Object.entries(routes || []).map(([path, component]) => [
-      new RegExp("^" + path.replace(/\/?$/, "/?$").replaceAll(/{(\w+)}/g, "(?<$1>[^/]+)")),
-      component,
-    ]),
-  };
-  window.addEventListener("popstate", () => renderRoute(x));
-  renderRoute(x);
-  return () => renderRoute(x);
+  window.addEventListener("popstate", () => renderRoute(routes, parentNode));
+  renderRoute(routes, parentNode);
 }
 
-function renderRoute(x) {
+function renderRoute(routes, parentNode) {
   if (!location.hash) history.replaceState(null, null, "#/");
   const [path, query] = location.hash.slice(1).split("?");
-  const [r, [tag, f = x => x]] = x.routes.find(([r]) => r.test(path)) || [null, []];
-  if (!r) return void (location.hash = "#/");
-  const props = Object.assign({}, new URLSearchParams(query).entries());
-  const params = r.exec(path).groups;
-  for (const k in params) props[k] = decodeURIComponent(params[k]);
-  render({tag, props: f(props)}, x.parentNode);
-  if (oldHash !== location.hash) {
-    window.scrollTo(0, 0);
-    document.activeElement?.blur?.();
-    oldHash = location.hash;
+  for (let [r, tag] of Object.entries(routes)) {
+    const params = matchRoute(r, path, query);
+    if (params) {
+      if (oldHash !== location.hash) {
+        window.scrollTo(0, 0);
+        document.activeElement?.blur?.();
+        oldHash = location.hash;
+      }
+      Object.assign(route, {path, params});
+      return void render({tag, props: params}, parentNode);
+    }
+  }
+  location.hash = "#/";
+}
+
+function matchRoute(route, path, query) {
+  const r = new RegExp("^" + route.replace(/\/?$/, "/?$").replace(/\/{(.+)}/g, (_, x) =>
+    x.startsWith("...") ? `(?<${x.slice(3)}>(/.*)?)` : `/(?<${x}>[^/]+)`
+  ));
+  const match = r.exec(path);
+  if (match) {
+    const params = Object.assign({}, new URLSearchParams(query).entries());
+    for (const k in match.groups) params[k] = decodeURIComponent(match.groups[k]);
+    return params;
   }
 }
