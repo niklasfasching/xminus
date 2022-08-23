@@ -60,7 +60,6 @@ p {
 img {
   display: block;
   max-width: 100%;
-  height: auto;
 }
 
 button {
@@ -207,11 +206,28 @@ ul {
   padding: 0 2ch;
 }
 
+li {
+  margin: 0.5em 0;
+}
 
 .debug * {
   outline: 1px solid #f00 !important;
   opacity: 1 !important;
   visibility: visible !important;
+}
+
+.logo {
+  display: inline-block;
+  white-space: pre-line;
+  border: .2em solid black;
+  font: bold 1em monospace;
+  padding: .125em .25em;
+  margin: .5em;
+  pointer-events: visible;
+}
+
+.space > * + * {
+  margin-top: var(--space, 1em);
 }
 
 @media (pointer: fine) {
