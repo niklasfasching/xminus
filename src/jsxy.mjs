@@ -272,6 +272,7 @@ function applyStoreDirective(node, {tag, props}, [type, key], data) {
   iterateForm(node, (k, el, k2) => {
     const v = m && m[k];
     if (k2) for (const x of el) x[k2] = v && v[x.value];
+    else if (el.type === "checkbox") el.checked = v;
     else el.value = v;
   });
   return true;
