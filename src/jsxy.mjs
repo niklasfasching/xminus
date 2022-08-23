@@ -1,4 +1,4 @@
-const attributes = new Set("list", "form", "selected");
+const attrs = new Set("list", "form", "selected"), subs = {"db": {}, "query": {}};
 let hooks, hookKey, hookIndex, oldHash, style;
 
 export const directives = {
@@ -7,7 +7,11 @@ export const directives = {
 
 export const db = new Proxy(localStorage, {
   get: (t, k) => JSON.parse(t.getItem(k)),
-  set: (t, k, v) => (t.setItem(k, JSON.stringify(v)), true),
+  set: (t, k, v) => {
+    t.setItem(k, JSON.stringify(v));
+    for (let f of subs["db"][k]) f(v);
+    return true;
+  },
   deleteProperty: (t, k) => (t.removeItem(k), true),
   ownKeys: (t) => Reflect.ownKeys(t),
   getOwnPropertyDescriptor: (t, k) => Reflect.getOwnPropertyDescriptor(t, k),
@@ -22,12 +26,18 @@ export const query = new Proxy(() => new URLSearchParams(location.hash.split("?"
     const q = t(), sv = Object(v) === v ? JSON.stringify(v) : v;
     q[sv != null && sv !== "" ? "set" : "delete"](k, sv);
     history.replaceState(null, null, location.hash.split("?")[0] + (""+q ? "?" + q : ""));
+    for (let f of subs["query"][k]) f(v);
     return true;
   },
   deleteProperty: (t, k) => (query[k] = undefined, true),
   ownKeys: (t) => [...t().keys()],
   getOwnPropertyDescriptor: (t, k) => ({enumerable: 1, configurable: 1}),
 });
+
+export function sub(store, k, f) {
+  subs[store][k] = [f].concat(subs[store][k] || []);
+  return () => subs[store][k] = subs[store][k].filter(x => x !== f);
+}
 
 export function html(strings, ...values) {
   let $ = "child", xs = [{children: []}], tmp = "";
@@ -219,7 +229,7 @@ function setProperties(node, vnode, component) {
 function setProperty(node, k, v) {
   if (k[0] == "o" && k [1] == "n") setEventListener(node, k.slice(2), eventListener, eventListener);
   else if (k[0] === "@") setEventListener(node, k.slice(1), eventListener, eventListener);
-  else if (k in node && !attributes.has(k)) node[k] = v == null ? "" : v;
+  else if (k in node && !attrs.has(k)) node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
   else node.setAttribute(k, v);
 }
