@@ -2,14 +2,31 @@ const attributes = new Set("list", "form", "selected");
 let hooks, hookKey, hookIndex, oldHash, style;
 
 export const directives = {
-  db: applyDBDirective,
+  store: applyStoreDirective,
 }
 
 export const db = new Proxy(localStorage, {
   get: (t, k) => JSON.parse(t.getItem(k)),
   set: (t, k, v) => (t.setItem(k, JSON.stringify(v)), true),
+  deleteProperty: (t, k) => (t.removeItem(k), true),
   ownKeys: (t) => Reflect.ownKeys(t),
   getOwnPropertyDescriptor: (t, k) => Reflect.getOwnPropertyDescriptor(t, k),
+});
+
+export const query = new Proxy(() => new URLSearchParams(location.hash.split("?")[1]), {
+  get: (t, k) => {
+    const v = t().get(k);
+    return v && (v[0] === "[" || v[0] === "{") ? JSON.parse(v) : v;
+  },
+  set: (t, k, v) => {
+    const q = t(), sv = Object(v) === v ? JSON.stringify(v) : v;
+    q[sv != null && sv !== "" ? "set" : "delete"](k, sv);
+    history.replaceState(null, null, location.hash.split("?")[0] + (""+q ? "?" + q : ""));
+    return true;
+  },
+  deleteProperty: (t, k) => (query[k] = undefined, true),
+  ownKeys: (t) => [...t().keys()],
+  getOwnPropertyDescriptor: (t, k) => ({enumerable: 1, configurable: 1}),
 });
 
 export function html(strings, ...values) {
@@ -227,28 +244,35 @@ function applyDirectives(node, vnode) {
   }
 }
 
-function applyDBDirective(node, {tag, props}, [key], data) {
-  if (tag !== "form") throw new Error(`:db on non-form tag '${tag}'`)
-  else if (!key) throw new Error(":db without :db:<key>");
+function applyStoreDirective(node, {tag, props}, [type, key], data) {
+  const store = {query, db}[type];
+  if (tag !== "form") throw new Error(`:store on non-form tag '${tag}'`)
+  else if (!key || !store) throw new Error("bad key or type in :store:<type>:<key>");
   if (!data) {
     node.addEventListener("submit", (e) => e.preventDefault());
     node.addEventListener("input", (e) => {
       const fd = new FormData(node), m = {};
-      for (let k of fd.keys()) {
-        const el = node.elements[k];
-        if (!el.multiple && !(!el.type && el[0].type === "checkbox")) m[k] = fd.get(k)
-        else m[k] = Object.fromEntries(fd.getAll(k).map(k => [k, true]));
-      }
-      db[key] = m;
+      iterateForm(node, (k, el, k2) => {
+        m[k] = k2 ? Object.fromEntries(fd.getAll(k).map(k => [k, true])) : fd.get(k);
+      });
+      store[key] = m;
     });
   }
-  const m = db[key];
-  for (let k of new Set([...node.elements].map(el => el.name).filter(Boolean))) {
-    const el = node.elements[k], v = m && m[k];
-    if (typeof v === "string") node.elements[k].value = v;
-    else for (const x of (el.options || el)) x[x.type ? "checked" : "selected"] = v && v[x.value];
-  }
+  const m = store[key];
+  iterateForm(node, (k, el, k2) => {
+    const v = m && m[k];
+    if (k2) for (const x of el) x[k2] = v && v[x.value];
+    else el.value = v;
+  });
   return true;
+}
+
+function iterateForm(form, f) {
+  for (let k of new Set([...form.elements].map(el => el.name).filter(Boolean))) {
+    const el = form.elements[k];
+    if (!el.multiple && !(!el.type && el[0].type === "checkbox")) f(k, el);
+    else f(k, (el.options || el), el.options ? "selected" : "checked");
+  }
 }
 
 export function route(routes, parentNode) {
