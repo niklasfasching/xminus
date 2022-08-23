@@ -55,7 +55,7 @@ function ByDate({showsByDate}) {
       <a href="#/show/${x.id}" .show>
         <img loading="lazy" src=${x.img}/>
         <div .title>${x.title}</div>
-        <div .cinema>${x.cinemaShortName} |  ${x.time}</div>
+        <div .cinema>${x.time} | ${x.cinemaShortName}</div>
       </a>
     `);
     return html`<div .day>
