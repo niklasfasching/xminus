@@ -230,5 +230,12 @@ t.describe("jsxy", () => {
       document.body.querySelector("button").click();
       t.assertFixture(document.body.innerHTML);
     });
+
+    t("renderChildren works correctly when removing children", () => {
+      render(html`<div>${[1, 2, 3]}</div>`, document.body);
+      t.assertFixture(document.body.innerHTML);
+      render(html`<div>${[1, null, 3]}</div>`, document.body);
+      t.assertFixture(document.body.innerHTML);
+    });
   });
 });
