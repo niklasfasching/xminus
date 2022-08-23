@@ -90,6 +90,9 @@ function filterByConfig(shows) {
   if (query.config?.searchTitle) {
     shows = shows.filter(x => x.normalizedTitle.includes(query.config?.searchTitle.toUpperCase()))
   }
+  if (query.config?.subtitled) {
+    shows = shows.filter(x => x.version === "subtitled")
+  }
   return shows
 }
 

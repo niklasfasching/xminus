@@ -89,7 +89,19 @@ css`
   padding: 0 1em;
   }
 
+  x-filters .subtitled input {
+  display: none;
+  }
 
+  x-filters .subtitled label {
+  display: block;
+  padding: .5em 1em;
+  }
+
+  x-filters .subtitled input:checked + label {
+  background: var(--fg);
+  color: var(--bg);
+  }
 `;
 
 export function Filters({$, refs, cinemas}) {
@@ -128,6 +140,10 @@ export function Filters({$, refs, cinemas}) {
   return html`
     <x-filters $filters>
       <form :store:query:config>
+        <div .item .subtitled>
+          <input type=checkbox name=subtitled id="subtitled"/>
+          <label for="subtitled">subtitled</label>
+        </div>
         <div .item>
           <button onclick=${toggle}>cinemas</button>
           <div .dropdown .cinemas>
