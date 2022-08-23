@@ -147,12 +147,12 @@ export function render(vnode, parentNode) {
   renderChild(vnode.node.parentNode, vnode, vnode.node, vnode);
 }
 
-function renderChildren(parentNode, vnodes, component) {
+function renderChildren(parentNode, vnodes, component, ns) {
   if (!Array.isArray(vnodes)) vnodes = [vnodes];
   let oldHooks = parentNode.hooks || {}, newHooks = {};
   hooks = oldHooks, hookIndex = 0, parentNode.hooks = newHooks;
   for (let i = 0; i < vnodes.length; i++) {
-    renderChild(parentNode, vnodes[i], parentNode.childNodes[i], component);
+    renderChild(parentNode, vnodes[i], parentNode.childNodes[i], component, ns);
   }
   for (let k in oldHooks) {
     if (!(k in newHooks)) for (let h of oldHooks[k]) h.unmount?.();
@@ -162,22 +162,23 @@ function renderChildren(parentNode, vnodes, component) {
   }
 }
 
-function renderChild(parentNode, vnode, node, component) {
+function renderChild(parentNode, vnode, node, component, ns) {
   if (vnode == null) return node ? void unmount(node).remove() : null;
   if (!vnode.tag) return createTextNode(parentNode, vnode, node);
   if (typeof vnode.tag !== "function") {
-    if (!node || vnode.tag !== node.vnode?.tag) node = createNode(parentNode, vnode.tag, node);
+    ns = vnode.props?.xmlns || ns
+    if (!node || vnode.tag !== node.vnode?.tag) node = createNode(parentNode, vnode.tag, node, ns);
     if (vnode.ref) component.props.$[vnode.ref] = node;
-    if (vnode.props) setProperties(node, vnode, component);
+    if (vnode.props) setProperties(node, vnode, component, ns);
     vnode.node = node, node.vnode = vnode, node.component = component;
-    renderChildren(node, vnode.children, component);
+    renderChildren(node, vnode.children, component, ns);
     if (vnode.dirs) applyDirectives(node, vnode)
     return node;
   }
   vnode.props.$ = {self: vnode, app: component.props?.$?.app || component};
   hookIndex = 0, hookKey = vnode.props.key || vnode.props.id;
   const _vnode = vnode.tag(vnode.props), _vnodeHooks = hooks[hookKey];
-  node = vnode.node = renderChild(parentNode, _vnode, node, vnode);
+  node = vnode.node = renderChild(parentNode, _vnode, node, vnode, ns);
   if (_vnodeHooks) {
     parentNode.hooks[hookKey] = _vnodeHooks;
     for (let h of _vnodeHooks) {
@@ -199,8 +200,9 @@ function unmount(node) {
   return node;
 }
 
-function createNode(parentNode, tag, node) {
-  return replaceNode(parentNode, document.createElement(tag), node);
+function createNode(parentNode, tag, node, ns) {
+  const newNode = ns ? document.createElementNS(ns, tag) : document.createElement(tag);
+  return replaceNode(parentNode, newNode, node);
 }
 
 function createTextNode(parentNode, vnode, node) {
@@ -215,9 +217,9 @@ function replaceNode(parentNode, newNode, oldNode) {
   return newNode;
 }
 
-function setProperties(node, vnode, component) {
+function setProperties(node, vnode, component, ns) {
   for (let k in vnode.props) {
-    if (node.vnode?.props[k] !== vnode.props[k]) setProperty(node, k, vnode.props[k]);
+    if (node.vnode?.props[k] !== vnode.props[k]) setProperty(node, k, vnode.props[k], ns);
   }
   if (node.vnode) {
     for (let k in node.vnode.props) {
@@ -226,10 +228,10 @@ function setProperties(node, vnode, component) {
   }
 }
 
-function setProperty(node, k, v) {
+function setProperty(node, k, v, ns) {
   if (k[0] == "o" && k [1] == "n") setEventListener(node, k.slice(2), eventListener, eventListener);
   else if (k[0] === "@") setEventListener(node, k.slice(1), eventListener, eventListener);
-  else if (k in node && !attrs.has(k)) node[k] = v == null ? "" : v;
+  else if (k in node && !attrs.has(k) && !ns) node[k] = v == null ? "" : v;
   else if (v == null || v === false) node.removeAttribute(k);
   else node.setAttribute(k, v);
 }

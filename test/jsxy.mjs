@@ -95,6 +95,13 @@ t.describe("jsxy", () => {
       t.assertFixture(document.body.innerHTML);
     });
 
+    t("svg", () => {
+      render(html`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <rect x="0" y="0" width="100" height="100" stroke="black"/>
+      </svg>`, document.body);
+      t.assertFixture(document.body.innerHTML);
+    });
 
     t("vnode/vnode array children render", () => {
       const Component = (props) => {
