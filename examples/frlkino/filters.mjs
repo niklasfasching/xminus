@@ -10,10 +10,21 @@ css`
   }
 
   x-filters .item > button {
+  position: relative;
   padding: .5em 1em;
   border: none;
-  border-left: 1px solid var(--mg);
+  border-right: 1px solid var(--mg);
   background: var(--ll);
+  }
+
+  x-filters .item > button.enabled::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: .125em;
+  background: var(--fg);
   }
 
   x-filters .item.active > button {
@@ -23,7 +34,7 @@ css`
   }
 
   x-filters .item:last-of-type.active > button {
-   border-right: 1px solid var(--mg);
+  border-right: 1px solid var(--mg);
   }
 
   x-filters .dropdown {
@@ -89,16 +100,17 @@ css`
   padding: 0 1em;
   }
 
-  x-filters .subtitled input {
+  x-filters .original input {
   display: none;
   }
 
-  x-filters .subtitled label {
+  x-filters .original label {
   display: block;
   padding: .5em 1em;
+  border-right: 1px solid var(--mg);
   }
 
-  x-filters .subtitled input:checked + label {
+  x-filters .original input:checked + label {
   background: var(--fg);
   color: var(--bg);
   }
@@ -106,8 +118,15 @@ css`
 
 export function Filters({$, refs, cinemas}) {
   useEffect(() => {
+    function updateButtons() {
+      const config = query.config || {};
+      $.cinemasButton.classList.toggle("enabled", Object.keys(config.cinemas || {}).length);
+      $.searchButton.classList.toggle("enabled", !!config.searchTitle);
+    }
+    updateButtons();
     return sub("query", "config", () => {
       render(refs.main);
+      updateButtons();
     });
   });
 
@@ -140,19 +159,23 @@ export function Filters({$, refs, cinemas}) {
   return html`
     <x-filters $filters>
       <form :store:query:config>
-        <div .item .subtitled>
-          <input type=checkbox name=subtitled id="subtitled"/>
-          <label for="subtitled">subtitled</label>
+        <div .item .original>
+          <input type=checkbox name=original id="original"/>
+          <label for="original">original/en</label>
         </div>
         <div .item>
-          <button onclick=${toggle}>cinemas</button>
+          <button $cinemasButton onclick=${toggle}>
+            cinemas
+          </button>
           <div .dropdown .cinemas>
             <button .clear onclick=${onCinemaClear}>clear</button>
             ${tags}
           </div>
         </div>
         <div .item>
-          <button onclick=${toggle}>search</button>
+          <button $searchButton onclick=${toggle}>
+            search
+          </button>
           <div .dropdown .search>
             <input id=searchTitle name=searchTitle placeholder=title/>
             <button .clear onclick=${onSearchClear}>clear</button>

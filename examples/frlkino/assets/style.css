@@ -1,6 +1,7 @@
 :root {
   --bg: #fff;
-  --mg: #444;
+  --mg: #666;
+  --lg: #bbb;
   --fg: #000;
   --hl: hsla(95, 50%, 70%, 50%);
   --ll: #eee;
@@ -132,4 +133,8 @@ x-movies {
   gap: 1em;
   grid-template-columns: repeat(auto-fit, minmax(25%, 1fr));
   padding: 1em;
+}
+
+.bookable {
+  position: relative;
 }
