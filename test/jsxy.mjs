@@ -145,10 +145,14 @@ t.describe("jsxy", () => {
         <${Component} key=a/>
         <${Component} key=b/>
       </div>`, document.body);
-      t.assertFixture(document.body.innerHTML);
-      document.body.querySelector("#a").click();
       document.body.querySelector("#a").click();
       document.body.querySelector("#b").click();
+      t.assertFixture(document.body.innerHTML);
+
+      render(html`<div>
+        <${Component} key=a/>
+        <${Component} key=b/>
+      </div>`, document.body);
       t.assertFixture(document.body.innerHTML);
     });
 

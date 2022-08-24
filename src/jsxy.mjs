@@ -177,10 +177,10 @@ function renderChild(parentNode, vnode, node, component, ns) {
   }
   vnode.props.$ = {self: vnode, app: component.props?.$?.app || component};
   hookIndex = 0, hookKey = vnode.props.key || vnode.props.id;
-  const _vnode = vnode.tag(vnode.props), _vnodeHooks = hooks[hookKey];
-  node = vnode.node = renderChild(parentNode, _vnode, node, vnode, ns);
+  const _hooks = hooks, _vnode = vnode.tag(vnode.props), _vnodeHooks = _hooks[vnode.props.key];
+  node = vnode.node = renderChild(parentNode, _vnode, node, vnode, ns), hooks = _hooks;
   if (_vnodeHooks) {
-    parentNode.hooks[hookKey] = _vnodeHooks;
+    parentNode.hooks[vnode.props.key] = _vnodeHooks;
     for (let h of _vnodeHooks) {
       if (h.mount && (h.changed || h.node !== node)) {
         if (h.unmount) h.unmount();
