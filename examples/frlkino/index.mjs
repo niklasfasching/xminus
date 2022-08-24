@@ -28,7 +28,7 @@ function wrap(tag, showFilters) {
       <${Nav} onClose=${onClose}/>
       ${showFilters && html`<${Filters} key=filters cinemas=${cinemas} refs=${props.$}/>`}
       <main>
-      <${tag} ...=${{history, shows, cinemas, showsByDate, showsByMovie}} ...=${props} $main/>
+      <${tag} key=${tag.name} ...=${{history, shows, cinemas, showsByDate, showsByMovie}} ...=${props} $main/>
       </main>
     </x-app>`
   }
@@ -47,7 +47,8 @@ function Nav({onClose}) {
     </nav>`;
 }
 
-function ByDate({showsByDate}) {
+function ByDate({$, showsByDate}) {
+  useEffect(() => sub("query", "config", () => render($)));
   const days = Object.entries(showsByDate).map(([date, shows]) => {
     shows = filterByConfig(shows)
     if (!shows.length) return;
@@ -66,7 +67,8 @@ function ByDate({showsByDate}) {
   return html`<x-shows>${days.filter(Boolean)}</x-shows>`;
 }
 
-function ByMovie({showsByMovie}) {
+function ByMovie({$, showsByMovie}) {
+  useEffect(() => sub("query", "config", () => render($)));
   const movies = Object.entries(showsByMovie).map(([normalizedTitle, shows]) => {
     shows = filterByConfig(shows)
     if (!shows.length) return;
