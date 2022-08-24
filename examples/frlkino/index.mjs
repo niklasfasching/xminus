@@ -112,8 +112,10 @@ function filterByConfig(shows) {
   if (query.config?.searchTitle) {
     shows = shows.filter(x => x.normalizedTitle.includes(query.config?.searchTitle.toUpperCase()))
   }
-  if (query.config?.original) {
-    shows = shows.filter(x => x.version.original || x.version.english)
+  if (query.config?.ov || query.config?.en) {
+    shows = shows.filter(x => {
+      return (query.config.ov && x.version.original) || (query.config.en && x.version.english);
+    })
   }
   return shows
 }

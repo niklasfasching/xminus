@@ -100,17 +100,17 @@ css`
   padding: 0 1em;
   }
 
-  x-filters .original input {
+  x-filters .lang input {
   display: none;
   }
 
-  x-filters .original label {
+  x-filters .lang label {
   display: block;
   padding: .5em 1em;
   border-right: 1px solid var(--mg);
   }
 
-  x-filters .original input:checked + label {
+  x-filters .lang input:checked + label {
   background: var(--fg);
   color: var(--bg);
   }
@@ -156,9 +156,13 @@ export function Filters({$, cinemas}) {
   return html`
     <x-filters $filters>
       <form :store:query:config>
-        <div .item .original>
-          <input type=checkbox name=original id="original"/>
-          <label for="original">original/en</label>
+        <div .item .lang .ov>
+          <input type=checkbox name=ov id="ov"/>
+          <label for="ov">OV</label>
+        </div>
+        <div .item .lang .en>
+          <input type=checkbox name=en id="en"/>
+          <label for="en">EN</label>
         </div>
         <div .item>
           <button $cinemasButton onclick=${toggle}>
