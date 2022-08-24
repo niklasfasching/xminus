@@ -1,4 +1,4 @@
-import {html, css} from "../../src/jsxy.mjs";
+import {render, html, css, db} from "../../src/jsxy.mjs";
 css`
   x-show {
   display: block;
@@ -20,16 +20,23 @@ css`
 
   x-show .meta {
   display: flex;
-  gap: 1em;
-  margin-top: .5em;
   margin-bottom: 3em;
   }
 
   x-show .meta > * {
   flex: 1;
   text-align: center;
-  padding: .25em;
+  padding: .75em;
   border: 1px solid var(--fg);
+  }
+
+  x-show .meta > * + * {
+  border-left: none;
+  }
+
+  x-show .meta .active {
+  background: var(--fg);
+  color: var(--bg);
   }
 
   x-show .alternatives {
@@ -140,7 +147,7 @@ css`
   }
 `;
 
-export function Show({id, shows}) {
+export function Show({$, id, shows}) {
   const show = shows[id];
   const alternatives = Object.values(shows).filter((other) => {
     return show.normalizedTitle === other.normalizedTitle &&
@@ -150,9 +157,11 @@ export function Show({id, shows}) {
   const description = getValue(alternatives, "description", true);
   const imgURL = getValue(alternatives, "img", true);
   const trailerURL = getValue(alternatives, "trailer", true);
+  const isFav = db.favs?.[normalizedTitle];
+
   const trs = alternatives
     .sort((a, b) => a.timestamp - b.timestamp).map((show) => {
-    let [day, date] = show.date.split(",");
+      let [day, date] = show.date.split(",");
       return html`
         <tr>
           <td>
@@ -173,10 +182,19 @@ export function Show({id, shows}) {
         </tr>`;
     });
 
+  function onFav() {
+    const v = db.favs?.[normalizedTitle] ? undefined : show.id;
+    db.favs = {...db.favs, [normalizedTitle]: v};
+    render($);
+  }
+
   return html`<x-show>
     <div .main-title>${normalizedTitle}</div>
     <img .full-width src=${imgURL}/>
-    <div .meta>
+    <div .meta .full-width>
+      <button .active=${isFav} onclick=${onFav}>
+        ${isFav ? "- favorite" : "+ favorite"}
+      </button>
       <a .disabled=${!trailerURL} href="${trailerURL}">
         trailer
       </a>

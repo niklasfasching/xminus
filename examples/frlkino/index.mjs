@@ -1,4 +1,4 @@
-import {html, css, route, render, query, useEffect, sub} from "../../src/jsxy.mjs";
+import {html, css, route, render, query, db, useEffect, sub} from "../../src/jsxy.mjs";
 import {Menu} from "./menu.mjs";
 import {Show} from "./show.mjs";
 import {Filters} from "./filters.mjs";
@@ -25,7 +25,7 @@ function wrap(tag, showFilters) {
       if (route.path === "/") render(props.$.main)
     }
     return html`<x-app>
-      <${Nav} onClose=${onClose}/>
+      <${Nav} key=nav ...=${{shows, onClose}}/>
       ${showFilters && html`<${Filters} key=filters cinemas=${cinemas} refs=${props.$}/>`}
       <main>
       <${tag} key=${tag.name} ...=${{history, shows, cinemas, showsByDate, showsByMovie}} ...=${props} $main/>
@@ -34,15 +34,35 @@ function wrap(tag, showFilters) {
   }
 }
 
-function Nav({onClose}) {
+function Nav({$, onClose, shows}) {
   const links = {
     "/": "By Date",
     "/movies/": "By Movie",
-  }
+  };
+
+  useEffect(() => sub("db", "favs", () => render($)));
+
+  const favs = Object.values(db.favs || {}).map(id => {
+    const show = shows[id];
+    if (!show) return;
+    return html`
+      <a href="#/show/${show.id}" .show>
+        <img loading="lazy" src=${show.img}/>
+        <div .title>${show.title}</div>
+        <div .cinema>${show.cinemaShortName}</div>
+      </a>`;
+  });
+
   return html`
     <nav>
       <a href="#/"><img .logo src="assets/logo.svg"/></a>
-      <${Menu} key=menu links=${links} onclose=${onClose}>
+      <${Menu} key=menu links=${links} onclose=${onClose} $menu>
+      <div .favs-wrapper .hidden=${!favs.length}>
+        <h1>Favorites</h1>
+        <div .favs>
+          ${favs}
+        </div>
+      </div>
       </>
     </nav>`;
 }

@@ -11,20 +11,20 @@ css`
   position: absolute;
   top: 100%;
   left: 0;
+  height: calc(100vh - 100%);
   width: 0;
-  height: 100vh;
   background: var(--bg);
   padding-top: 2em;
   transform: translateX(100vw);
+  transform-origin: top right;
   overflow: hidden;
-  transition: transform .1s ease-in-out, width .1s ease-in-out;
+  transition: transform .1s ease-in-out, transform .1s ease-in-out;
   font-size: 1rem;
   }
 
   x-menu .open + .overlay {
   transform: translateX(0);
   width: 100vw;
-  overflow-y: scroll;
   }
 
   x-menu a {
@@ -51,7 +51,7 @@ export function Menu({$, title, links, onclose, openClose = ["☰","✕"]}) {
       document.body.style.overflow = "hidden";
     } else {
       $.button.textContent = openClose[0];
-      document.body.style.overflow = "initial";
+      document.body.style.overflow = "";
       if (onclose && !onRender) onclose();
     }
   };

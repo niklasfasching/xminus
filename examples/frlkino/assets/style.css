@@ -68,12 +68,18 @@ x-app nav .logo  {
   margin: .25em;
 }
 
-x-shows .shows {
+x-shows .shows, .favs {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 33%;
   gap: 1em;
   overflow-x: auto;
+}
+
+.favs-wrapper {
+  margin: 1em;
+  position: absolute;
+  bottom: 0;
 }
 
 @media (min-width: 70ch) {
@@ -94,6 +100,7 @@ x-shows .day {
 .show {
   display: grid;
   grid-template-rows: 1fr auto auto;
+  font-size: 1rem;
   gap: .5em;
   color: inherit;
   text-decoration: none;
@@ -137,4 +144,8 @@ x-movies {
 
 .bookable {
   position: relative;
+}
+
+.hidden {
+  display: none;
 }
