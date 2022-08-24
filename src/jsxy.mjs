@@ -9,7 +9,7 @@ export const db = new Proxy(localStorage, {
   get: (t, k) => JSON.parse(t.getItem(k)),
   set: (t, k, v) => {
     t.setItem(k, JSON.stringify(v));
-    for (let f of subs["db"][k]) f(v);
+    if (k in subs["db"]) for (let f of subs["db"][k]) f(v);
     return true;
   },
   deleteProperty: (t, k) => (t.removeItem(k), true),
@@ -26,7 +26,7 @@ export const query = new Proxy(() => new URLSearchParams(location.hash.split("?"
     const q = t(), sv = Object(v) === v ? JSON.stringify(v) : v;
     q[sv != null && sv !== "" ? "set" : "delete"](k, sv);
     history.replaceState(null, null, location.hash.split("?")[0] + (""+q ? "?" + q : ""));
-    for (let f of subs["query"][k]) f(v);
+    if (k in subs["query"]) for (let f of subs["query"][k]) f(v);
     return true;
   },
   deleteProperty: (t, k) => (query[k] = undefined, true),
