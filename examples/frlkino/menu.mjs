@@ -48,10 +48,10 @@ export function Menu({$, title, links, onclose, openClose = ["☰","✕"]}) {
   const on = (_, state, onRender) => {
     if ($.button.classList.toggle("open", state)) {
       $.button.textContent = openClose[1];
-      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
     } else {
       $.button.textContent = openClose[0];
-      document.body.style.overflow = "";
+      document.body.style.position = "";
       if (onclose && !onRender) onclose();
     }
   };
