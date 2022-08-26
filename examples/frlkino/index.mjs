@@ -25,7 +25,7 @@ function wrap(tag, showFilters) {
       if (route.path === "/") render(props.$.main)
     }
     return html`<x-app>
-      <${Nav} key=nav ...=${{shows, onClose}}/>
+      <${Nav} key=nav ...=${{shows, showsByMovie, onClose}}/>
       ${showFilters && html`<${Filters} key=filters cinemas=${cinemas} refs=${props.$}/>`}
       <main>
       <${tag} key=${tag.name} ...=${{history, shows, cinemas, showsByDate, showsByMovie}} ...=${props} $main/>
@@ -34,7 +34,7 @@ function wrap(tag, showFilters) {
   }
 }
 
-function Nav({$, onClose, shows}) {
+function Nav({$, onClose, shows, showsByMovie}) {
   const links = {
     "/": "By Date",
     "/movies/": "By Movie",
@@ -42,8 +42,8 @@ function Nav({$, onClose, shows}) {
 
   useEffect(() => sub("db", "favs", () => render($)));
 
-  const favs = Object.values(db.favs || {}).map(id => {
-    const show = shows[id];
+  const favs = Object.keys(db.favs || {}).map(normalizedTitle => {
+    const show = showsByMovie[normalizedTitle]?.filter(x => x.timestamp > Date.now())[0];
     if (!show) return;
     return html`
       <a href="#/show/${show.id}" .show>
