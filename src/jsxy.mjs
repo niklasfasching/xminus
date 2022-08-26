@@ -294,11 +294,11 @@ export function route(routes, parentNode) {
 }
 
 function renderRoute(routes, parentNode) {
-  if (!location.hash) history.replaceState(null, null, "#/");
-  const [path, query] = location.hash.slice(1).split("?");
+  if (location.hash[1] !== "#") history.replaceState(null, null, "##"+location.hash.slice(1));
+  const [path, query] = location.hash.slice(2).split("?");
   for (let [r, tag] of Object.entries(routes)) {
     const params = matchRoute(r, path, query);
-    if (params) {
+    if (path && params) {
       if (oldHash !== location.hash) {
         window.scrollTo(0, 0);
         document.activeElement?.blur?.();
@@ -308,11 +308,11 @@ function renderRoute(routes, parentNode) {
       return void render({tag, props: params}, parentNode);
     }
   }
-  location.hash = "#/";
+  location.hash = "##/";
 }
 
 function matchRoute(route, path, query) {
-  const r = new RegExp("^" + route.replace(/\/?$/, "/?$").replace(/\/{(.+)}/g, (_, x) =>
+  const r = new RegExp("^" + route.replace(/\/?$/, "/?$").replace(/\/{(.+?)}/g, (_, x) =>
     x.startsWith("...") ? `(?<${x.slice(3)}>(/.*)?)` : `/(?<${x}>[^/]+)`
   ));
   const match = r.exec(path);
