@@ -150,7 +150,7 @@ export function render(vnode, parentNode) {
 function renderChildren(parentNode, vnodes, component, ns) {
   if (!Array.isArray(vnodes)) vnodes = [vnodes];
   let oldHooks = parentNode.hooks || {}, newHooks = {}, nodes = [...parentNode.childNodes];
-  hooks = oldHooks, hookIndex = 0, parentNode.hooks = newHooks;
+  hooks = oldHooks, parentNode.hooks = newHooks;
   for (let i = 0; i < vnodes.length; i++) {
     renderChild(parentNode, vnodes[i], nodes[i], component, ns);
   }
