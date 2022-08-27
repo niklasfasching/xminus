@@ -1,4 +1,4 @@
-const attrs = new Set("list", "form", "selected"), subs = {"db": {}, "query": {}};
+const attrs = new Set("list", "form", "selected"), subs = new Map();
 let hooks, hookKey, hookIndex, oldHash, style;
 
 export const directives = {
@@ -9,7 +9,7 @@ export const db = new Proxy(localStorage, {
   get: (t, k) => JSON.parse(t.getItem(k)),
   set: (t, k, v) => {
     t.setItem(k, JSON.stringify(v));
-    if (k in subs["db"]) for (let f of subs["db"][k]) f(v);
+    if (!publish.active) publish(db, k, v);
     return true;
   },
   deleteProperty: (t, k) => (t.removeItem(k), true),
@@ -26,7 +26,7 @@ export const query = new Proxy(() => new URLSearchParams(location.hash.split("?"
     const q = t(), sv = Object(v) === v ? JSON.stringify(v) : v;
     q[sv != null && sv !== "" ? "set" : "delete"](k, sv);
     history.replaceState(null, null, location.hash.split("?")[0] + (""+q ? "?" + q : ""));
-    if (k in subs["query"]) for (let f of subs["query"][k]) f(v);
+    if (!publish.active) publish(query, k, v);
     return true;
   },
   deleteProperty: (t, k) => (query[k] = undefined, true),
@@ -35,8 +35,15 @@ export const query = new Proxy(() => new URLSearchParams(location.hash.split("?"
 });
 
 export function sub(store, k, f) {
-  subs[store][k] = [f].concat(subs[store][k] || []);
-  return () => subs[store][k] = subs[store][k].filter(x => x !== f);
+  if (!subs.has(store)) subs.set(store, {});
+  subs.get(store)[k] = [f].concat(subs.get(store)[k] || []);
+  return () => subs.get(store)[k] = subs.get(store)[k].filter(x => x !== f);
+}
+
+function publish(store, k, v) {
+  publish.active = true;
+  if (subs.get(store) && k in subs.get(store)) for (let f of subs.get(store)[k]) f(v);
+  delete publish.active;
 }
 
 export function html(strings, ...values) {

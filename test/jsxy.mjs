@@ -1,5 +1,5 @@
 import {t, done} from "../src/test.mjs";
-import {html, render, useState, useEffect} from "../src/jsxy.mjs";
+import {html, render, useState, useEffect, sub, db, query} from "../src/jsxy.mjs";
 
 t.describe("jsxy", () => {
   t.exitAfter();
@@ -83,6 +83,8 @@ t.describe("jsxy", () => {
     function reset() {
       document.body.innerHTML = "";
       document.body.hooks = undefined;
+      history.replaceState(null, null, " ");
+      localStorage.clear();
     }
     t.beforeEach(reset);
     t.afterEach(reset);
@@ -242,4 +244,36 @@ t.describe("jsxy", () => {
       t.assertFixture(document.body.innerHTML);
     });
   });
+
+  t.describe("db/query", () => {
+    t.describe("publish", () => {
+      t("publish changes and allow unsubscribing", () => {
+        for (let store of [db, query]) {
+          const vs = [], k = "k";
+          const unsub = sub(store, k, v => vs.push(v))
+          store[k] = "bar";
+          store[k] = "baz";
+          unsub();
+          t.assert(vs.join(",") === "bar,baz");
+          store[k] = "bam";
+          t.assert(vs.join(",") === "bar,baz");
+        }
+      });
+
+      t("only publish changes that happen outside of subscriptions", async () => {
+        for (let store of [db, query]) {
+          const vs = [], k = "k";
+          const unsub = sub(store, k, v => {
+            vs.push(v);
+            store[k] = "nope";
+          });
+          store[k] = "bar";
+          unsub();
+          t.assert(vs.join(",") === "bar");
+        }
+      });
+    });
+  });
+
+
 });

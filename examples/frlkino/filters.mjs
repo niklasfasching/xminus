@@ -124,7 +124,7 @@ export function Filters({$, cinemas}) {
       $.searchButton.classList.toggle("enabled", !!config.searchTitle);
     }
     updateButtons();
-    return sub("query", "config", updateButtons);
+    return sub(query, "config", updateButtons);
   });
 
   function toggle(e) {

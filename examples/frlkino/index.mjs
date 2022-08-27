@@ -40,7 +40,7 @@ function Nav({$, onClose, shows, showsByMovie}) {
     "/movies/": "By Movie",
   };
 
-  useEffect(() => sub("db", "favs", () => render($)));
+  useEffect(() => sub(db, "favs", () => render($)));
 
   const favs = Object.keys(db.favs || {}).map(normalizedTitle => {
     const show = showsByMovie[normalizedTitle]?.filter(x => x.timestamp > Date.now())[0];
@@ -68,7 +68,7 @@ function Nav({$, onClose, shows, showsByMovie}) {
 }
 
 function ByDate({$, showsByDate}) {
-  useEffect(() => sub("query", "config", () => render($)));
+  useEffect(() => sub(query, "config", () => render($)));
   const days = Object.entries(showsByDate).map(([date, shows]) => {
     shows = filterByConfig(shows)
     if (!shows.length) return;
@@ -88,7 +88,7 @@ function ByDate({$, showsByDate}) {
 }
 
 function ByMovie({$, showsByMovie}) {
-  useEffect(() => sub("query", "config", () => render($)));
+  useEffect(() => sub(query, "config", () => render($)));
   const movies = Object.entries(showsByMovie).map(([normalizedTitle, shows]) => {
     shows = filterByConfig(shows)
     if (!shows.length) return;
