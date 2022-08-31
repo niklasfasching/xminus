@@ -1,3 +1,21 @@
+export function fluidScale([screenMin, ratioMin], [screenMax, ratioMax], n, rem) {
+  const vwMin = screenMin / 100, vwMax = screenMax / 100;
+  return [...Array(n)].map((_, x) => {
+    // vwPix is what changes, so it's our x, making targetPx y.
+    // we want to linearly interpolate between the targetPx values - i.e. targetPx = y+b*vwPx
+    // b is how much targetPx changes relative to vwPx - i.e. the ratio of the diffs
+    // y is the targetPx value we want at x=0. As we want remMin at screenMin/vwMin we have to
+    // subtract b*vwPxMin while correcting for the px/rem ratio
+    const i = Math.ceil(-n/2) + x;
+    let remMin = ratioMin**i, remMax = ratioMax**i;
+    const targetPxDiff = (remMax - remMin) * rem, vwPxDiff = vwMax - vwMin;
+    const b = targetPxDiff / vwPxDiff, y = remMin - ((b * vwMin) / rem);
+    if (i === 0) return "--r0: 1rem;";
+    if (remMin > remMax) [remMin, remMax] = [remMax, remMin];
+    return `--r${i}: clamp(${remMin.toFixed(2)}rem, ${y.toFixed(2)}rem + ${b.toFixed(2)}vw, ${remMax.toFixed(2)}rem);`
+  }).join("\n");
+}
+
 export function imgUrl(width = 500, height = 500, txt = `${width}x${height}`) {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg"
