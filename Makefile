@@ -1,3 +1,6 @@
+install:
+	cd cli && go install .
+
 cli: cli/xminus
 cli/xminus: cli/*.go cli/go.mod cli/go.sum cli/assets/*
 	go env -w GOPROXY=direct
