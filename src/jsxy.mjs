@@ -269,6 +269,7 @@ function applyStoreDirective(node, {tag, props}, [type, key], data) {
   else if (!key || !store) throw new Error("bad key or type in :store:<type>:<key>");
   if (!data) {
     node.addEventListener("submit", (e) => e.preventDefault());
+    node.addEventListener("reset", (e) => delete store[key]);
     node.addEventListener("input", (e) => {
       const fd = new FormData(node), m = {};
       iterateForm(node, (k, el, k2) => {
@@ -282,7 +283,7 @@ function applyStoreDirective(node, {tag, props}, [type, key], data) {
     const v = m && m[k];
     if (k2) for (const x of el) x[k2] = v && v[x.value];
     else if (el.type === "checkbox") el.checked = v;
-    else el.value = v;
+    else el.value = v == null ? "" : v;
   });
   return true;
 }
