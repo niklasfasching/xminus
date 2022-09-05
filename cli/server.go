@@ -4,16 +4,20 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
+	"os"
+	"os/exec"
 	"path"
 	"strings"
 )
 
 type Server struct {
-	Address string
+	Address    string
+	ForwardADB bool
 	*Watcher
 	*Runner
 
@@ -79,6 +83,22 @@ func (s *Server) Start() error {
 		}
 		w.Write(bs)
 	})
+
+	if s.ForwardADB {
+		go func() {
+			cmd := exec.Command("bash", "-c", fmt.Sprintf(`
+              while true; do
+                adb wait-for-usb-device reverse tcp:%[1]s tcp:%[1]s
+                echo adb: Forwarding %[1]s
+                adb wait-for-usb-disconnect
+                echo adb: Disconnected
+              done`, strings.Split(s.Address, ":")[1]))
+			cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+			if err := cmd.Run(); err != nil {
+				log.Println("adb", err)
+			}
+		}()
+	}
 	log.Println("Listening at http://" + s.Address)
 	return s.Server.ListenAndServe()
 }

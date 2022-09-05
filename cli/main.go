@@ -10,6 +10,7 @@ import (
 )
 
 var listenAddress = flag.String("l", ":8000", "http listen address")
+var forwardADB = flag.Bool("f", false, "forward listenAddress to adb device")
 var watch = flag.Bool("w", false, "watch and re-run on change")
 var watchInterval = flag.Int("i", 500, "watch poll interval in ms")
 var updateFixtures = flag.Bool("u", false, "update test fixtures")
@@ -35,7 +36,7 @@ func main() {
 
 	w := &Watcher{Path: "./", Interval: time.Duration(*watchInterval) * time.Millisecond}
 	r := &Runner{Args: flag.Args(), WindowArgs: strings.Fields(*windowArgs), Address: *listenAddress}
-	s := &Server{Address: *listenAddress, Watcher: w, Runner: r}
+	s := &Server{Address: *listenAddress, ForwardADB: *forwardADB, Watcher: w, Runner: r}
 	go func() { log.Fatal(s.Start()) }()
 	if *updateFixtures {
 		exitCode, err := r.UpdateFixtures()
