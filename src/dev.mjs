@@ -1,4 +1,4 @@
-export function imgUrl(width, height, txt = `${width}x${height}`) {
+export function imgUrl(width = 500, height = 500, txt = `${width}x${height}`) {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg"
          width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
