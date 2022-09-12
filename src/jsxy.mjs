@@ -227,7 +227,7 @@ function replaceNode(parentNode, newNode, oldNode) {
 
 function setProperties(node, vnode, component, ns) {
   for (let k in vnode.props) {
-    if (node.vnode?.props[k] !== vnode.props[k]) setProperty(node, k, vnode.props[k], ns);
+    if (node.vnode?.props?.[k] !== vnode.props[k]) setProperty(node, k, vnode.props[k], ns);
   }
   if (node.vnode) {
     for (let k in node.vnode.props) {
