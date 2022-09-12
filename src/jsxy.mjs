@@ -4,6 +4,7 @@ let hooks, hookKey, hookIndex, oldSearch, style;
 export const directives = {
   store: applyStoreDirective,
   href: applyHrefDirective,
+  intersect: applyIntersectDirective,
 }
 
 export const db = new Proxy(localStorage, {
@@ -286,6 +287,16 @@ function applyStoreDirective(node, {tag, props}, [type, key], v, data) {
     else if (el.type === "checkbox") el.checked = v;
     else el.value = v == null ? "" : v;
   });
+  return true;
+}
+
+function applyIntersectDirective(node, {tag, props}, args, rootMargin = "0% 100%", data) {
+  if (!data) {
+    const observer = new IntersectionObserver((xs, observer) => {
+      for (const x of xs) x.target.classList.toggle("intersecting", x.isIntersecting);
+    }, {rootMargin});
+    observer.observe(node);
+  }
   return true;
 }
 
