@@ -46,7 +46,7 @@ function Nav({$, onClose, shows, showsByMovie}) {
     const show = showsByMovie[normalizedTitle]?.filter(x => x.timestamp > Date.now())[0];
     if (!show) return;
     return html`
-      <a href="#/show/${show.id}" .show>
+      <a :href="?/show/${show.id}" .show>
         <img loading="lazy" src=${show.img}/>
         <div .title>${show.title}</div>
         <div .cinema>${show.cinemaShortName}</div>
@@ -55,7 +55,7 @@ function Nav({$, onClose, shows, showsByMovie}) {
 
   return html`
     <nav>
-      <a href="#/"><img .logo src="assets/logo.svg"/></a>
+      <a :href="?/"><img .logo src="assets/logo.svg"/></a>
       <${Menu} key=menu links=${links} onclose=${onClose} $menu>
       <div .favs-wrapper .hidden=${!favs.length}>
         <h1>Favorites</h1>
@@ -73,7 +73,7 @@ function ByDate({$, showsByDate}) {
     shows = filterByConfig(shows)
     if (!shows.length) return;
     shows = shows.map(x => html`
-      <a href="#/show/${x.id}" .show>
+      <a :href="?/show/${x.id}" .show>
         <img loading="lazy" src=${x.img}/>
         <div .title>${x.title}</div>
         <div .cinema>${x.time} | ${x.cinemaShortName}</div>
@@ -94,7 +94,7 @@ function ByMovie({$, showsByMovie}) {
     if (!shows.length) return;
     const show = shows[0];
     return html`
-      <a href="#/show/${show.id}" .show>
+      <a :href="?/show/${show.id}" .show>
         <img loading="lazy" src=${show.img}/>
         <div .title>${show.title}</div>
         <div .cinema>${show.cinemaShortName}</div>

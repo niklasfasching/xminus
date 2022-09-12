@@ -44,7 +44,7 @@ css`
 
 export function Menu({$, title, links, onclose, openClose = ["☰","✕"]}) {
   const list = links && Object.entries(links).map(([path, title]) =>
-    html`<a href="#${path}" .active=${route.path === path}>${title}</a>`);
+    html`<a :href="?${path}" .active=${route.path === path}>${title}</a>`);
   const on = (_, state, onRender) => {
     if ($.button.classList.toggle("open", state)) {
       $.button.textContent = openClose[1];

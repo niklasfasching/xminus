@@ -1,8 +1,9 @@
 const attrs = new Set("list", "form", "selected"), subs = new Map();
-let hooks, hookKey, hookIndex, oldHash, style;
+let hooks, hookKey, hookIndex, oldSearch, style;
 
 export const directives = {
   store: applyStoreDirective,
+  href: applyHrefDirective,
 }
 
 export const db = new Proxy(localStorage, {
@@ -17,7 +18,7 @@ export const db = new Proxy(localStorage, {
   getOwnPropertyDescriptor: (t, k) => Reflect.getOwnPropertyDescriptor(t, k),
 });
 
-export const query = new Proxy(() => new URLSearchParams(location.hash.split("?")[1]), {
+export const query = new Proxy(() => new URLSearchParams(location.search), {
   get: (t, k) => {
     const v = t().get(k);
     return v && (v[0] === "[" || v[0] === "{") ? JSON.parse(v) : v;
@@ -25,7 +26,7 @@ export const query = new Proxy(() => new URLSearchParams(location.hash.split("?"
   set: (t, k, v) => {
     const q = t(), sv = Object(v) === v ? JSON.stringify(v) : v;
     q[sv != null && sv !== "" ? "set" : "delete"](k, sv);
-    history.replaceState(null, null, location.hash.split("?")[0] + (""+q ? "?" + q : ""));
+    history.replaceState(null, "", "?"+q+location.hash);
     if (!publish.active) publish(query, k, v);
     return true;
   },
@@ -257,13 +258,13 @@ function eventListener(e) {
 }
 
 function applyDirectives(node, vnode) {
-  for (const kv in vnode.dirs) {
-    const [_, k, ...args] = kv.split(":"), f = directives[k];
-    if (f) node.dataset[k] = f(node, vnode, args, node.dataset[k]);
+  for (const dk in vnode.dirs) {
+    const [_, k, ...args] = dk.split(":"), f = directives[k], v = vnode.dirs[dk];
+    if (f) node.dataset[k] = f(node, vnode, args, v, node.dataset[k]);
   }
 }
 
-function applyStoreDirective(node, {tag, props}, [type, key], data) {
+function applyStoreDirective(node, {tag, props}, [type, key], v, data) {
   const store = {query, db}[type];
   if (tag !== "form") throw new Error(`:store on non-form tag '${tag}'`)
   else if (!key || !store) throw new Error("bad key or type in :store:<type>:<key>");
@@ -288,6 +289,12 @@ function applyStoreDirective(node, {tag, props}, [type, key], data) {
   return true;
 }
 
+function applyHrefDirective(node, {tag, props}, args, href, data) {
+  node.href = href;
+  if (!data) node.addEventListener("click", (e) => (route.go(node.href), e.preventDefault()));
+  return true;
+}
+
 function iterateForm(form, f) {
   for (let k of new Set([...form.elements].map(el => el.name).filter(Boolean))) {
     const el = form.elements[k];
@@ -297,36 +304,36 @@ function iterateForm(form, f) {
 }
 
 export function route(routes, parentNode) {
+  route.go = (href) => (history.pushState({}, "", href), renderRoute(routes, parentNode));
   window.addEventListener("popstate", () => renderRoute(routes, parentNode));
   renderRoute(routes, parentNode);
 }
 
 function renderRoute(routes, parentNode) {
-  if (location.hash[1] !== "#") history.replaceState(null, null, "##"+location.hash.slice(1));
-  const [path, query] = location.hash.slice(2).split("?");
+  let kvs = new URLSearchParams(location.search), params = Object.fromEntries(kvs), path;
+  for (let [k, v] of kvs) if (k[0] === "/") path = k;
   for (let [r, tag] of Object.entries(routes)) {
-    const params = matchRoute(r, path, query);
-    if (path && params) {
-      if (oldHash !== location.hash) {
+    if (matchRoute(r, path, params)) {
+      if (oldSearch !== location.search) {
+        oldSearch = location.search;
         window.scrollTo(0, 0);
         document.activeElement?.blur?.();
-        oldHash = location.hash;
       }
       Object.assign(route, {path, params});
       return void render({tag, props: params}, parentNode);
     }
   }
-  location.hash = "##/";
+  route.go("?/");
 }
 
-function matchRoute(route, path, query) {
+function matchRoute(route, path, params) {
   const r = new RegExp("^" + route.replace(/\/?$/, "/?$").replace(/\/{(.+?)}/g, (_, x) =>
     x.startsWith("...") ? `(?<${x.slice(3)}>(/.*)?)` : `/(?<${x}>[^/]+)`
   ));
   const match = r.exec(path);
   if (match) {
-    const params = Object.assign({}, new URLSearchParams(query).entries());
+    params.key = route;
     for (const k in match.groups) params[k] = decodeURIComponent(match.groups[k]);
-    return params;
+    return true;
   }
 }
