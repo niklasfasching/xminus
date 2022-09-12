@@ -1,5 +1,5 @@
 const attrs = new Set("list", "form", "selected"), subs = new Map();
-let hooks, hookKey, hookIndex, oldSearch, style;
+let hooks, hookKey, hookIndex, oldSearch, oldHash, style;
 
 export const directives = {
   store: applyStoreDirective,
@@ -323,18 +323,24 @@ export function route(routes, parentNode) {
 function renderRoute(routes, parentNode) {
   let kvs = new URLSearchParams(location.search), params = Object.fromEntries(kvs), path;
   for (let [k, v] of kvs) if (k[0] === "/") path = k;
-  for (let [r, tag] of Object.entries(routes)) {
-    if (matchRoute(r, path, params)) {
-      if (oldSearch !== location.search) {
+  if (!(location.hash !== oldHash && location.search === oldSearch)) {
+    for (let [r, tag] of Object.entries(routes)) {
+      if (matchRoute(r, path, params)) {
+        if (location.search !== oldSearch) {
+          window.scrollTo(0, 0);
+          document.activeElement?.blur?.();
+          oldSearch = location.search;
+        }
+        Object.assign(route, {path, params});
+        render({tag, props: params}, parentNode);
         oldSearch = location.search;
-        window.scrollTo(0, 0);
-        document.activeElement?.blur?.();
       }
-      Object.assign(route, {path, params});
-      return void render({tag, props: params}, parentNode);
     }
   }
-  route.go("?/");
+  if (location.search !== oldSearch) return void route.go("?/");
+  dispatchHashEvent(oldHash, "leave");
+  dispatchHashEvent(location.hash, "enter");
+  oldHash = location.hash;
 }
 
 function matchRoute(route, path, params) {
@@ -346,5 +352,14 @@ function matchRoute(route, path, params) {
     params.key = route;
     for (const k in match.groups) params[k] = decodeURIComponent(match.groups[k]);
     return true;
+  }
+}
+
+function dispatchHashEvent(hash = "", type) {
+  const [id, ...args] = hash.split(":"), el = id && document.querySelector(id);
+  if (el) {
+    void el.offsetWidth; // reflow
+    el.classList.toggle("target", type === "enter");
+    el.dispatchEvent(new CustomEvent("hash", {detail: {id, args, type}}));
   }
 }
