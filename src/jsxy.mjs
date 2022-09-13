@@ -275,7 +275,9 @@ function applyStoreDirective(node, {tag, props}, [type, key], v, data) {
     node.addEventListener("input", (e) => {
       const fd = new FormData(node), m = {};
       iterateForm(node, (k, el, k2) => {
-        m[k] = k2 ? Object.fromEntries(fd.getAll(k).map(k => [k, true])) : fd.get(k);
+        const vs = fd.getAll(k);
+        if (!k2) m[k] = vs[0];
+        else if (vs.length) m[k] = Object.fromEntries(vs.map(k => [k, true]));
       });
       store[key] = m;
     });
