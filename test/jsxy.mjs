@@ -289,7 +289,15 @@ t.describe("jsxy", () => {
         }
       });
     });
+
+    t.describe("query", () => {
+      t("preserves path unencoded", () => {
+        history.replaceState(null, "", "?/some/path");
+        query.foo = "bar"
+        t.assert(location.search === "?/some/path&foo=bar")
+        delete query.foo
+        t.assert(location.search === "?/some/path")
+      });
+    });
   });
-
-
 });

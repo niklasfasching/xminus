@@ -19,15 +19,15 @@ export const db = new Proxy(localStorage, {
   getOwnPropertyDescriptor: (t, k) => Reflect.getOwnPropertyDescriptor(t, k),
 });
 
-export const query = new Proxy(() => new URLSearchParams(location.search), {
+export const query = new Proxy(searchParams, {
   get: (t, k) => {
-    const v = t().get(k);
+    const v = t()[1].get(k);
     return v && (v[0] === "[" || v[0] === "{") ? JSON.parse(v) : v;
   },
   set: (t, k, v) => {
-    const q = t(), sv = Object(v) === v ? JSON.stringify(v) : v;
+    const [path, q] = t(), sv = Object(v) === v ? JSON.stringify(v) : v;
     q[sv != null && sv !== "" ? "set" : "delete"](k, sv);
-    history.replaceState(null, "", "?"+q+location.hash);
+    history.replaceState(null, "", "?"+path+(q.size ? "&"+q : "")+location.hash);
     if (!publish.active) publish(query, k, v);
     return true;
   },
@@ -324,8 +324,7 @@ export function route(routes, parentNode) {
 }
 
 function renderRoute(routes, parentNode) {
-  let kvs = new URLSearchParams(location.search), params = Object.fromEntries(kvs), path;
-  for (let [k, v] of kvs) if (k[0] === "/") path = k;
+  const [path, q] = searchParams(), params = Object.fromEntries(q);
   if (!(location.hash !== oldHash && location.search === oldSearch)) {
     for (let [r, tag] of Object.entries(routes)) {
       if (matchRoute(r, path, params)) {
@@ -365,4 +364,9 @@ function dispatchHashEvent(hash = "", type) {
     el.classList.toggle("target", type === "enter");
     el.dispatchEvent(new CustomEvent("hash", {detail: {id, args, type}}));
   }
+}
+
+function searchParams() {
+  const q = location.search, [path] = q.slice(1).split("&", 1);
+  return [path, new URLSearchParams(q.slice(path.length+1))];
 }
