@@ -2,6 +2,8 @@ github.com/niklasfasching/headless v0.0.0-20220326235830-76ca08a9d47b h1:ukfnm7Q
 github.com/niklasfasching/headless v0.0.0-20220326235830-76ca08a9d47b/go.mod h1:eNtgWNWLiNx0s72IxtwQ/09AThEdyHlaGOJGY1TAxN0=
 github.com/niklasfasching/headless v0.0.0-20220707103220-86925fd04f3d h1:y9al+/3HVFVqMYiZKCfAdCT7hLi0tj5FxFFz3crDb3I=
 github.com/niklasfasching/headless v0.0.0-20220707103220-86925fd04f3d/go.mod h1:eNtgWNWLiNx0s72IxtwQ/09AThEdyHlaGOJGY1TAxN0=
+github.com/niklasfasching/headless v0.0.0-20240223211520-370e96cf88e8 h1:8R5KT5onNrqkZPSyWf+T46ks2NTpJgSYTQa1BKNHSxU=
+github.com/niklasfasching/headless v0.0.0-20240223211520-370e96cf88e8/go.mod h1:eNtgWNWLiNx0s72IxtwQ/09AThEdyHlaGOJGY1TAxN0=
 golang.org/x/net v0.0.0-20210525063256-abc453219eb5/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210423082822-04245dca01da/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
