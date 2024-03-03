@@ -13,7 +13,7 @@ for dir in $(ls -d examples/*/); do
     index="${name}/index.html"
     echo $dir $index
     cp -r $dir "docs/${name}"
-    (cd docs && ../cli/xminus -b "$index" "$index")
+    (cd docs && ~/go/bin/xminus -b "$index" "$index")
     body="${body}
       <a href='${name}/'><h1>${name}</h1></a>
       <iframe src='${name}/'></iframe>"

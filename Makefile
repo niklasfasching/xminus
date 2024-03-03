@@ -1,32 +1,31 @@
-install:
-	cd cli && go install .
+xminus = $(HOME)/go/bin/xminus
 
-cli: cli/xminus
-cli/xminus: cli/*.go cli/go.mod cli/go.sum cli/assets/*
-	go env -w GOPROXY=direct
-	cd cli && go get -u ./...
-	cd cli && go build -o xminus *.go
+.PHONY: install
+install: $(HOME)/go/bin/xminus
+
+$(xminus): $(shell find cli)
+	cd cli && go install ./cmd/xminus
 
 .PHONY: dev
-dev: cli/xminus
-	cli/xminus -w
+dev: install
+	$(xminus) -w
 
 .PHONY: bench
-bench: cli/xminus
-	cli/xminus test/benchmark/bench.mjs
+bench: install
+	$(xminus) test/benchmark/bench.mjs
 
 .PHONY: update-fixtures
-update-fixtures: cli/xminus
-	cli/xminus -u test/*.mjs test/integration/*.mjs
+update-fixtures: install
+	$(xminus) -u test/*.mjs test/integration/*.mjs
 
 .PHONY: test
-test: cli/xminus
-	cli/xminus test/*.mjs test/integration/*.mjs
+test: install
+	$(xminus) test/*.mjs test/integration/*.mjs
+
+.PHONY: docs
+docs: install
+	etc/build-docs
 
 .PHONY: setup
 setup:
 	git config core.hooksPath etc/githooks
-
-.PHONY: docs
-docs: cli/xminus
-	etc/build-docs

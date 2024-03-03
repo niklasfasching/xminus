@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/niklasfasching/xminus/cli"
 )
 
 var listenAddress = flag.String("l", ":8000", "http listen address")
@@ -28,15 +30,15 @@ func main() {
 	flag.Parse()
 
 	if *create {
-		if err := CreateScaffold(flag.Args()); err != nil {
+		if err := cli.CreateScaffold(flag.Args()); err != nil {
 			log.Fatal(err)
 		}
 		os.Exit(0)
 	}
 
-	w := &Watcher{Path: "./", Interval: time.Duration(*watchInterval) * time.Millisecond}
-	r := &Runner{Args: flag.Args(), WindowArgs: strings.Fields(*windowArgs), Address: *listenAddress}
-	s := &Server{Address: *listenAddress, ForwardADB: *forwardADB, Watcher: w, Runner: r}
+	w := &cli.Watcher{Path: "./", Interval: time.Duration(*watchInterval) * time.Millisecond}
+	r := &cli.Runner{Args: flag.Args(), WindowArgs: strings.Fields(*windowArgs), Address: *listenAddress}
+	s := &cli.Server{Address: *listenAddress, ForwardADB: *forwardADB, Watcher: w, Runner: r}
 	go func() { log.Fatal(s.Start()) }()
 	if *updateFixtures {
 		exitCode, err := r.UpdateFixtures()
