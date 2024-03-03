@@ -90,6 +90,19 @@ func (r *Runner) run(ctx context.Context) (int, error) {
 		}
 		return os.WriteFile(path, []byte(body), 0644)
 	})
+	s.Bind("readDir", func(path string) ([]string, error) {
+		d, err := os.Getwd()
+		if err != nil {
+			return nil, fmt.Errorf("getwd: %w", err)
+		}
+		xs, err := os.ReadDir(filepath.Join(d, path))
+		fs := []string{}
+		for _, x := range xs {
+			fs = append(fs, x.Name())
+		}
+		return fs, err
+	})
+
 	s.Bind("console.log", func(args ...interface{}) { fmt.Fprintln(os.Stdout, headless.Colorize(args)) })
 	s.Bind("console.info", func(args ...interface{}) { fmt.Fprintln(os.Stdout, headless.Colorize(args)) })
 	s.Bind("console.error", func(args ...interface{}) { fmt.Fprintln(os.Stderr, headless.Colorize(args)) })
