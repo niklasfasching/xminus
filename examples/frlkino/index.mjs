@@ -3,10 +3,6 @@ import {Menu} from "./menu.mjs";
 import {Show} from "./show.mjs";
 import {Filters} from "./filters.mjs";
 
-if (navigator.serviceWorker != null) {
-  navigator.serviceWorker.register("assets/sw.mjs");
-}
-
 const history = await fetch("https://niklasfasching.github.io/freiluftkino/history.json").then(r => r.json());
 const shows = await fetch("https://niklasfasching.github.io/freiluftkino/shows.json").then(r => r.json());
 const showsByDate = groupShowsBy(shows, "date");
