@@ -331,11 +331,11 @@ function renderRoute(routes, parentNode) {
         if (location.search !== oldSearch) {
           window.scrollTo(0, 0);
           document.activeElement?.blur?.();
-          oldSearch = location.search;
         }
         Object.assign(route, {path, params});
         render({tag, props: params}, parentNode);
         oldSearch = location.search;
+        break;
       }
     }
   }
