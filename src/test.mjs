@@ -218,7 +218,9 @@ function log(lvl, isFailure, color, line, err) {
   console[navigator.webdriver ? "error" : "info"](" ".repeat(lvl) + "%c" + line, "color: " + color);
   if (err) {
     if (!navigator.webdriver) console.info(err);
-    else for (let l of err.stack.split("\n")) log(lvl+2, isFailure, "grey", l);
+    else for (let l of err.stack.split("\n")) {
+      if (!l.includes(import.meta.url)) log(lvl+2, isFailure, "grey", l);
+    }
   }
 }
 
