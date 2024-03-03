@@ -179,7 +179,7 @@ function renderChild(parentNode, vnode, node, component, ns) {
     ns = vnode.props?.xmlns || ns
     if (!node || vnode.tag !== node.vnode?.tag) node = createNode(parentNode, vnode.tag, node, ns);
     if (vnode.ref) component.props.$[vnode.ref] = node;
-    if (vnode.props) setProperties(node, vnode, component, ns);
+    if (vnode.props || node.vnode?.props) setProperties(node, vnode, component, ns);
     vnode.node = node, node.vnode = vnode, node.component = component;
     renderChildren(node, vnode.children, component, ns);
     if (vnode.dirs) applyDirectives(node, vnode)
@@ -233,7 +233,7 @@ function setProperties(node, vnode, component, ns) {
   }
   if (node.vnode) {
     for (let k in node.vnode.props) {
-      if (!(k in vnode.props)) setProperty(node, k, "");
+      if (!vnode.props || !(k in vnode.props)) setProperty(node, k, "");
     }
   }
 }

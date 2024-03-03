@@ -253,6 +253,12 @@ t.describe("jsxy", () => {
       render(html`<div>${[1, null, 3]}</div>`, document.body);
       t.assertFixture(document.body.innerHTML);
     });
+
+    t("render removes existing vnode props when necessary", () => {
+      render(html`<div .class>hello world</div>`, document.body);
+      render(html`<div>hello world</div>`, document.body);
+      t.assertFixture(document.body.innerHTML);
+    })
   });
 
   t.describe("db/query", () => {

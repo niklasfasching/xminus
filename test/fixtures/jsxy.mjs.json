@@ -247,5 +247,6 @@
   "jsxy: render: render root/app from any child (0)": "<div><button></button>0</div>",
   "jsxy: render: render root/app from any child (1)": "<div><button></button>1</div>",
   "jsxy: render: renderChildren works correctly when removing children (0)": "<div>123</div>",
-  "jsxy: render: renderChildren works correctly when removing children (1)": "<div>13</div>"
+  "jsxy: render: renderChildren works correctly when removing children (1)": "<div>13</div>",
+  "jsxy: render: render removes existing vnode props when necessary (0)": "<div class=\"\">hello world</div>"
 }
