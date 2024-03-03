@@ -77,6 +77,16 @@ t.describe("jsxy", () => {
         ${[1,2,3].map(x => html`<div>${x}</div>`)}
       </div>
     `);
+
+    test("tag starting with special prop renders as div - but not null value tag", html`
+      <div>
+        <.class></><.class/>
+        <#id></><#id/>
+        <--display=contents></><--display=contents/>
+        <...=${{x: 10}}></><...=${{x: 10}}/>
+        <${null}></><${null}/>
+      </div>
+    `);
   });
 
   t.describe("render", () => {

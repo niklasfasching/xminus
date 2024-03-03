@@ -160,6 +160,75 @@
     ],
     "tag": "div"
   },
+  "jsxy: html: tag starting with special prop renders as div - but not null value tag (0)": {
+    "children": [
+      {
+        "children": [],
+        "props": {
+          "classList": " class"
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {
+          "classList": " class"
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {
+          "id": "id"
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {
+          "id": "id"
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {
+          "style": ";--display:contents;"
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {
+          "style": ";--display:contents;"
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {
+          "x": 10
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "props": {
+          "x": 10
+        },
+        "tag": "div"
+      },
+      {
+        "children": [],
+        "tag": ""
+      },
+      {
+        "children": [],
+        "tag": ""
+      }
+    ],
+    "tag": "div"
+  },
   "jsxy: render: static render (0)": "<div>hello world</div>",
   "jsxy: render: svg (0)": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect x=\"0\" y=\"0\" width=\"100\" height=\"100\" stroke=\"black\"></rect></svg>",
   "jsxy: render: vnode/vnode array children render (0)": "<ul>\n            <li>1</li><li>2</li><li>3</li><li>4</li></ul>",

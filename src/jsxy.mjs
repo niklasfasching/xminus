@@ -60,10 +60,11 @@ export function html(strings, ...values) {
           $ = "close";
         } else {
           xs.push({children: [], props: []});
-          $ = "open";
+          $ = "#$:.-".includes(s[i+1]) ? "key" : "open";
         }
       } else if (($ === "close" && c === ">")) {
         const x = xs.pop(), props = x.props.length || typeof x.tag === "function" ? {} : undefined;
+        if (!("tag" in x)) x.tag = "div";
         if (tmp && tmp !== "/" && tmp.slice(1) !== x.tag) {
           throw new Error(`unexpected <${tmp}> in <${x.tag}>`);
         }
