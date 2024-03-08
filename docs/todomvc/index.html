@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html><head>
+<script type="module">
+import {mount, define, Component} from '/src/runtime.mjs';
+
+     define("x-todomvc", class extends Component {
+       onInit({store}) {
+         store.items = JSON.parse(localStorage.getItem("items") || "[]");
+       }
+
+       onUpdate({store}) {
+         localStorage.setItem("items", JSON.stringify(store.items));
+       }
+
+       onInput({target, key}) {
+         if (key !== "Enter") return
+         this.store.add(target.value.trim());
+         target.value = "";
+         this.update();
+       }
+
+       toggleAll({target}) {
+         for (const item of this.store.items) item.completed = target.checked;
+       }
+     })
+
+
+     define("x-todo-item", class extends Component {
+       onEditInput({type, target, key}) {
+         if (key === 'Escape') {
+           this.item.editing = false;
+           this.app.update();
+         } else if (key === "Enter" || type === "blur") {
+           this.item.title = target.value.trim();
+           this.item.editing = false;
+           if (!this.item.title) this.store.remove(this.item);
+           this.app.update();
+         }
+       }
+     })
+
+     class Store {
+       id = 0
+       items = []
+
+       add(title) {
+         if (title) this.items.push({id: this.id++, title, completed: false});
+       }
+
+       routeItems(path) {
+         if (path === "/") return this.items;
+         else if (path === "/active") return this.remaining;
+         else return this.completed;
+       }
+
+       remove(item) {
+         this.items = this.items.filter(_ => _ !== item);
+       }
+
+       toggleCompleted(item) {
+         item.completed = !item.completed;
+       }
+
+       clearCompleted() {
+         this.items = this.items.filter(_ => !_.completed);
+       }
+
+       get remaining() {
+         return this.items.filter(_ => !_.completed);
+       }
+
+       get completed() {
+         return this.items.filter(_ => _.completed);
+       }
+     }
+
+     window.store = new Store();
+     mount(document.body, "x-app", {
+       routes: {".*": ["x-todomvc", () => ({store})]},
+     });
+    </script>
+<script type="module">
+import {define, Component} from '/src/runtime.mjs';
+   define("x-app", class extends Component {
+     onInit({db, routes}) {
+       this.views = {};
+       this.db = this.initDB(db);
+       if (!location.hash) history.replaceState(null, null, "#/");
+       this.routeList = Object.entries(routes || []).map(([path, tag]) => [
+         new RegExp("^" + path.replace(/\/?$/, "/?$").replaceAll(/{(\w+)}/g, "(?<$1>[^/]+)")),
+         tag,
+       ]);
+       if (routes) {
+         this.listener = () => this.route();
+         window.addEventListener("popstate", this.listener);
+         this.route();
+       }
+     }
+
+     initDB(defaults = {}) {
+       const json = localStorage.getItem("app.db");
+       const db = Object.assign({}, defaults, json === "" ? {} : JSON.parse(json));
+       return this.proxy(db, () => localStorage.setItem("app.db", JSON.stringify(this.db)));
+     }
+
+     route() {
+       const [path, query] = location.hash.slice(1).split("?");
+       const [r, [tag, f = (app) => ({})]] = this.routeList.find(([r]) => r.test(path)) || [null, []];
+       if (!r) {
+         location.hash = "#/";
+         return void console.log(`404 for ${path}: ${JSON.stringify(this.routeList.map(([r]) => r.toString()))}`);
+       }
+       this.f = f;
+       this.path = path;
+       this.params = r.exec(path).groups;
+       for (const k in this.params) this.params[k] = decodeURIComponent(this.params[k]);
+       this.query = Object.fromEntries(new URLSearchParams(query).entries());
+       if (this.active && this.active === this.views[tag]) {
+         window.scrollTo(0, 0);
+         return void this.active.update?.(f(this.app));
+       }
+       if (this.active) this.active.style.display = "none";
+       if (this.views[tag]) {
+         this.active = this.views[tag];
+         this.active.update(f(this.app));
+         this.active.style.removeProperty("display");
+       } else {
+         this.active = this.views[tag] = document.createElement(tag);
+         if (this.active instanceof Component) this.active.init(this.app, this, f(this.app));
+         this.append(this.active);
+       }
+       window.scrollTo(0, 0);
+     }
+
+     onUpdate() {
+       if (this.active) this.active.update?.(this.f(this.app));
+     }
+
+     proxy(x, cb) {
+       const that = this;
+       return new Proxy(x, {
+         get(x, key) {
+           const value = x[key];
+           return typeof value === "object" ? that.proxy(value, cb) : value;
+         },
+         set(x, key, value) {
+           x[key] = value;
+           cb();
+           return true;
+         },
+         deleteProperty(x, key) {
+           const deleted = delete x[key];
+           if (deleted) cb();
+           return deleted;
+         },
+       })
+     }
+
+     onRemove() {
+       window.removeEventListener("popstate", this.listener);
+     }
+   });
+  </script>
+<script type="module">
+xm.register("x-todomvc", `
+<section class="todoapp">
+<header class="header">
+<h1>todos</h1>
+<input class="new-todo" placeholder="What needs to be done?">
+</header>
+<!---->
+</section>
+<footer class="info">
+<p>Double-click to edit a todo</p>
+<p>Adapted from <a href="http://todomvc.com">TodoMVC</a></p>
+</footer>
+`, function() {
+    const $ = this;
+    let _children_0_node = this.firstChild;
+let _children_1_node = _children_0_node.nextSibling;
+let _children_2_node = _children_1_node.firstChild;
+let _children_3_node = _children_2_node.nextSibling;
+let _children_4_node = _children_3_node.firstChild;
+let _children_5_node = _children_4_node.nextSibling;
+let _children_6_node = _children_5_node.firstChild;
+let _children_7_node = _children_5_node.nextSibling;
+let _children_8_node = _children_7_node.nextSibling;
+_children_8_node.addEventListener("keydown", function($event) {
+                   $.onInput($event);
+                   
+                 });
+let _on_9_node = _children_8_node;
+function _on_9_node_fn() { this.focus() }
+setTimeout(() => _on_9_node_fn.call(_on_9_node));
+let _children_10_node = _children_8_node.nextSibling;
+let _children_11_node = _children_3_node.nextSibling;
+let _children_12_node = _children_11_node.nextSibling;
+let _if_13_anchor = _children_12_node, _if_13_node = xm.fragment(`<section class="main">
+<input id="toggle-all" class="toggle-all" type="checkbox">
+<label for="toggle-all"></label>
+<ul class="todo-list">
+<!---->
+</ul>
+<!---->
+</section>`, 0).firstChild;
+               function _if_13_create($, ..._args) {
+                 let _children_12_node = _if_13_node.cloneNode(true);
+                 
+                 let _children_14_node = _children_12_node.firstChild;
+let _children_15_node = _children_14_node.nextSibling;
+let _properties_16_node = _children_15_node;
+xm.setProperty(_properties_16_node, "checked", (!$.store.remaining.length));
+_children_15_node.addEventListener("click", function($event) {
+                   $.toggleAll($event);
+                   $.app.update();
+                 });
+let _children_17_node = _children_15_node.nextSibling;
+let _children_18_node = _children_17_node.nextSibling;
+let _children_19_node = _children_18_node.nextSibling;
+let _children_20_node = _children_19_node.nextSibling;
+let _children_21_node = _children_20_node.firstChild;
+let _children_22_node = _children_21_node.nextSibling;
+let _for_23_anchor = _children_22_node, _for_23_node = xm.fragment(`<x-todo-item></x-todo-item>`, 0).firstChild;
+               function _for_23_create($, ..._args) {
+                 let _children_22_node = _for_23_node.cloneNode(true);
+                 let item = _args[0];
+                 _children_22_node.init($.app, $, {["item"]: (item), ["store"]: ($.store)});
+
+                 _children_22_node[xm.symbols.updateChildNode] = (..._args) => {
+                   item = _args[0];
+                   _children_22_node.update({["item"]: (item), ["store"]: ($.store)});
+
+                   return _children_22_node;
+                 };
+                 return _children_22_node;
+               }
+const _for_23_values = [], _for_23_nodes = [];
+               xm.updateChildNodes(_for_23_anchor.parentNode, _for_23_anchor, _for_23_nodes, _for_23_values, $.store.routeItems($.app.path) || [], $, _for_23_create);
+let _children_24_node = _children_22_node.nextSibling;
+let _children_25_node = _children_20_node.nextSibling;
+let _children_26_node = _children_25_node.nextSibling;
+let _if_27_anchor = _children_26_node, _if_27_node = xm.fragment(`<footer class="footer">
+<span class="todo-count"><!----> item<!----> left</span>
+<ul class="filters">
+<li><a href="#/">All</a></li>
+<li><a href="#/active">Active</a></li>
+<li><a href="#/completed">Completed</a></li>
+</ul>
+<!---->
+</footer>`, 0).firstChild;
+               function _if_27_create($, ..._args) {
+                 let _children_26_node = _if_27_node.cloneNode(true);
+                 
+                 let _children_28_node = _children_26_node.firstChild;
+let _children_29_node = _children_28_node.nextSibling;
+let _children_30_node = _children_29_node.firstChild;
+let _children_32_node = _children_29_node;
+const _children_31_nodes = [_children_30_node,_children_30_node.nextSibling.nextSibling], _children_31_values = [];
+                 xm.updateChildNodes(_children_32_node, null, _children_31_nodes, _children_31_values, [($.store.remaining.length),($.store.remaining.length === 1 ? '' : 's')], $, xm.createChildNode);
+let _children_33_node = _children_29_node.nextSibling;
+let _children_34_node = _children_33_node.nextSibling;
+let _children_35_node = _children_34_node.firstChild;
+let _children_36_node = _children_35_node.nextSibling;
+let _children_37_node = _children_36_node.firstChild;
+let _properties_38_node = _children_37_node;
+xm.setProperty(_properties_38_node, "class", ($.app.path === '/' && 'selected'));
+let _children_39_node = _children_37_node.firstChild;
+let _children_40_node = _children_36_node.nextSibling;
+let _children_41_node = _children_40_node.nextSibling;
+let _children_42_node = _children_41_node.firstChild;
+let _properties_43_node = _children_42_node;
+xm.setProperty(_properties_43_node, "class", ($.app.path === '/active' && 'selected'));
+let _children_44_node = _children_42_node.firstChild;
+let _children_45_node = _children_41_node.nextSibling;
+let _children_46_node = _children_45_node.nextSibling;
+let _children_47_node = _children_46_node.firstChild;
+let _properties_48_node = _children_47_node;
+xm.setProperty(_properties_48_node, "class", ($.app.path === '/completed' && 'selected'));
+let _children_49_node = _children_47_node.firstChild;
+let _children_50_node = _children_46_node.nextSibling;
+let _children_51_node = _children_34_node.nextSibling;
+let _children_52_node = _children_51_node.nextSibling;
+let _if_53_anchor = _children_52_node, _if_53_node = xm.fragment(`<button class="clear-completed">Clear completed</button>`, 0).firstChild;
+               function _if_53_create($, ..._args) {
+                 let _children_52_node = _if_53_node.cloneNode(true);
+                 
+                 let _children_54_node = _children_52_node.firstChild;
+_children_52_node.addEventListener("click", function($event) {
+                   $.store.clearCompleted();
+                   $.app.update();
+                 });
+
+                 _children_52_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   
+                   return _children_52_node;
+                 };
+                 return _children_52_node;
+               }
+let _if_53_connected = xm.nodeIf(($.store.completed.length), _if_53_anchor, _if_53_anchor, $, _if_53_create);
+               _children_52_node = _if_53_connected;
+let _children_55_node = _children_52_node.nextSibling;
+
+                 _children_26_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.updateChildNodes(_children_32_node, null, _children_31_nodes, _children_31_values, [($.store.remaining.length),($.store.remaining.length === 1 ? '' : 's')], $, xm.createChildNode);
+xm.setProperty(_properties_38_node, "class", ($.app.path === '/' && 'selected'));
+xm.setProperty(_properties_43_node, "class", ($.app.path === '/active' && 'selected'));
+xm.setProperty(_properties_48_node, "class", ($.app.path === '/completed' && 'selected'));
+_if_53_connected = xm.nodeIf(($.store.completed.length), _if_53_connected, _if_53_anchor, $, _if_53_create);
+
+                   return _children_26_node;
+                 };
+                 return _children_26_node;
+               }
+let _if_27_connected = xm.nodeIf(($.store.items.length), _if_27_anchor, _if_27_anchor, $, _if_27_create);
+               _children_26_node = _if_27_connected;
+let _children_56_node = _children_26_node.nextSibling;
+
+                 _children_12_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.setProperty(_properties_16_node, "checked", (!$.store.remaining.length));
+xm.updateChildNodes(_for_23_anchor.parentNode, _for_23_anchor, _for_23_nodes, _for_23_values, $.store.routeItems($.app.path) || [], $, _for_23_create);
+_if_27_connected = xm.nodeIf(($.store.items.length), _if_27_connected, _if_27_anchor, $, _if_27_create);
+
+                   return _children_12_node;
+                 };
+                 return _children_12_node;
+               }
+let _if_13_connected = xm.nodeIf(($.store.items.length), _if_13_anchor, _if_13_anchor, $, _if_13_create);
+               _children_12_node = _if_13_connected;
+let _children_57_node = _children_12_node.nextSibling;
+let _children_58_node = _children_1_node.nextSibling;
+let _children_59_node = _children_58_node.nextSibling;
+let _children_60_node = _children_59_node.firstChild;
+let _children_61_node = _children_60_node.nextSibling;
+let _children_62_node = _children_61_node.firstChild;
+let _children_63_node = _children_61_node.nextSibling;
+let _children_64_node = _children_63_node.nextSibling;
+let _children_65_node = _children_64_node.firstChild;
+let _children_66_node = _children_65_node.nextSibling;
+let _children_67_node = _children_66_node.firstChild;
+let _children_68_node = _children_64_node.nextSibling;
+let _children_69_node = _children_59_node.nextSibling;
+
+    return () => {
+      _if_13_connected = xm.nodeIf(($.store.items.length), _if_13_connected, _if_13_anchor, $, _if_13_create);
+
+    };
+  }, ["store",]);
+
+xm.register("x-todo-item", `
+<li>
+<input class="toggle" type="checkbox">
+<!---->
+<!---->
+<button class="destroy"></button>
+</li>
+`, function() {
+    const $ = this;
+    let _children_70_node = this.firstChild;
+let _children_71_node = _children_70_node.nextSibling;
+let _properties_72_node = _children_71_node;
+xm.setProperty(_properties_72_node, "class", "todo-item " + ($.item.completed ? 'completed' : '') + " " + ($.item.editing ? 'editing' : ''));
+let _children_73_node = _children_71_node.firstChild;
+let _children_74_node = _children_73_node.nextSibling;
+let _properties_75_node = _children_74_node;
+xm.setProperty(_properties_75_node, "checked", ($.item.completed));
+_children_74_node.addEventListener("click", function($event) {
+                   $.item.completed = !$.item.completed;
+                   $.app.update();
+                 });
+let _children_76_node = _children_74_node.nextSibling;
+let _children_77_node = _children_76_node.nextSibling;
+let _if_78_anchor = _children_77_node, _if_78_node = xm.fragment(`<label><!----></label>`, 0).firstChild;
+               function _if_78_create($, ..._args) {
+                 let _children_77_node = _if_78_node.cloneNode(true);
+                 
+                 let _children_79_node = _children_77_node.firstChild;
+let _children_81_node = _children_77_node;
+const _children_80_nodes = [_children_79_node], _children_80_values = [];
+                 xm.updateChildNodes(_children_81_node, null, _children_80_nodes, _children_80_values, [($.item.title)], $, xm.createChildNode);
+_children_77_node.addEventListener("dblclick", function($event) {
+                   $.item.editing = true;
+                   $.app.update();
+                 });
+
+                 _children_77_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.updateChildNodes(_children_81_node, null, _children_80_nodes, _children_80_values, [($.item.title)], $, xm.createChildNode);
+
+                   return _children_77_node;
+                 };
+                 return _children_77_node;
+               }
+let _if_78_connected = xm.nodeIf((!$.item.editing), _if_78_anchor, _if_78_anchor, $, _if_78_create);
+               _children_77_node = _if_78_connected;
+let _children_82_node = _children_77_node.nextSibling;
+let _children_83_node = _children_82_node.nextSibling;
+let _if_84_anchor = _children_83_node, _if_84_node = xm.fragment(`<input class="edit">`, 0).firstChild;
+               function _if_84_create($, ..._args) {
+                 let _children_83_node = _if_84_node.cloneNode(true);
+                 
+                 let _bind_85_node = _children_83_node;
+if ($.item.title !== undefined) _bind_85_node["value"] = $.item.title;
+
+               _bind_85_node.addEventListener("keyup", () => $.item.title = _bind_85_node["value"]);
+let _on_86_node = _children_83_node;
+function _on_86_node_fn() { if ($.item.editing) this.focus() }
+setTimeout(() => _on_86_node_fn.call(_on_86_node));
+_children_83_node.addEventListener("keydown", function($event) {
+                   $.onEditInput($event);
+                   
+                 });
+_children_83_node.addEventListener("blur", function($event) {
+                   $.onEditInput($event);
+                   
+                 });
+
+                 _children_83_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   if (document.activeElement !== _bind_85_node && $.item.title !== undefined) _bind_85_node["value"] = $.item.title;
+
+                   return _children_83_node;
+                 };
+                 return _children_83_node;
+               }
+let _if_84_connected = xm.nodeIf(($.item.editing), _if_84_anchor, _if_84_anchor, $, _if_84_create);
+               _children_83_node = _if_84_connected;
+let _children_87_node = _children_83_node.nextSibling;
+let _children_88_node = _children_87_node.nextSibling;
+_children_88_node.addEventListener("click", function($event) {
+                   $.store.remove($.item);
+                   $.app.update();
+                 });
+let _children_89_node = _children_88_node.nextSibling;
+let _children_90_node = _children_71_node.nextSibling;
+
+    return () => {
+      xm.setProperty(_properties_72_node, "class", "todo-item " + ($.item.completed ? 'completed' : '') + " " + ($.item.editing ? 'editing' : ''));
+xm.setProperty(_properties_75_node, "checked", ($.item.completed));
+_if_78_connected = xm.nodeIf((!$.item.editing), _if_78_connected, _if_78_anchor, $, _if_78_create);
+_if_84_connected = xm.nodeIf(($.item.editing), _if_84_connected, _if_84_anchor, $, _if_84_create);
+
+    };
+  }, ["item", "store",]);
+
+xm.register("x-app", ``, function() {
+    const $ = this;
+    
+    return () => {
+      
+    };
+  }, []);
+</script>
+<link href="/src/base.css" rel="stylesheet">
+<link href="/todomvc/todomvc.css" rel="stylesheet">
+
+
+  
+    <meta charset="utf-8">
+    <link href="/src/base.css" rel="stylesheet">
+    <link href="/todomvc/todomvc.css" rel="stylesheet">
+    
+    
+
+    
+
+    
+  </head>
+  <body>
+
+</body></html>

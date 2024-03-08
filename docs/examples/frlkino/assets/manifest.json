@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "display": "standalone",
+  "name": "freiluftkino",
+  "short_name": "frlkino",
+  "background_color": "white",
+  "theme_color": "white",
+  "start_url": "../",
+  "icons": [
+    {
+      "src": "logo.svg",
+      "sizes": "any"
+    }
+  ]
+}

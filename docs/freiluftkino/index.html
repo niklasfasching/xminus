@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html><head>
+<script type="module">
+import {mount} from '/src/runtime.mjs';
+
+     (async () => {
+       const history = await fetch("https://niklasfasching.github.io/freiluftkino/history.json").then(r => r.json());
+       const shows = await fetch("https://niklasfasching.github.io/freiluftkino/shows.json").then(r => r.json());
+       for (const id in shows) {
+         shows[id].key = shows[id].title.toLowerCase().replace(/\(.*\)|-.*?film preview|open air:/g, "").trim();
+       }
+       await mount(document.body, "x-app", {
+         routes: {
+           "/": ["x-list", () => ({shows, history})],
+           "/favorites": ["x-list", () => ({shows, history})],
+           "/hidden": ["x-list", () => ({shows, history})],
+           "/cinema/{id}": ["x-list", () => ({shows, history})],
+           "/show/{id}": ["x-details", (app) => {
+             const show = shows[app.params.id];
+             return {shows, show, history: history[show?.url]};
+           }],
+         },
+         cinemas: Object.fromEntries(Object.values(shows).map(x => [x.cinemaId, x.cinemaShortName])),
+         shows,
+         history,
+         db: {
+           excludedCinemas: {},
+           onlyAvailable: false,
+           favoriteShows: {},
+           hiddenMovies: {},
+         },
+       });
+     })();
+    </script>
+<script type="module">
+import {define, Component} from '/src/runtime.mjs';
+   define("x-app", class extends Component {
+     onInit({db, routes}) {
+       this.views = {};
+       this.db = this.initDB(db);
+       if (!location.hash) history.replaceState(null, null, "#/");
+       this.routeList = Object.entries(routes || []).map(([path, tag]) => [
+         new RegExp("^" + path.replace(/\/?$/, "/?$").replaceAll(/{(\w+)}/g, "(?<$1>[^/]+)")),
+         tag,
+       ]);
+       if (routes) {
+         this.listener = () => this.route();
+         window.addEventListener("popstate", this.listener);
+         this.route();
+       }
+     }
+
+     initDB(defaults = {}) {
+       const json = localStorage.getItem("app.db");
+       const db = Object.assign({}, defaults, json === "" ? {} : JSON.parse(json));
+       return this.proxy(db, () => localStorage.setItem("app.db", JSON.stringify(this.db)));
+     }
+
+     route() {
+       const [path, query] = location.hash.slice(1).split("?");
+       const [r, [tag, f = (app) => ({})]] = this.routeList.find(([r]) => r.test(path)) || [null, []];
+       if (!r) {
+         location.hash = "#/";
+         return void console.log(`404 for ${path}: ${JSON.stringify(this.routeList.map(([r]) => r.toString()))}`);
+       }
+       this.f = f;
+       this.path = path;
+       this.params = r.exec(path).groups;
+       for (const k in this.params) this.params[k] = decodeURIComponent(this.params[k]);
+       this.query = Object.fromEntries(new URLSearchParams(query).entries());
+       if (this.active && this.active === this.views[tag]) {
+         window.scrollTo(0, 0);
+         return void this.active.update?.(f(this.app));
+       }
+       if (this.active) this.active.style.display = "none";
+       if (this.views[tag]) {
+         this.active = this.views[tag];
+         this.active.update(f(this.app));
+         this.active.style.removeProperty("display");
+       } else {
+         this.active = this.views[tag] = document.createElement(tag);
+         if (this.active instanceof Component) this.active.init(this.app, this, f(this.app));
+         this.append(this.active);
+       }
+       window.scrollTo(0, 0);
+     }
+
+     onUpdate() {
+       if (this.active) this.active.update?.(this.f(this.app));
+     }
+
+     proxy(x, cb) {
+       const that = this;
+       return new Proxy(x, {
+         get(x, key) {
+           const value = x[key];
+           return typeof value === "object" ? that.proxy(value, cb) : value;
+         },
+         set(x, key, value) {
+           x[key] = value;
+           cb();
+           return true;
+         },
+         deleteProperty(x, key) {
+           const deleted = delete x[key];
+           if (deleted) cb();
+           return deleted;
+         },
+       })
+     }
+
+     onRemove() {
+       window.removeEventListener("popstate", this.listener);
+     }
+   });
+  </script>
+<script type="module">
+import {define, Component} from '/src/runtime.mjs';
+     define("x-list", class extends Component {
+       onRender() {
+         const {excludedCinemas, favoriteShows, hiddenMovies, onlyAvailable} = this.app.db, searchTitle = this.app.searchTitle || "";
+         this.shows = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp)
+                            .filter(x => {
+                              return x.timestamp >= Date.now() &&
+                                     x.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
+                                     !excludedCinemas[x.cinemaName] &&
+                                     (!onlyAvailable || x.bookable) &&
+                                     (location.hash !== "#/favorites" || favoriteShows[x.id]) &&
+                                     (location.hash !== "#/hidden" ? !hiddenMovies[x.key] : hiddenMovies[x.key]) &&
+                                     (!location.hash.startsWith("#/cinema/") || x.cinemaId === this.app.params.id);
+                            })
+                            .reduce((g, s) => {
+                              (g[s.date] = g[s.date] || []).push(s);
+                              g[s.date] = g[s.date].sort((x, y) => x.time > y.time);
+                              return g;
+                            }, {});
+       }
+     });
+    </script>
+<script type="module">
+import {define, Component} from '/src/runtime.mjs';
+
+     define("x-actions", class extends Component {
+       onShare() {
+         return navigator.share({title: this.show.title, url: location.href});
+       }
+
+       toggleFavorite() {
+         if (this.favorited) delete this.app.db.favoriteShows[this.show.id];
+         else this.app.db.favoriteShows[this.show.id] = true;
+         if (this.favorited) delete this.app.db.hiddenMovies[this.show.key];
+       }
+
+       toggleHideMovie() {
+         if (this.hidden) delete this.app.db.hiddenMovies[this.show.key];
+         else this.app.db.hiddenMovies[this.show.key] = true;
+         if (this.hidden) delete this.app.db.favoriteShows[this.show.id];
+       }
+
+       get hidden() {
+         return this.app.db.hiddenMovies[this.show.key];
+       }
+
+       get favorited() {
+         return this.app.db.favoriteShows[this.show.id];
+       }
+     });
+    </script>
+<script type="module">
+import {define, Component} from '/src/runtime.mjs';
+
+     define("x-details", class extends Component {
+       onRender() {
+         this.chart = {
+           xMin: this.history[0]?.[0] || 0,
+           xMax: Date.now(),
+           yMin: 0,
+           yMax: Math.max(...this.history.map(([x, y]) => y)),
+           values: this.history,
+         };
+
+         this.alternatives = Object.values(this.props.shows).sort((a, b) => a.timestamp - b.timestamp).filter((show) => {
+           return this.show.key === show.key && this.show !== show;
+         });
+       }
+
+       formatTooltip({vx, vy}) {
+         const date = new Date(vx).toLocaleDateString("de").slice(0, -5);
+         const time = new Date(vx).toLocaleTimeString("de").slice(0, -3);
+         return `${date} ${time} | ${vy.toFixed()} free`;
+       }
+     });
+    </script>
+<script type="module">
+import {mount, define, Component} from '/src/runtime.mjs';
+     define("x-chart", class extends Component {
+       onInit() {
+         this.formatTooltip = this.props.formatTooltip || ((b) => `(${b.vx.toFixed(1)}, ${b.vy.toFixed(1)})`);
+       }
+
+       onpointerover(e) {
+         this.querySelector(".tooltip").innerText = e.target._value ? this.formatTooltip(e.target._value) : "";
+       }
+
+       onRender() {
+         const {values, xMin, xMax, yMin, yMax} = this.props;
+         this.bars = values.map(([vx, vy], i) => {
+           const height = Math.min((vy / yMax) * 100, 100) || 0,
+                 start = ((vx-xMin) / (xMax-xMin)) * 95,
+                 end = values[i+1] ? (values[i+1][0]-xMin) / (xMax-xMin) * 95 : 100;
+           return {
+             vx,
+             vy,
+             width: end-start,
+             height,
+             x: start,
+             y: 100-height,
+           };
+         });
+       }
+     })
+    </script>
+<script type="module">
+import {define, Component} from '/src/runtime.mjs';
+
+     define("x-nav", class extends Component {
+       onRender() {
+         const shows = this.app.props.shows, favoriteShows = this.app.db.favoriteShows, hiddenMovies = this.app.db.hiddenMovies;
+         this.favoriteCount = Object.entries(favoriteShows).filter(([id, x]) => x && shows[id]).length;
+         this.hiddenCount = Object.entries(hiddenMovies).filter(([key, x]) => x && Object.values(shows).find(x => x.key === key)).length;
+       }
+     });;
+    </script>
+<script type="module">
+
+xm.register("x-app", ``, function() {
+    const $ = this;
+    
+    return () => {
+      
+    };
+  }, []);
+
+xm.register("x-list", `
+<x-nav></x-nav>
+<div class="days">
+<!---->
+</div>
+`, function() {
+    const $ = this;
+    let _children_0_node = this.firstChild;
+let _children_1_node = _children_0_node.nextSibling;
+_children_1_node.init($.app, $, {});
+let _children_2_node = _children_1_node.nextSibling;
+let _children_3_node = _children_2_node.nextSibling;
+let _children_4_node = _children_3_node.firstChild;
+let _children_5_node = _children_4_node.nextSibling;
+let _for_6_anchor = _children_5_node, _for_6_node = xm.fragment(`<div class="day">
+<div class="date"><!----></div>
+<div class="shows">
+<!---->
+</div>
+</div>`, 0).firstChild;
+               function _for_6_create($, ..._args) {
+                 let _children_5_node = _for_6_node.cloneNode(true);
+                 let [day, shows] = _args[0];
+                 let _children_7_node = _children_5_node.firstChild;
+let _children_8_node = _children_7_node.nextSibling;
+let _children_9_node = _children_8_node.firstChild;
+let _children_11_node = _children_8_node;
+const _children_10_nodes = [_children_9_node], _children_10_values = [];
+                 xm.updateChildNodes(_children_11_node, null, _children_10_nodes, _children_10_values, [(day.slice(0, -1))], $, xm.createChildNode);
+let _children_12_node = _children_8_node.nextSibling;
+let _children_13_node = _children_12_node.nextSibling;
+let _children_14_node = _children_13_node.firstChild;
+let _children_15_node = _children_14_node.nextSibling;
+let _for_16_anchor = _children_15_node, _for_16_node = xm.fragment(`<x-show></x-show>`, 0).firstChild;
+               function _for_16_create($, ..._args) {
+                 let _children_15_node = _for_16_node.cloneNode(true);
+                 let show = _args[0];
+                 _children_15_node.init($.app, $, {["show"]: (show)});
+
+                 _children_15_node[xm.symbols.updateChildNode] = (..._args) => {
+                   show = _args[0];
+                   _children_15_node.update({["show"]: (show)});
+
+                   return _children_15_node;
+                 };
+                 return _children_15_node;
+               }
+const _for_16_values = [], _for_16_nodes = [];
+               xm.updateChildNodes(_for_16_anchor.parentNode, _for_16_anchor, _for_16_nodes, _for_16_values, shows || [], $, _for_16_create);
+let _children_17_node = _children_15_node.nextSibling;
+let _children_18_node = _children_13_node.nextSibling;
+
+                 _children_5_node[xm.symbols.updateChildNode] = (..._args) => {
+                   [day, shows] = _args[0];
+                   xm.updateChildNodes(_children_11_node, null, _children_10_nodes, _children_10_values, [(day.slice(0, -1))], $, xm.createChildNode);
+xm.updateChildNodes(_for_16_anchor.parentNode, _for_16_anchor, _for_16_nodes, _for_16_values, shows || [], $, _for_16_create);
+
+                   return _children_5_node;
+                 };
+                 return _children_5_node;
+               }
+const _for_6_values = [], _for_6_nodes = [];
+               xm.updateChildNodes(_for_6_anchor.parentNode, _for_6_anchor, _for_6_nodes, _for_6_values, Object.entries($.shows || {}) || [], $, _for_6_create);
+let _children_19_node = _children_5_node.nextSibling;
+let _children_20_node = _children_3_node.nextSibling;
+
+    return () => {
+      _children_1_node.update({});
+xm.updateChildNodes(_for_6_anchor.parentNode, _for_6_anchor, _for_6_nodes, _for_6_values, Object.entries($.shows || {}) || [], $, _for_6_create);
+
+    };
+  }, []);
+
+xm.register("x-show", `
+<div class="cover">
+<a>
+<img loading="lazy">
+</a>
+<div class="time"><!----></div>
+<x-actions></x-actions>
+<div class="info">
+<div class="title"><a><!----></a></div>
+<a class="cinema"><!----></a>
+<div class="seats">
+<span><!----> available</span>
+<!---->
+</div>
+</div>
+</div>
+`, function() {
+    const $ = this;
+    let _children_21_node = this.firstChild;
+let _children_22_node = _children_21_node.nextSibling;
+_children_22_node.classList.toggle("bookable", !!($.show.bookable));
+let _children_23_node = _children_22_node.firstChild;
+let _children_24_node = _children_23_node.nextSibling;
+let _properties_25_node = _children_24_node;
+xm.setProperty(_properties_25_node, "href", "#/show/" + ($.show.id));
+let _children_26_node = _children_24_node.firstChild;
+let _children_27_node = _children_26_node.nextSibling;
+let _properties_28_node = _children_27_node;
+xm.setProperty(_properties_28_node, "src", ($.show.img));
+let _children_29_node = _children_27_node.nextSibling;
+let _children_30_node = _children_24_node.nextSibling;
+let _children_31_node = _children_30_node.nextSibling;
+let _children_32_node = _children_31_node.firstChild;
+let _children_34_node = _children_31_node;
+const _children_33_nodes = [_children_32_node], _children_33_values = [];
+                 xm.updateChildNodes(_children_34_node, null, _children_33_nodes, _children_33_values, [($.show.time)], $, xm.createChildNode);
+let _children_35_node = _children_31_node.nextSibling;
+let _children_36_node = _children_35_node.nextSibling;
+_children_36_node.init($.app, $, {["show"]: ($.show), ["heart"]: "true", ["visibility"]: ($.app.path === '/hidden')});
+let _children_37_node = _children_36_node.nextSibling;
+let _children_38_node = _children_37_node.nextSibling;
+let _children_39_node = _children_38_node.firstChild;
+let _children_40_node = _children_39_node.nextSibling;
+let _properties_41_node = _children_40_node;
+xm.setProperty(_properties_41_node, "title", ($.show.title));
+let _children_42_node = _children_40_node.firstChild;
+let _properties_43_node = _children_42_node;
+xm.setProperty(_properties_43_node, "href", ($.show.url));
+let _children_44_node = _children_42_node.firstChild;
+let _children_46_node = _children_42_node;
+const _children_45_nodes = [_children_44_node], _children_45_values = [];
+                 xm.updateChildNodes(_children_46_node, null, _children_45_nodes, _children_45_values, [($.show.title)], $, xm.createChildNode);
+let _children_47_node = _children_40_node.nextSibling;
+let _children_48_node = _children_47_node.nextSibling;
+let _properties_49_node = _children_48_node;
+xm.setProperty(_properties_49_node, "href", ($.show.cinemaUrl));
+let _children_50_node = _children_48_node.firstChild;
+let _children_52_node = _children_48_node;
+const _children_51_nodes = [_children_50_node], _children_51_values = [];
+                 xm.updateChildNodes(_children_52_node, null, _children_51_nodes, _children_51_values, [($.show.cinemaShortName)], $, xm.createChildNode);
+let _children_53_node = _children_48_node.nextSibling;
+let _children_54_node = _children_53_node.nextSibling;
+let _children_55_node = _children_54_node.firstChild;
+let _children_56_node = _children_55_node.nextSibling;
+let _children_57_node = _children_56_node.firstChild;
+let _children_59_node = _children_56_node;
+const _children_58_nodes = [_children_57_node], _children_58_values = [];
+                 xm.updateChildNodes(_children_59_node, null, _children_58_nodes, _children_58_values, [($.show.available === -1 ? "" :  `${$.show.available || 0}`)], $, xm.createChildNode);
+let _children_60_node = _children_56_node.nextSibling;
+let _children_61_node = _children_60_node.nextSibling;
+let _if_62_anchor = _children_61_node, _if_62_node = xm.fragment(`<span>| <!----> reserved</span>`, 0).firstChild;
+               function _if_62_create($, ..._args) {
+                 let _children_61_node = _if_62_node.cloneNode(true);
+                 
+                 let _children_63_node = _children_61_node.firstChild;
+let _children_65_node = _children_61_node;
+const _children_64_nodes = [_children_63_node.nextSibling], _children_64_values = [];
+                 xm.updateChildNodes(_children_65_node, null, _children_64_nodes, _children_64_values, [($.show.reserved || 0)], $, xm.createChildNode);
+
+                 _children_61_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.updateChildNodes(_children_65_node, null, _children_64_nodes, _children_64_values, [($.show.reserved || 0)], $, xm.createChildNode);
+
+                   return _children_61_node;
+                 };
+                 return _children_61_node;
+               }
+let _if_62_connected = xm.nodeIf(($.show.available !== -1), _if_62_anchor, _if_62_anchor, $, _if_62_create);
+               _children_61_node = _if_62_connected;
+let _children_66_node = _children_61_node.nextSibling;
+let _children_67_node = _children_54_node.nextSibling;
+let _children_68_node = _children_38_node.nextSibling;
+let _children_69_node = _children_22_node.nextSibling;
+
+    return () => {
+      _children_22_node.classList.toggle("bookable", !!($.show.bookable));
+xm.setProperty(_properties_25_node, "href", "#/show/" + ($.show.id));
+xm.setProperty(_properties_28_node, "src", ($.show.img));
+xm.updateChildNodes(_children_34_node, null, _children_33_nodes, _children_33_values, [($.show.time)], $, xm.createChildNode);
+_children_36_node.update({["show"]: ($.show), ["heart"]: "true", ["visibility"]: ($.app.path === '/hidden')});
+xm.setProperty(_properties_41_node, "title", ($.show.title));
+xm.setProperty(_properties_43_node, "href", ($.show.url));
+xm.updateChildNodes(_children_46_node, null, _children_45_nodes, _children_45_values, [($.show.title)], $, xm.createChildNode);
+xm.setProperty(_properties_49_node, "href", ($.show.cinemaUrl));
+xm.updateChildNodes(_children_52_node, null, _children_51_nodes, _children_51_values, [($.show.cinemaShortName)], $, xm.createChildNode);
+xm.updateChildNodes(_children_59_node, null, _children_58_nodes, _children_58_values, [($.show.available === -1 ? "" :  `${$.show.available || 0}`)], $, xm.createChildNode);
+_if_62_connected = xm.nodeIf(($.show.available !== -1), _if_62_connected, _if_62_anchor, $, _if_62_create);
+
+    };
+  }, ["show",]);
+
+xm.register("x-actions", `
+<!---->
+<!---->
+<!---->
+`, function() {
+    const $ = this;
+    let _children_277_node = this.firstChild;
+let _children_278_node = _children_277_node.nextSibling;
+let _if_279_anchor = _children_278_node, _if_279_node = xm.fragment(`<x-icon-share></x-icon-share>`, 0).firstChild;
+               function _if_279_create($, ..._args) {
+                 let _children_278_node = _if_279_node.cloneNode(true);
+                 
+                 _children_278_node.init($.app, $, {});
+_children_278_node.addEventListener("click", function($event) {
+                   {$.onShare()};
+                   $.app.update();
+                 });
+
+                 _children_278_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   _children_278_node.update({});
+
+                   return _children_278_node;
+                 };
+                 return _children_278_node;
+               }
+let _if_279_connected = xm.nodeIf(($.props.share), _if_279_anchor, _if_279_anchor, $, _if_279_create);
+               _children_278_node = _if_279_connected;
+let _children_280_node = _children_278_node.nextSibling;
+let _children_281_node = _children_280_node.nextSibling;
+let _if_282_anchor = _children_281_node, _if_282_node = xm.fragment(`<x-icon-heart></x-icon-heart>`, 0).firstChild;
+               function _if_282_create($, ..._args) {
+                 let _children_281_node = _if_282_node.cloneNode(true);
+                 
+                 _children_281_node.classList.toggle("favorited", !!($.favorited));
+_children_281_node.init($.app, $, {});
+_children_281_node.addEventListener("click", function($event) {
+                   $.toggleFavorite();
+                   $.app.update();
+                 });
+
+                 _children_281_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   _children_281_node.classList.toggle("favorited", !!($.favorited));
+_children_281_node.update({});
+
+                   return _children_281_node;
+                 };
+                 return _children_281_node;
+               }
+let _if_282_connected = xm.nodeIf(($.props.heart), _if_282_anchor, _if_282_anchor, $, _if_282_create);
+               _children_281_node = _if_282_connected;
+let _children_283_node = _children_281_node.nextSibling;
+let _children_284_node = _children_283_node.nextSibling;
+let _if_285_anchor = _children_284_node, _if_285_node = xm.fragment(`<x-icon-visibility></x-icon-visibility>`, 0).firstChild;
+               function _if_285_create($, ..._args) {
+                 let _children_284_node = _if_285_node.cloneNode(true);
+                 
+                 _children_284_node.init($.app, $, {["hidden"]: ($.hidden)});
+_children_284_node.addEventListener("click", function($event) {
+                   $.toggleHideMovie();
+                   $.app.update();
+                 });
+
+                 _children_284_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   _children_284_node.update({["hidden"]: ($.hidden)});
+
+                   return _children_284_node;
+                 };
+                 return _children_284_node;
+               }
+let _if_285_connected = xm.nodeIf(($.props.visibility), _if_285_anchor, _if_285_anchor, $, _if_285_create);
+               _children_284_node = _if_285_connected;
+let _children_286_node = _children_284_node.nextSibling;
+
+    return () => {
+      _if_279_connected = xm.nodeIf(($.props.share), _if_279_connected, _if_279_anchor, $, _if_279_create);
+_if_282_connected = xm.nodeIf(($.props.heart), _if_282_connected, _if_282_anchor, $, _if_282_create);
+_if_285_connected = xm.nodeIf(($.props.visibility), _if_285_connected, _if_285_anchor, $, _if_285_create);
+
+    };
+  }, ["show",]);
+
+xm.register("x-details", `
+<x-nav></x-nav>
+<main>
+<div>
+<div class="cover">
+<img>
+<div class="time"><!----> - <!----></div>
+<x-actions></x-actions>
+</div>
+</div>
+<div class="content">
+<div class="meta">
+<div class="title"><a><!----></a></div>
+<a class="cinema"><!----></a>
+</div>
+<div class="stats">
+<div><b>Seats</b></div>
+<!---->
+<!---->
+</div>
+<div class="links">
+<!---->
+</div>
+<div class="description"><!----></div>
+<!---->
+</div>
+</main>
+`, function() {
+    const $ = this;
+    let _children_70_node = this.firstChild;
+let _children_71_node = _children_70_node.nextSibling;
+_children_71_node.init($.app, $, {});
+let _children_72_node = _children_71_node.nextSibling;
+let _children_73_node = _children_72_node.nextSibling;
+let _children_74_node = _children_73_node.firstChild;
+let _children_75_node = _children_74_node.nextSibling;
+let _children_76_node = _children_75_node.firstChild;
+let _children_77_node = _children_76_node.nextSibling;
+_children_77_node.classList.toggle("bookable", !!($.show.bookable));
+let _children_78_node = _children_77_node.firstChild;
+let _children_79_node = _children_78_node.nextSibling;
+let _properties_80_node = _children_79_node;
+xm.setProperty(_properties_80_node, "src", ($.show.img));
+let _children_81_node = _children_79_node.nextSibling;
+let _children_82_node = _children_81_node.nextSibling;
+let _children_83_node = _children_82_node.firstChild;
+let _children_85_node = _children_82_node;
+const _children_84_nodes = [_children_83_node,_children_83_node.nextSibling.nextSibling], _children_84_values = [];
+                 xm.updateChildNodes(_children_85_node, null, _children_84_nodes, _children_84_values, [($.show.date),($.show.time)], $, xm.createChildNode);
+let _children_86_node = _children_82_node.nextSibling;
+let _children_87_node = _children_86_node.nextSibling;
+_children_87_node.init($.app, $, {["show"]: ($.show), ["visibility"]: "true", ["share"]: "true", ["heart"]: "true"});
+let _children_88_node = _children_87_node.nextSibling;
+let _children_89_node = _children_77_node.nextSibling;
+let _children_90_node = _children_75_node.nextSibling;
+let _children_91_node = _children_90_node.nextSibling;
+let _children_92_node = _children_91_node.firstChild;
+let _children_93_node = _children_92_node.nextSibling;
+let _children_94_node = _children_93_node.firstChild;
+let _children_95_node = _children_94_node.nextSibling;
+let _children_96_node = _children_95_node.firstChild;
+let _properties_97_node = _children_96_node;
+xm.setProperty(_properties_97_node, "href", ($.show.url));
+let _children_98_node = _children_96_node.firstChild;
+let _children_100_node = _children_96_node;
+const _children_99_nodes = [_children_98_node], _children_99_values = [];
+                 xm.updateChildNodes(_children_100_node, null, _children_99_nodes, _children_99_values, [($.show.title)], $, xm.createChildNode);
+let _children_101_node = _children_95_node.nextSibling;
+let _children_102_node = _children_101_node.nextSibling;
+let _properties_103_node = _children_102_node;
+xm.setProperty(_properties_103_node, "href", ($.show.cinemaUrl));
+let _children_104_node = _children_102_node.firstChild;
+let _children_106_node = _children_102_node;
+const _children_105_nodes = [_children_104_node], _children_105_values = [];
+                 xm.updateChildNodes(_children_106_node, null, _children_105_nodes, _children_105_values, [($.show.cinemaShortName)], $, xm.createChildNode);
+let _children_107_node = _children_102_node.nextSibling;
+let _children_108_node = _children_93_node.nextSibling;
+let _children_109_node = _children_108_node.nextSibling;
+let _children_110_node = _children_109_node.firstChild;
+let _children_111_node = _children_110_node.nextSibling;
+let _children_112_node = _children_111_node.firstChild;
+let _children_113_node = _children_112_node.firstChild;
+let _children_114_node = _children_111_node.nextSibling;
+let _children_115_node = _children_114_node.nextSibling;
+let _if_116_anchor = _children_115_node, _if_116_node = xm.fragment(`<small>free, open seating</small>`, 0).firstChild;
+               function _if_116_create($, ..._args) {
+                 let _children_115_node = _if_116_node.cloneNode(true);
+                 
+                 let _children_117_node = _children_115_node.firstChild;
+
+                 _children_115_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   
+                   return _children_115_node;
+                 };
+                 return _children_115_node;
+               }
+let _if_116_connected = xm.nodeIf(($.show.available === -1), _if_116_anchor, _if_116_anchor, $, _if_116_create);
+               _children_115_node = _if_116_connected;
+let _children_118_node = _children_115_node.nextSibling;
+let _children_119_node = _children_118_node.nextSibling;
+let _if_120_anchor = _children_119_node, _if_120_node = xm.fragment(`<div>
+<x-chart></x-chart>
+<span><!----> free</span> |
+              <span><!----> reserved</span>
+</div>`, 0).firstChild;
+               function _if_120_create($, ..._args) {
+                 let _children_119_node = _if_120_node.cloneNode(true);
+                 
+                 let _children_121_node = _children_119_node.firstChild;
+let _children_122_node = _children_121_node.nextSibling;
+_children_122_node.init($.app, $, Object.assign({}, $.chart, {["formatTooltip"]: ($.formatTooltip)}));
+let _children_123_node = _children_122_node.nextSibling;
+let _children_124_node = _children_123_node.nextSibling;
+let _children_125_node = _children_124_node.firstChild;
+let _children_127_node = _children_124_node;
+const _children_126_nodes = [_children_125_node], _children_126_values = [];
+                 xm.updateChildNodes(_children_127_node, null, _children_126_nodes, _children_126_values, [($.show.available || 0)], $, xm.createChildNode);
+let _children_128_node = _children_124_node.nextSibling;
+let _children_129_node = _children_128_node.nextSibling;
+let _children_130_node = _children_129_node.firstChild;
+let _children_132_node = _children_129_node;
+const _children_131_nodes = [_children_130_node], _children_131_values = [];
+                 xm.updateChildNodes(_children_132_node, null, _children_131_nodes, _children_131_values, [($.show.reserved || 0)], $, xm.createChildNode);
+let _children_133_node = _children_129_node.nextSibling;
+
+                 _children_119_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   _children_122_node.update(Object.assign({}, $.chart, {["formatTooltip"]: ($.formatTooltip)}));
+xm.updateChildNodes(_children_127_node, null, _children_126_nodes, _children_126_values, [($.show.available || 0)], $, xm.createChildNode);
+xm.updateChildNodes(_children_132_node, null, _children_131_nodes, _children_131_values, [($.show.reserved || 0)], $, xm.createChildNode);
+
+                   return _children_119_node;
+                 };
+                 return _children_119_node;
+               }
+let _if_120_connected = xm.nodeIf(($.show.available !== -1), _if_120_anchor, _if_120_anchor, $, _if_120_create);
+               _children_119_node = _if_120_connected;
+let _children_134_node = _children_119_node.nextSibling;
+let _children_135_node = _children_109_node.nextSibling;
+let _children_136_node = _children_135_node.nextSibling;
+let _children_137_node = _children_136_node.firstChild;
+let _children_138_node = _children_137_node.nextSibling;
+let _if_139_anchor = _children_138_node, _if_139_node = xm.fragment(`<a target="_blank" rel="noopener" class="button">trailer</a>`, 0).firstChild;
+               function _if_139_create($, ..._args) {
+                 let _children_138_node = _if_139_node.cloneNode(true);
+                 
+                 let _properties_140_node = _children_138_node;
+xm.setProperty(_properties_140_node, "href", ($.show.trailer));
+let _children_141_node = _children_138_node.firstChild;
+
+                 _children_138_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.setProperty(_properties_140_node, "href", ($.show.trailer));
+
+                   return _children_138_node;
+                 };
+                 return _children_138_node;
+               }
+let _if_139_connected = xm.nodeIf(($.show.trailer), _if_139_anchor, _if_139_anchor, $, _if_139_create);
+               _children_138_node = _if_139_connected;
+let _children_142_node = _children_138_node.nextSibling;
+let _children_143_node = _children_136_node.nextSibling;
+let _children_144_node = _children_143_node.nextSibling;
+let _children_145_node = _children_144_node.firstChild;
+let _children_147_node = _children_144_node;
+const _children_146_nodes = [_children_145_node], _children_146_values = [];
+                 xm.updateChildNodes(_children_147_node, null, _children_146_nodes, _children_146_values, [($.show.description)], $, xm.createChildNode);
+let _children_148_node = _children_144_node.nextSibling;
+let _children_149_node = _children_148_node.nextSibling;
+let _if_150_anchor = _children_149_node, _if_150_node = xm.fragment(`<div class="alternatives">
+<h3>Alternatives</h3>
+<!---->
+</div>`, 0).firstChild;
+               function _if_150_create($, ..._args) {
+                 let _children_149_node = _if_150_node.cloneNode(true);
+                 
+                 let _children_151_node = _children_149_node.firstChild;
+let _children_152_node = _children_151_node.nextSibling;
+let _children_153_node = _children_152_node.firstChild;
+let _children_154_node = _children_152_node.nextSibling;
+let _children_155_node = _children_154_node.nextSibling;
+let _for_156_anchor = _children_155_node, _for_156_node = xm.fragment(`<div class="alternative">
+<h4><a><!----></a></h4>
+<div><!----> <a><!----></a></div>
+<div class="seats">
+<!---->
+<!---->
+</div>
+</div>`, 0).firstChild;
+               function _for_156_create($, ..._args) {
+                 let _children_155_node = _for_156_node.cloneNode(true);
+                 let show = _args[0];
+                 _children_155_node.classList.toggle("cinema-excluded", !!($.app.db.excludedCinemas[show.cinemaName]));
+let _children_157_node = _children_155_node.firstChild;
+let _children_158_node = _children_157_node.nextSibling;
+let _children_159_node = _children_158_node.firstChild;
+let _properties_160_node = _children_159_node;
+xm.setProperty(_properties_160_node, "href", "#/show/" + (show.id));
+let _children_161_node = _children_159_node.firstChild;
+let _children_163_node = _children_159_node;
+const _children_162_nodes = [_children_161_node], _children_162_values = [];
+                 xm.updateChildNodes(_children_163_node, null, _children_162_nodes, _children_162_values, [(show.title)], $, xm.createChildNode);
+let _children_164_node = _children_158_node.nextSibling;
+let _children_165_node = _children_164_node.nextSibling;
+let _children_166_node = _children_165_node.firstChild;
+let _children_167_node = _children_166_node.nextSibling.nextSibling;
+let _properties_168_node = _children_167_node;
+xm.setProperty(_properties_168_node, "href", (show.cinemaUrl));
+let _children_169_node = _children_167_node.firstChild;
+let _children_171_node = _children_167_node;
+const _children_170_nodes = [_children_169_node], _children_170_values = [];
+                 xm.updateChildNodes(_children_171_node, null, _children_170_nodes, _children_170_values, [(show.cinemaShortName)], $, xm.createChildNode);
+let _children_173_node = _children_165_node;
+const _children_172_nodes = [_children_166_node], _children_172_values = [];
+                 xm.updateChildNodes(_children_173_node, null, _children_172_nodes, _children_172_values, [(show.date.replaceAll(",", ""))], $, xm.createChildNode);
+let _children_174_node = _children_165_node.nextSibling;
+let _children_175_node = _children_174_node.nextSibling;
+let _children_176_node = _children_175_node.firstChild;
+let _children_177_node = _children_176_node.nextSibling;
+let _if_178_anchor = _children_177_node, _if_178_node = xm.fragment(`<small>free, open seating</small>`, 0).firstChild;
+               function _if_178_create($, ..._args) {
+                 let _children_177_node = _if_178_node.cloneNode(true);
+                 
+                 let _children_179_node = _children_177_node.firstChild;
+
+                 _children_177_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   
+                   return _children_177_node;
+                 };
+                 return _children_177_node;
+               }
+let _if_178_connected = xm.nodeIf((show.available === -1), _if_178_anchor, _if_178_anchor, $, _if_178_create);
+               _children_177_node = _if_178_connected;
+let _children_180_node = _children_177_node.nextSibling;
+let _children_181_node = _children_180_node.nextSibling;
+let _if_182_anchor = _children_181_node, _if_182_node = xm.fragment(`<div>
+<span><!----> free</span> |
+                  <span><!----> reserved</span>
+</div>`, 0).firstChild;
+               function _if_182_create($, ..._args) {
+                 let _children_181_node = _if_182_node.cloneNode(true);
+                 
+                 let _children_183_node = _children_181_node.firstChild;
+let _children_184_node = _children_183_node.nextSibling;
+let _children_185_node = _children_184_node.firstChild;
+let _children_187_node = _children_184_node;
+const _children_186_nodes = [_children_185_node], _children_186_values = [];
+                 xm.updateChildNodes(_children_187_node, null, _children_186_nodes, _children_186_values, [(show.available || 0)], $, xm.createChildNode);
+let _children_188_node = _children_184_node.nextSibling;
+let _children_189_node = _children_188_node.nextSibling;
+let _children_190_node = _children_189_node.firstChild;
+let _children_192_node = _children_189_node;
+const _children_191_nodes = [_children_190_node], _children_191_values = [];
+                 xm.updateChildNodes(_children_192_node, null, _children_191_nodes, _children_191_values, [(show.reserved || 0)], $, xm.createChildNode);
+let _children_193_node = _children_189_node.nextSibling;
+
+                 _children_181_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.updateChildNodes(_children_187_node, null, _children_186_nodes, _children_186_values, [(show.available || 0)], $, xm.createChildNode);
+xm.updateChildNodes(_children_192_node, null, _children_191_nodes, _children_191_values, [(show.reserved || 0)], $, xm.createChildNode);
+
+                   return _children_181_node;
+                 };
+                 return _children_181_node;
+               }
+let _if_182_connected = xm.nodeIf((show.available !== -1), _if_182_anchor, _if_182_anchor, $, _if_182_create);
+               _children_181_node = _if_182_connected;
+let _children_194_node = _children_181_node.nextSibling;
+let _children_195_node = _children_175_node.nextSibling;
+
+                 _children_155_node[xm.symbols.updateChildNode] = (..._args) => {
+                   show = _args[0];
+                   _children_155_node.classList.toggle("cinema-excluded", !!($.app.db.excludedCinemas[show.cinemaName]));
+xm.setProperty(_properties_160_node, "href", "#/show/" + (show.id));
+xm.updateChildNodes(_children_163_node, null, _children_162_nodes, _children_162_values, [(show.title)], $, xm.createChildNode);
+xm.setProperty(_properties_168_node, "href", (show.cinemaUrl));
+xm.updateChildNodes(_children_171_node, null, _children_170_nodes, _children_170_values, [(show.cinemaShortName)], $, xm.createChildNode);
+xm.updateChildNodes(_children_173_node, null, _children_172_nodes, _children_172_values, [(show.date.replaceAll(",", ""))], $, xm.createChildNode);
+_if_178_connected = xm.nodeIf((show.available === -1), _if_178_connected, _if_178_anchor, $, _if_178_create);
+_if_182_connected = xm.nodeIf((show.available !== -1), _if_182_connected, _if_182_anchor, $, _if_182_create);
+
+                   return _children_155_node;
+                 };
+                 return _children_155_node;
+               }
+const _for_156_values = [], _for_156_nodes = [];
+               xm.updateChildNodes(_for_156_anchor.parentNode, _for_156_anchor, _for_156_nodes, _for_156_values, $.alternatives || [], $, _for_156_create);
+let _children_196_node = _children_155_node.nextSibling;
+
+                 _children_149_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.updateChildNodes(_for_156_anchor.parentNode, _for_156_anchor, _for_156_nodes, _for_156_values, $.alternatives || [], $, _for_156_create);
+
+                   return _children_149_node;
+                 };
+                 return _children_149_node;
+               }
+let _if_150_connected = xm.nodeIf(($.alternatives.length), _if_150_anchor, _if_150_anchor, $, _if_150_create);
+               _children_149_node = _if_150_connected;
+let _children_197_node = _children_149_node.nextSibling;
+let _children_198_node = _children_91_node.nextSibling;
+let _children_199_node = _children_73_node.nextSibling;
+
+    return () => {
+      _children_71_node.update({});
+_children_77_node.classList.toggle("bookable", !!($.show.bookable));
+xm.setProperty(_properties_80_node, "src", ($.show.img));
+xm.updateChildNodes(_children_85_node, null, _children_84_nodes, _children_84_values, [($.show.date),($.show.time)], $, xm.createChildNode);
+_children_87_node.update({["show"]: ($.show), ["visibility"]: "true", ["share"]: "true", ["heart"]: "true"});
+xm.setProperty(_properties_97_node, "href", ($.show.url));
+xm.updateChildNodes(_children_100_node, null, _children_99_nodes, _children_99_values, [($.show.title)], $, xm.createChildNode);
+xm.setProperty(_properties_103_node, "href", ($.show.cinemaUrl));
+xm.updateChildNodes(_children_106_node, null, _children_105_nodes, _children_105_values, [($.show.cinemaShortName)], $, xm.createChildNode);
+_if_116_connected = xm.nodeIf(($.show.available === -1), _if_116_connected, _if_116_anchor, $, _if_116_create);
+_if_120_connected = xm.nodeIf(($.show.available !== -1), _if_120_connected, _if_120_anchor, $, _if_120_create);
+_if_139_connected = xm.nodeIf(($.show.trailer), _if_139_connected, _if_139_anchor, $, _if_139_create);
+xm.updateChildNodes(_children_147_node, null, _children_146_nodes, _children_146_values, [($.show.description)], $, xm.createChildNode);
+_if_150_connected = xm.nodeIf(($.alternatives.length), _if_150_connected, _if_150_anchor, $, _if_150_create);
+
+    };
+  }, ["show", "history",]);
+
+xm.register("x-icon-heart", `
+<svg viewBox="0 1 24 24">
+<path d="M 12 22
+                 l 9 -10
+                 A 5 5 0 1 0 12 7
+                 A 5 5 0 1 0 3 12
+                 z"></path>
+</svg>
+`, function() {
+    const $ = this;
+    xm.setTemplateProperty(this, "x-icon", "true");
+let _children_287_node = this.firstChild;
+let _children_288_node = _children_287_node.nextSibling;
+let _children_289_node = _children_288_node.firstChild;
+let _children_290_node = _children_289_node.nextSibling;
+let _children_291_node = _children_290_node.nextSibling;
+let _children_292_node = _children_288_node.nextSibling;
+
+    return () => {
+      
+    };
+  }, []);
+
+xm.register("x-icon-share", `
+<svg viewBox="0 0 24 24">
+<circle cx="5" cy="12" r="2.5"></circle>
+<circle cx="19" cy="5" r="2.5"></circle>
+<circle cx="19" cy="19" r="2.5"></circle>
+<polyline points="7.5 11, 16.5 6"></polyline>
+<polyline points="7.5 13, 16.5 18"></polyline>
+</svg>
+`, function() {
+    const $ = this;
+    xm.setTemplateProperty(this, "x-icon", "true");
+let _children_293_node = this.firstChild;
+let _children_294_node = _children_293_node.nextSibling;
+let _children_295_node = _children_294_node.firstChild;
+let _children_296_node = _children_295_node.nextSibling;
+let _children_297_node = _children_296_node.nextSibling;
+let _children_298_node = _children_297_node.nextSibling;
+let _children_299_node = _children_298_node.nextSibling;
+let _children_300_node = _children_299_node.nextSibling;
+let _children_301_node = _children_300_node.nextSibling;
+let _children_302_node = _children_301_node.nextSibling;
+let _children_303_node = _children_302_node.nextSibling;
+let _children_304_node = _children_303_node.nextSibling;
+let _children_305_node = _children_304_node.nextSibling;
+let _children_306_node = _children_294_node.nextSibling;
+
+    return () => {
+      
+    };
+  }, []);
+
+xm.register("x-icon-search", `
+<svg viewBox="0 0 24 24">
+<circle cx="9" cy="9" r="6.5"></circle>
+<polyline points="14 14, 20 20"></polyline>
+</svg>
+`, function() {
+    const $ = this;
+    xm.setTemplateProperty(this, "x-icon", "true");
+let _children_307_node = this.firstChild;
+let _children_308_node = _children_307_node.nextSibling;
+let _children_309_node = _children_308_node.firstChild;
+let _children_310_node = _children_309_node.nextSibling;
+let _children_311_node = _children_310_node.nextSibling;
+let _children_312_node = _children_311_node.nextSibling;
+let _children_313_node = _children_312_node.nextSibling;
+let _children_314_node = _children_308_node.nextSibling;
+
+    return () => {
+      
+    };
+  }, []);
+
+xm.register("x-icon-x", `
+<svg viewBox="0 0 24 24">
+<polyline points="5 5, 19 19"></polyline>
+<polyline points="19 5, 5 19"></polyline>
+</svg>
+`, function() {
+    const $ = this;
+    xm.setTemplateProperty(this, "x-icon", "true");
+let _children_315_node = this.firstChild;
+let _children_316_node = _children_315_node.nextSibling;
+let _children_317_node = _children_316_node.firstChild;
+let _children_318_node = _children_317_node.nextSibling;
+let _children_319_node = _children_318_node.nextSibling;
+let _children_320_node = _children_319_node.nextSibling;
+let _children_321_node = _children_320_node.nextSibling;
+let _children_322_node = _children_316_node.nextSibling;
+
+    return () => {
+      
+    };
+  }, []);
+
+xm.register("x-icon-star", `
+<svg viewBox="0 -1 24 24">
+<polyline points="21.5 8.9, 16.8 13.5, 17.9 20.1, 12.0 17.0, 6.1 20.1, 7.2 13.5, 2.5 8.9, 9.1 8.0, 12.0 2.0, 14.9 8.0, 21.5 8.9, 16.8 13.5"></polyline>
+</svg>
+`, function() {
+    const $ = this;
+    xm.setTemplateProperty(this, "x-icon", "true");
+let _children_323_node = this.firstChild;
+let _children_324_node = _children_323_node.nextSibling;
+let _children_325_node = _children_324_node.firstChild;
+let _children_326_node = _children_325_node.nextSibling;
+let _children_327_node = _children_326_node.nextSibling;
+let _children_328_node = _children_324_node.nextSibling;
+
+    return () => {
+      
+    };
+  }, []);
+
+xm.register("x-icon-more", `
+<svg viewBox="0 0 24 24">
+<circle cx="12" cy="6" r="0.5"></circle>
+<circle cx="12" cy="12" r="0.5"></circle>
+<circle cx="12" cy="18" r="0.5"></circle>
+</svg>
+`, function() {
+    const $ = this;
+    xm.setTemplateProperty(this, "x-icon", "true");
+let _children_329_node = this.firstChild;
+let _children_330_node = _children_329_node.nextSibling;
+let _children_331_node = _children_330_node.firstChild;
+let _children_332_node = _children_331_node.nextSibling;
+let _children_333_node = _children_332_node.nextSibling;
+let _children_334_node = _children_333_node.nextSibling;
+let _children_335_node = _children_334_node.nextSibling;
+let _children_336_node = _children_335_node.nextSibling;
+let _children_337_node = _children_336_node.nextSibling;
+let _children_338_node = _children_330_node.nextSibling;
+
+    return () => {
+      
+    };
+  }, []);
+
+xm.register("x-icon-drawer", `
+<svg viewBox="0 0 24 24">
+<circle cx="6" cy="6" r="0.5"></circle>
+<circle cx="6" cy="12" r="0.5"></circle>
+<circle cx="6" cy="18" r="0.5"></circle>
+<circle cx="12" cy="6" r="0.5"></circle>
+<circle cx="12" cy="12" r="0.5"></circle>
+<circle cx="12" cy="18" r="0.5"></circle>
+<circle cx="18" cy="6" r="0.5"></circle>
+<circle cx="18" cy="12" r="0.5"></circle>
+<circle cx="18" cy="18" r="0.5"></circle>
+</svg>
+`, function() {
+    const $ = this;
+    xm.setTemplateProperty(this, "x-icon", "true");
+let _children_339_node = this.firstChild;
+let _children_340_node = _children_339_node.nextSibling;
+let _children_341_node = _children_340_node.firstChild;
+let _children_342_node = _children_341_node.nextSibling;
+let _children_343_node = _children_342_node.nextSibling;
+let _children_344_node = _children_343_node.nextSibling;
+let _children_345_node = _children_344_node.nextSibling;
+let _children_346_node = _children_345_node.nextSibling;
+let _children_347_node = _children_346_node.nextSibling;
+let _children_348_node = _children_347_node.nextSibling;
+let _children_349_node = _children_348_node.nextSibling;
+let _children_350_node = _children_349_node.nextSibling;
+let _children_351_node = _children_350_node.nextSibling;
+let _children_352_node = _children_351_node.nextSibling;
+let _children_353_node = _children_352_node.nextSibling;
+let _children_354_node = _children_353_node.nextSibling;
+let _children_355_node = _children_354_node.nextSibling;
+let _children_356_node = _children_355_node.nextSibling;
+let _children_357_node = _children_356_node.nextSibling;
+let _children_358_node = _children_357_node.nextSibling;
+let _children_359_node = _children_358_node.nextSibling;
+let _children_360_node = _children_340_node.nextSibling;
+
+    return () => {
+      
+    };
+  }, []);
+
+xm.register("x-icon-menu", `
+<svg viewBox="0 0 24 24">
+<polyline points="4 6, 20 6"></polyline>
+<polyline points="4 12, 20 12"></polyline>
+<polyline points="4 18, 20 18"></polyline>
+</svg>
+`, function() {
+    const $ = this;
+    xm.setTemplateProperty(this, "x-icon", "true");
+let _children_361_node = this.firstChild;
+let _children_362_node = _children_361_node.nextSibling;
+let _children_363_node = _children_362_node.firstChild;
+let _children_364_node = _children_363_node.nextSibling;
+let _children_365_node = _children_364_node.nextSibling;
+let _children_366_node = _children_365_node.nextSibling;
+let _children_367_node = _children_366_node.nextSibling;
+let _children_368_node = _children_367_node.nextSibling;
+let _children_369_node = _children_368_node.nextSibling;
+let _children_370_node = _children_362_node.nextSibling;
+
+    return () => {
+      
+    };
+  }, []);
+
+xm.register("x-icon-visibility", `
+<svg viewBox="0 0 24 24">
+<path d="M 2 12
+                 C 8 2 16 2 22 12
+                 C 16 22 8 22 2 12
+                 z"></path>
+<circle cx="12" cy="12" r="2" fill="currentColor"></circle>
+<!---->
+</svg>
+`, function() {
+    const $ = this;
+    xm.setTemplateProperty(this, "x-icon", "true");
+let _children_371_node = this.firstChild;
+let _children_372_node = _children_371_node.nextSibling;
+let _children_373_node = _children_372_node.firstChild;
+let _children_374_node = _children_373_node.nextSibling;
+let _children_375_node = _children_374_node.nextSibling;
+let _children_376_node = _children_375_node.nextSibling;
+let _children_377_node = _children_376_node.nextSibling;
+let _children_378_node = _children_377_node.nextSibling;
+let _if_379_anchor = _children_378_node, _if_379_node = xm.fragment(`<polyline points="4 4, 20 20"></polyline>`, 1).firstChild;
+               function _if_379_create($, ..._args) {
+                 let _children_378_node = _if_379_node.cloneNode(true);
+                 
+                 
+                 _children_378_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   
+                   return _children_378_node;
+                 };
+                 return _children_378_node;
+               }
+let _if_379_connected = xm.nodeIf(($.props.hidden), _if_379_anchor, _if_379_anchor, $, _if_379_create);
+               _children_378_node = _if_379_connected;
+let _children_380_node = _children_378_node.nextSibling;
+let _children_381_node = _children_372_node.nextSibling;
+
+    return () => {
+      _if_379_connected = xm.nodeIf(($.props.hidden), _if_379_connected, _if_379_anchor, $, _if_379_create);
+
+    };
+  }, []);
+
+xm.register("x-chart", `
+<svg class="chart" viewBox="0 0 100 100" role="img" preserveAspectRatio="none">
+<!---->
+</svg>
+<div class="tooltip"></div>
+`, function() {
+    const $ = this;
+    let _children_382_node = this.firstChild;
+let _children_383_node = _children_382_node.nextSibling;
+let _children_384_node = _children_383_node.firstChild;
+let _children_385_node = _children_384_node.nextSibling;
+let _for_386_anchor = _children_385_node, _for_386_node = xm.fragment(`<g>
+<rect></rect>
+<rect fill="none" y="0"></rect>
+</g>`, 1).firstChild;
+               function _for_386_create($, ..._args) {
+                 let _children_385_node = _for_386_node.cloneNode(true);
+                 let b = _args[0];
+                 let _children_387_node = _children_385_node.firstChild;
+let _children_388_node = _children_387_node.nextSibling;
+let _properties_389_node = _children_388_node;
+xm.setProperty(_properties_389_node, "width", (b.width));
+xm.setProperty(_properties_389_node, "height", (b.height));
+xm.setProperty(_properties_389_node, "x", (b.x));
+xm.setProperty(_properties_389_node, "y", (b.y));
+xm.setProperty(_properties_389_node, "_value", (b));
+let _children_390_node = _children_388_node.nextSibling;
+let _children_391_node = _children_390_node.nextSibling;
+let _properties_392_node = _children_391_node;
+xm.setProperty(_properties_392_node, "width", (b.width));
+xm.setProperty(_properties_392_node, "height", (b.y));
+xm.setProperty(_properties_392_node, "x", (b.x));
+xm.setProperty(_properties_392_node, "_value", (b));
+let _children_393_node = _children_391_node.nextSibling;
+
+                 _children_385_node[xm.symbols.updateChildNode] = (..._args) => {
+                   b = _args[0];
+                   xm.setProperty(_properties_389_node, "width", (b.width));
+xm.setProperty(_properties_389_node, "height", (b.height));
+xm.setProperty(_properties_389_node, "x", (b.x));
+xm.setProperty(_properties_389_node, "y", (b.y));
+xm.setProperty(_properties_389_node, "_value", (b));
+xm.setProperty(_properties_392_node, "width", (b.width));
+xm.setProperty(_properties_392_node, "height", (b.y));
+xm.setProperty(_properties_392_node, "x", (b.x));
+xm.setProperty(_properties_392_node, "_value", (b));
+
+                   return _children_385_node;
+                 };
+                 return _children_385_node;
+               }
+const _for_386_values = [], _for_386_nodes = [];
+               xm.updateChildNodes(_for_386_anchor.parentNode, _for_386_anchor, _for_386_nodes, _for_386_values, $.bars || [], $, _for_386_create);
+let _children_394_node = _children_385_node.nextSibling;
+let _children_395_node = _children_383_node.nextSibling;
+let _children_396_node = _children_395_node.nextSibling;
+let _children_397_node = _children_396_node.nextSibling;
+
+    return () => {
+      xm.updateChildNodes(_for_386_anchor.parentNode, _for_386_anchor, _for_386_nodes, _for_386_values, $.bars || [], $, _for_386_create);
+
+    };
+  }, []);
+
+xm.register("x-nav", `
+<div class="links">
+<a href="#/" id="logo">freiluftkino</a>
+<div class="other">
+<a href="#/hidden">hidden (<!---->)</a> |
+          <a href="#/favorites">favorites (<!---->)</a>
+</div>
+</div>
+<details>
+<summary>cinemas</summary>
+<ul>
+<!---->
+</ul>
+</details>
+<details>
+<summary>filters</summary>
+<div id="settings">
+<div>
+<input id="onlyAvailable" type="checkbox">
+<label for="onlyAvailable">only available</label>
+</div>
+<label for="partialTitle">title</label>
+<input id="partialTitle" type="text" placeholder="title">
+<label for="cinema">excluded cinemas</label>
+<select multiple="true" id="cinema">
+<!---->
+</select>
+</div>
+</details>
+`, function() {
+    const $ = this;
+    let _children_200_node = this.firstChild;
+let _children_201_node = _children_200_node.nextSibling;
+let _children_202_node = _children_201_node.firstChild;
+let _children_203_node = _children_202_node.nextSibling;
+let _children_204_node = _children_203_node.firstChild;
+let _children_205_node = _children_203_node.nextSibling;
+let _children_206_node = _children_205_node.nextSibling;
+let _children_207_node = _children_206_node.firstChild;
+let _children_208_node = _children_207_node.nextSibling;
+_children_208_node.classList.toggle("active", !!($.app.path === '/hidden'));
+let _children_209_node = _children_208_node.firstChild;
+let _children_211_node = _children_208_node;
+const _children_210_nodes = [_children_209_node.nextSibling], _children_210_values = [];
+                 xm.updateChildNodes(_children_211_node, null, _children_210_nodes, _children_210_values, [($.hiddenCount)], $, xm.createChildNode);
+let _children_212_node = _children_208_node.nextSibling;
+let _children_213_node = _children_212_node.nextSibling;
+_children_213_node.classList.toggle("active", !!($.app.path === '/favorites'));
+let _children_214_node = _children_213_node.firstChild;
+let _children_216_node = _children_213_node;
+const _children_215_nodes = [_children_214_node.nextSibling], _children_215_values = [];
+                 xm.updateChildNodes(_children_216_node, null, _children_215_nodes, _children_215_values, [($.favoriteCount)], $, xm.createChildNode);
+let _children_217_node = _children_213_node.nextSibling;
+let _children_218_node = _children_206_node.nextSibling;
+let _children_219_node = _children_201_node.nextSibling;
+let _children_220_node = _children_219_node.nextSibling;
+let _properties_221_node = _children_220_node;
+xm.setProperty(_properties_221_node, "open", ($.app.path.startsWith('/cinema/')));
+let _children_222_node = _children_220_node.firstChild;
+let _children_223_node = _children_222_node.nextSibling;
+let _children_224_node = _children_223_node.firstChild;
+let _children_225_node = _children_223_node.nextSibling;
+let _children_226_node = _children_225_node.nextSibling;
+let _children_227_node = _children_226_node.firstChild;
+let _children_228_node = _children_227_node.nextSibling;
+let _for_229_anchor = _children_228_node, _for_229_node = xm.fragment(`<li>
+<a><!----></a>
+</li>`, 0).firstChild;
+               function _for_229_create($, ..._args) {
+                 let _children_228_node = _for_229_node.cloneNode(true);
+                 let [id, name] = _args[0];
+                 let _children_230_node = _children_228_node.firstChild;
+let _children_231_node = _children_230_node.nextSibling;
+_children_231_node.classList.toggle("active", !!($.app.params?.id === id));
+let _properties_232_node = _children_231_node;
+xm.setProperty(_properties_232_node, "href", "#/cinema/" + (id));
+let _children_233_node = _children_231_node.firstChild;
+let _children_235_node = _children_231_node;
+const _children_234_nodes = [_children_233_node], _children_234_values = [];
+                 xm.updateChildNodes(_children_235_node, null, _children_234_nodes, _children_234_values, [(name)], $, xm.createChildNode);
+let _children_236_node = _children_231_node.nextSibling;
+
+                 _children_228_node[xm.symbols.updateChildNode] = (..._args) => {
+                   [id, name] = _args[0];
+                   _children_231_node.classList.toggle("active", !!($.app.params?.id === id));
+xm.setProperty(_properties_232_node, "href", "#/cinema/" + (id));
+xm.updateChildNodes(_children_235_node, null, _children_234_nodes, _children_234_values, [(name)], $, xm.createChildNode);
+
+                   return _children_228_node;
+                 };
+                 return _children_228_node;
+               }
+const _for_229_values = [], _for_229_nodes = [];
+               xm.updateChildNodes(_for_229_anchor.parentNode, _for_229_anchor, _for_229_nodes, _for_229_values, Object.entries($.app.props.cinemas || {}) || [], $, _for_229_create);
+let _children_237_node = _children_228_node.nextSibling;
+let _children_238_node = _children_226_node.nextSibling;
+let _children_239_node = _children_220_node.nextSibling;
+let _children_240_node = _children_239_node.nextSibling;
+let _children_241_node = _children_240_node.firstChild;
+let _children_242_node = _children_241_node.nextSibling;
+let _children_243_node = _children_242_node.firstChild;
+let _children_244_node = _children_242_node.nextSibling;
+let _children_245_node = _children_244_node.nextSibling;
+let _children_246_node = _children_245_node.firstChild;
+let _children_247_node = _children_246_node.nextSibling;
+let _children_248_node = _children_247_node.firstChild;
+let _children_249_node = _children_248_node.nextSibling;
+let _bind_250_node = _children_249_node;
+if ($.app.db.onlyAvailable !== undefined) _bind_250_node["checked"] = $.app.db.onlyAvailable;
+
+               _bind_250_node.addEventListener("change", () => $.app.db.onlyAvailable = _bind_250_node["checked"]);
+_children_249_node.addEventListener("change", function($event) {
+                   $.app.update();
+                   $.app.update();
+                 });
+let _children_251_node = _children_249_node.nextSibling;
+let _children_252_node = _children_251_node.nextSibling;
+let _children_253_node = _children_252_node.firstChild;
+let _children_254_node = _children_252_node.nextSibling;
+let _children_255_node = _children_247_node.nextSibling;
+let _children_256_node = _children_255_node.nextSibling;
+let _children_257_node = _children_256_node.firstChild;
+let _children_258_node = _children_256_node.nextSibling;
+let _children_259_node = _children_258_node.nextSibling;
+let _bind_260_node = _children_259_node;
+if ($.app.searchTitle !== undefined) _bind_260_node["value"] = $.app.searchTitle;
+
+               _bind_260_node.addEventListener("keyup", () => $.app.searchTitle = _bind_260_node["value"]);
+_children_259_node.addEventListener("keyup", function($event) {
+                   $.app.update();
+                   $.app.update();
+                 });
+let _children_261_node = _children_259_node.nextSibling;
+let _children_262_node = _children_261_node.nextSibling;
+let _children_263_node = _children_262_node.firstChild;
+let _children_264_node = _children_262_node.nextSibling;
+let _children_265_node = _children_264_node.nextSibling;
+let _children_266_node = _children_265_node.firstChild;
+let _children_267_node = _children_266_node.nextSibling;
+let _for_268_anchor = _children_267_node, _for_268_node = xm.fragment(`<option><!----></option>`, 0).firstChild;
+               function _for_268_create($, ..._args) {
+                 let _children_267_node = _for_268_node.cloneNode(true);
+                 let [_, name] = _args[0];
+                 let _children_269_node = _children_267_node.firstChild;
+let _children_271_node = _children_267_node;
+const _children_270_nodes = [_children_269_node], _children_270_values = [];
+                 xm.updateChildNodes(_children_271_node, null, _children_270_nodes, _children_270_values, [(name)], $, xm.createChildNode);
+
+                 _children_267_node[xm.symbols.updateChildNode] = (..._args) => {
+                   [_, name] = _args[0];
+                   xm.updateChildNodes(_children_271_node, null, _children_270_nodes, _children_270_values, [(name)], $, xm.createChildNode);
+
+                   return _children_267_node;
+                 };
+                 return _children_267_node;
+               }
+const _for_268_values = [], _for_268_nodes = [];
+               xm.updateChildNodes(_for_268_anchor.parentNode, _for_268_anchor, _for_268_nodes, _for_268_values, Object.entries($.app.props.cinemas || {}) || [], $, _for_268_create);
+let _children_272_node = _children_267_node.nextSibling;
+let _bind_273_node = _children_265_node;
+if ($.app.db.excludedCinemas !== undefined) for (let o of _bind_273_node.options) o.selected = ($.app.db.excludedCinemas)?.[o.value] || false;
+
+               _bind_273_node.addEventListener("change", () => $.app.db.excludedCinemas = Object.fromEntries([..._bind_273_node.selectedOptions].map(o => [o.value, true])));
+_children_265_node.addEventListener("change", function($event) {
+                   $.app.update();
+                   
+                 });
+let _children_274_node = _children_265_node.nextSibling;
+let _children_275_node = _children_245_node.nextSibling;
+let _children_276_node = _children_240_node.nextSibling;
+
+    return () => {
+      _children_208_node.classList.toggle("active", !!($.app.path === '/hidden'));
+xm.updateChildNodes(_children_211_node, null, _children_210_nodes, _children_210_values, [($.hiddenCount)], $, xm.createChildNode);
+_children_213_node.classList.toggle("active", !!($.app.path === '/favorites'));
+xm.updateChildNodes(_children_216_node, null, _children_215_nodes, _children_215_values, [($.favoriteCount)], $, xm.createChildNode);
+xm.setProperty(_properties_221_node, "open", ($.app.path.startsWith('/cinema/')));
+xm.updateChildNodes(_for_229_anchor.parentNode, _for_229_anchor, _for_229_nodes, _for_229_values, Object.entries($.app.props.cinemas || {}) || [], $, _for_229_create);
+if (document.activeElement !== _bind_250_node && $.app.db.onlyAvailable !== undefined) _bind_250_node["checked"] = $.app.db.onlyAvailable;
+if (document.activeElement !== _bind_260_node && $.app.searchTitle !== undefined) _bind_260_node["value"] = $.app.searchTitle;
+xm.updateChildNodes(_for_268_anchor.parentNode, _for_268_anchor, _for_268_nodes, _for_268_values, Object.entries($.app.props.cinemas || {}) || [], $, _for_268_create);
+if (document.activeElement !== _bind_273_node && $.app.db.excludedCinemas !== undefined) for (let o of _bind_273_node.options) o.selected = ($.app.db.excludedCinemas)?.[o.value] || false;
+
+    };
+  }, []);
+</script>
+<link href="/src/base.css" rel="stylesheet">
+<link href="/freiluftkino/module.css" rel="stylesheet">
+<style>
+     x-list .days {
+       display: flex;
+       flex-direction: column;
+       gap: 2em;
+     }
+
+     x-list .date {
+       font-size: 1.5em;
+     }
+
+     x-list .shows {
+       display: flex;
+       width: 100%;
+       overflow-x: auto;
+       gap: 1em;
+     }
+
+     x-show {
+       font-size: 0.75em;
+       display: grid;
+       grid-template-rows: 12rem 1fr;
+       flex-shrink: 0;
+       flex-grow: 0;
+       width: 8rem;
+       background-color: #333;
+       border-radius: 0.5em;
+       overflow: hidden;
+     }
+
+     x-show .cover:not(.bookable) {
+       filter: grayscale(0.75) opacity(0.5);
+     }
+
+     x-show .cover {
+       position: relative;
+     }
+
+     x-show .time {
+       position: absolute;
+       pointer-events: none;
+       padding: 0.5em;
+       top: 0;
+       font-size: 1.5em;
+       font-weight: bold;
+       width: 100%;
+       background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+     }
+
+     x-show x-actions {
+       position: absolute;
+       top: 0;
+       right: 0;
+       font-size: 1.5em;
+       padding: 0.5em;
+     }
+
+     x-show .seats {
+       font-size: 0.75em;
+     }
+
+     x-show .info {
+       position: absolute;
+       bottom: 0;
+       padding: 0.5em;
+       padding-top: 1em;
+       overflow: hidden;
+       background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+       width: 100%;
+     }
+
+     x-show .title {
+       font-weight: bold;
+       white-space: nowrap;
+       text-overflow: ellipsis;
+       overflow: hidden;
+     }
+
+     x-show .cinema {
+       font-size: 0.75em;
+     }
+
+     @media (min-device-width: 768px) {
+       x-show {
+         font-size: 1em;
+         grid-template-rows: 20rem 1fr;
+         width: 13rem;
+       }
+     }
+
+    </style>
+<style>
+     x-actions {
+       color: #ccc;
+       display: flex;
+       gap: 0.5em;
+     }
+
+     x-actions svg:hover {
+       stroke: #fff;
+     }
+    </style>
+<style>
+     x-details main {
+       display: flex;
+       flex-direction: column;
+       gap: 1em;
+       max-width: 50em;
+       margin: 0 auto;
+       border-radius: 0.25em;
+       overflow: hidden;
+     }
+
+     x-details x-chart svg {
+       display: block;
+       width: 100%;
+       height: 2em;
+       fill: #fff;
+     }
+
+     x-details img {
+       height: 30em;
+       width: 100%;
+       object-fit: cover;
+     }
+
+     x-details .content {
+       display: flex;
+       flex-direction: column;
+       gap: 1em;
+       margin: 1em;
+     }
+
+     x-details .title {
+       font-size: 1.5em;
+       white-space: initial;
+     }
+
+     x-details x-actions {
+       position: absolute;
+       top: 0;
+       right: 0;
+       padding: 0.5em;
+       font-size: 1.5em;
+     }
+
+     x-details .cover {
+       position: relative;
+     }
+
+     x-details .time {
+       position: absolute;
+       pointer-events: none;
+       padding: 0.5em;
+       top: 0;
+       font-size: 1.5em;
+       font-weight: bold;
+       width: 100%;
+       background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+     }
+
+     x-details .description {
+       line-height: 1.5;
+     }
+
+     x-details .actions {
+       position: absolute;
+       top: 0;
+       right: 0;
+       padding: 0.5em;
+       font-size: 1.5em;
+     }
+
+     x-details .alternative.cinema-excluded, x-details .alternative .seats {
+       color: #888;
+     }
+
+    </style>
+<style>
+     :where([x-icon]) {
+       display: inline-flex;
+       align-items: center;
+       width: 1em;
+       stroke: currentColor;
+       stroke-width: 2;
+       stroke-linejoin: round;
+       fill: none;
+     }
+
+     :where(x-icon-more, x-icon-drawer) {
+       fill: currentColor;
+     }
+    </style>
+<style>
+     x-chart {
+       display: block;
+       position: relative;
+     }
+
+     rect {
+       pointer-events: all;
+     }
+
+     g:hover {
+       fill: #555;
+       stroke: #fff;
+       stroke-width: 0.1px;
+     }
+
+     rect:hover + rect, rect[fill=none]:hover {
+       fill: #555a;
+     }
+
+     x-chart:hover .tooltip {
+       display: block;
+     }
+
+     .tooltip {
+       pointer-events: none;
+       font-size: 0.75em;
+       display: none;
+       position: absolute;
+       opacity: 0.9;
+       left: 0;
+       bottom: 0;
+       background-color: #555;
+       padding: 0.25em;
+       font-weight: bold;
+       color: white;
+     }
+    </style>
+<style>
+     x-nav {
+       display: flex;
+       flex-direction: column;
+       gap: 0.5em;
+       padding: 0.5em;
+     }
+
+     x-nav .links{
+       display: flex;
+       justify-content: space-between;
+     }
+
+     x-nav .active {
+       text-decoration: underline;
+     }
+
+     x-nav #logo {
+       font-size: 2em;
+     }
+
+     x-nav details summary {
+       font-size: 1.5em;
+     }
+
+     x-nav #settings {
+       display: flex;
+       flex-direction: column;
+       gap: 0.5em;
+     }
+    </style>
+
+
+  
+    <title>freiluftkino</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/src/base.css" rel="stylesheet">
+    <link href="/freiluftkino/module.css" rel="stylesheet">
+    
+    
+    
+    
+
+    
+  </head>
+<body>
+</body></html>

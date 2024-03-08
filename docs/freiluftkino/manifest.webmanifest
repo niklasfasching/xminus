@@ -1,0 +1,14 @@
+{
+  "version": "0.0.2",
+  "display": "standalone",
+  "name": "freiluftkino",
+  "short_name": "flk",
+  "background_color": "#000",
+  "theme_color": "#000",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "any"
+    }
+  ]
+}

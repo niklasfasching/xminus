@@ -1,0 +1,251 @@
+:root {
+  --bg: #fff;
+  --mg: #444;
+  --fg: #000;
+  --hl: hsla(95, 50%, 70%, 50%);
+  --ll: #ddd;
+
+  --hf: sans-serif;
+  --bf: system-ui;
+
+  --bw: .1rem;
+}
+
+*, ::after, ::before {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  font: normal 1.2em/1.6 var(--bf);
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100%;
+  margin: 0;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+h1 { font: bold 3em    var(--hf); }
+h2 { font: bold 1.75em var(--hf); }
+h3 { font: bold 1.25em var(--hf); }
+h4 { font: bold 0.75em var(--hf); }
+
+h1, h2, h3 {
+  color: var(--mg);
+  display: inline;
+  background: linear-gradient(180deg, var(--bg) 60%, var(--hl) 60%) no-repeat;
+  background-position: .25em;
+  line-height: 1.2;
+  width: max-content;
+}
+
+:is(h1, h2, h3)::before, :is(h1, h2, h3)::after {
+  content: "";
+  display: block;
+}
+
+p {
+  margin: 1em 0;
+  line-height: 1.6;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  display: inline-block;
+  font: inherit;
+  padding: .25em .5em;
+  margin: .5em 0;
+  background: var(--bg);
+  color: var(--fg);
+  border: var(--bw) solid var(--fg);
+  box-shadow: var(--bw) var(--bw) 0 var(--fg);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+button:is(:active, :focus) {
+  filter: brightness(90%);
+}
+
+button:is(:active, :focus) {
+  outline: .25rem solid var(--hl);
+  box-shadow: none;
+  transform: translate(var(--bw), 0);
+}
+
+:is(button,input):disabled:is(:disabled, :hover, :focus) {
+  color: var(--mg);
+  border-color: var(--mg);
+  outline: none;
+  box-shadow: none;
+  transform: none;
+  filter: none;
+  cursor: not-allowed;
+}
+
+input, textarea, select {
+  font: inherit;
+  box-shadow: none;
+  font-size: 1em;
+  color: var(--fg);
+  background-color: var(--bg);
+  border: var(--bw) solid var(--fg);
+  border-radius: 0;
+  padding: .25em .5em;
+  margin: .5em 0;
+}
+
+input:not([type=checkbox], [type=radio]) {
+  width: 100%;
+  appearance: none;
+}
+
+input:is([type=checkbox], [type=radio]) {
+  transform: scale(1.5);
+  margin: 1em;
+}
+
+input:not(:placeholder-shown):invalid {
+  border-color: red;
+}
+
+:is(input, textarea, select):is(:active, :focus) {
+  outline: .25rem solid var(--hl);
+}
+
+a {
+  color: var(--fg);
+  background: var(--hl);
+  padding: 0 .25em;
+  text-decoration: none;
+  box-shadow: 0 var(--bw) 0 var(--fg);
+}
+
+a:visited {
+  background: var(--ll);
+}
+
+table {
+  text-align: left;
+  font-size: 1rem;
+  border-collapse: collapse;
+  width: 100%;
+  border-spacing: 0;
+  margin: 2em 0;
+}
+
+table td, th {
+  padding: .5em;
+  border: var(--bw) solid var(--fg);
+}
+
+code {
+  border: var(--bw) solid var(--fg);
+  padding: .1em .2em;
+}
+
+mark {
+  padding: .1em .2em;
+}
+
+pre {
+  white-space: pre-wrap;
+  margin: 2em 0 2em 3em;
+}
+
+blockquote {
+  font-style: italic;
+  margin: 2em 0 2em 2em;
+  color: var(--mg);
+}
+
+.row {
+  display: flex;
+}
+
+.space {
+  gap: .5em;
+  margin: 1em;
+}
+
+.bg-hl {
+  background: var(--hl);
+}
+
+.fg-hl {
+  color: var(--hl);
+}
+
+form {
+  width: 100%;
+}
+
+fieldset {
+  border: var(--bw) solid var(--fg);
+  padding: 1em;
+}
+
+label {
+  font-weight: bold;
+  padding: 3em;
+}
+
+ul {
+  padding: 0 2ch;
+}
+
+li {
+  margin: 0.5em 0;
+}
+
+.debug * {
+  outline: 1px solid #f00 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.logo {
+  display: inline-block;
+  white-space: pre-line;
+  border: .2em solid black;
+  font: bold 1em monospace;
+  padding: .125em .25em;
+  margin: .5em;
+  pointer-events: visible;
+}
+
+.space > * + * {
+  margin-top: var(--space, 1em);
+}
+
+@media (pointer: fine) {
+  a:hover, button:hover {
+    filter: brightness(90%);
+  }
+}
+
+@media (min-width: 70ch) {
+  main {
+    width: 70ch;
+    margin: 0 auto;
+  }
+
+  .col   { flex: 1;                   }
+  .col2  { flex: 0 0 calc(100% / 2);  }
+  .col3  { flex: 0 0 calc(100% / 3);  }
+  .col4  { flex: 0 0 calc(100% / 4);  }
+  .col5  { flex: 0 0 calc(100% / 5);  }
+  .col10 { flex: 0 0 calc(100% / 10); }
+}

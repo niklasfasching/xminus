@@ -1,0 +1,151 @@
+/* header */
+
+nav {
+    top: 0;
+    position: sticky;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5em 1em;
+    margin-bottom: 1em;
+    border-bottom: 1px solid #aaa;
+    background-color: white;
+    word-break: initial;
+}
+
+#logo {
+    font-weight: bold;
+    text-decoration: none;
+    color: inherit;
+    font-family: var(--font-mono);
+}
+
+#settings {
+    display: flex;
+    gap: 0.25em;
+}
+
+#top-value, #top-unit, #top-order {
+    border: none;
+    border-radius: 0;
+    border-bottom: 1px solid black;
+    width: 4ch;
+    background-color: white;
+    appearance: none;
+}
+
+#top-order {
+    width: auto;
+}
+
+/* stories */
+
+#stories {
+    border-spacing: 0;
+    width: 100%;
+}
+
+#stories thead {
+    font-family: var(--font-mono);
+    font-size: 0.75em;
+    color: #aaa;
+}
+
+#stories a {
+    text-decoration: none;
+    color: inherit;
+}
+
+#stories a:visited, #stories .old {
+    color: #888;
+}
+
+#stories td {
+    padding: 0.75em 0.5em;
+}
+
+#stories tr:hover {
+    background-color: #eee;
+}
+
+#stories tbody .points, #stories tbody .comments {
+    text-align: right;
+}
+
+#stories .title small, #stories .author {
+    font-size: 0.75em;
+    color: #888;
+    font-family: var(--font-mono);
+}
+
+#stories .title small {
+    word-break: break-all;
+}
+
+#stories .author {
+    margin-top: 0.75em;
+}
+
+#stories .points, #stories .comments {
+    --alpha: 0%;
+    background-color: hsla(30, 100%, 80%, var(--alpha));
+    word-break: keep-all;
+}
+
+/* story */
+
+#story {
+    margin: 1em;
+}
+#story #title {
+    font-size: 2em;
+}
+
+#story #title small {
+    font-size: 0.75em;
+    color: #888;
+    font-family: var(--font-mono);
+}
+
+#story #title a, #story #meta a, #story .header a {
+    text-decoration: none;
+    color: inherit;
+}
+
+#story #meta {
+    color: #888;
+    margin-bottom: 2em;
+    border-bottom: 1px dashed #888;
+}
+
+#story .comment {
+    margin: 1.25em 0;
+}
+
+#story .comment .header {
+    margin-left: -0.5em;
+    padding: 0.5em;
+    color: #888;
+    --alpha: 0%;
+    background-color: hsla(30, 100%, 80%, var(--alpha));
+}
+
+#story .comment p {
+    margin: 0.5em 0 0.5em 0;
+}
+
+#story .comment .count {
+    font-size: 0.75em;
+    color: #888
+}
+
+#story .comment > .comments {
+    margin-left: 1em;
+}
+
+#story pre {
+    background-color: #eee;
+    max-width: 100%;
+    overflow-x: scroll;
+
+}

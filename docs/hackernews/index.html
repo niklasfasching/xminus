@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html><head>
+<script type="module">
+import {mount} from '/src/runtime.mjs';
+     mount(document.body, "x-app", {
+       routes: {
+         "/story": ["x-story"],
+         "/": ["x-stories"],
+       },
+     });
+    </script>
+<script type="module">
+import {define, Component} from '/src/runtime.mjs';
+   define("x-app", class extends Component {
+     onInit({db, routes}) {
+       this.views = {};
+       this.db = this.initDB(db);
+       if (!location.hash) history.replaceState(null, null, "#/");
+       this.routeList = Object.entries(routes || []).map(([path, tag]) => [
+         new RegExp("^" + path.replace(/\/?$/, "/?$").replaceAll(/{(\w+)}/g, "(?<$1>[^/]+)")),
+         tag,
+       ]);
+       if (routes) {
+         this.listener = () => this.route();
+         window.addEventListener("popstate", this.listener);
+         this.route();
+       }
+     }
+
+     initDB(defaults = {}) {
+       const json = localStorage.getItem("app.db");
+       const db = Object.assign({}, defaults, json === "" ? {} : JSON.parse(json));
+       return this.proxy(db, () => localStorage.setItem("app.db", JSON.stringify(this.db)));
+     }
+
+     route() {
+       const [path, query] = location.hash.slice(1).split("?");
+       const [r, [tag, f = (app) => ({})]] = this.routeList.find(([r]) => r.test(path)) || [null, []];
+       if (!r) {
+         location.hash = "#/";
+         return void console.log(`404 for ${path}: ${JSON.stringify(this.routeList.map(([r]) => r.toString()))}`);
+       }
+       this.f = f;
+       this.path = path;
+       this.params = r.exec(path).groups;
+       for (const k in this.params) this.params[k] = decodeURIComponent(this.params[k]);
+       this.query = Object.fromEntries(new URLSearchParams(query).entries());
+       if (this.active && this.active === this.views[tag]) {
+         window.scrollTo(0, 0);
+         return void this.active.update?.(f(this.app));
+       }
+       if (this.active) this.active.style.display = "none";
+       if (this.views[tag]) {
+         this.active = this.views[tag];
+         this.active.update(f(this.app));
+         this.active.style.removeProperty("display");
+       } else {
+         this.active = this.views[tag] = document.createElement(tag);
+         if (this.active instanceof Component) this.active.init(this.app, this, f(this.app));
+         this.append(this.active);
+       }
+       window.scrollTo(0, 0);
+     }
+
+     onUpdate() {
+       if (this.active) this.active.update?.(this.f(this.app));
+     }
+
+     proxy(x, cb) {
+       const that = this;
+       return new Proxy(x, {
+         get(x, key) {
+           const value = x[key];
+           return typeof value === "object" ? that.proxy(value, cb) : value;
+         },
+         set(x, key, value) {
+           x[key] = value;
+           cb();
+           return true;
+         },
+         deleteProperty(x, key) {
+           const deleted = delete x[key];
+           if (deleted) cb();
+           return deleted;
+         },
+       })
+     }
+
+     onRemove() {
+       window.removeEventListener("popstate", this.listener);
+     }
+   });
+  </script>
+<script type="module">
+import {define, Component} from '/src/runtime.mjs';
+
+ define("x-stories", class extends Component {
+   stories = []
+
+   onInit(props) {
+     const defaults = {n: 20, unit: "n", order: "date", seen: {}};
+     Object.assign(this, defaults, JSON.parse(localStorage.getItem("hackernews") || "{}"));
+     this.updateStories();
+   }
+
+   onUpdate(props) {
+     for (const id in this.seen) if (Date.now() - this.seen[id] > 2 * 24 * 60 * 60 * 1000) delete this.seen[id];
+     localStorage.setItem("hackernews", JSON.stringify({
+       n: this.n,
+       unit: this.unit,
+       order: this.order,
+       seen: this.seen,
+     }));
+   }
+
+   timeSince(story) {
+     const fmt = (n, unit) => `${n} ${unit}${n === 1 ? "" : "s"}`;
+     const s = Date.now() / 1000 - story.created_at_i;
+     if (s < 60 * 60) return fmt(Math.floor(s / 60), "minute");
+     else if (s < 60 * 60 * 24) return fmt(Math.floor(s / 60 / 60), "hour");
+     else return fmt(Math.floor(s / 60 / 60 / 24), "day");
+   }
+
+   isOld(story) {
+     return Date.now() - this.seen[story.objectID] > 60 * 60 * 1000;
+   }
+
+   async updateStories() {
+     const {n, unit, order, seen} = this;
+     const url = "https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=50";
+     const {hits} = await fetch(url).then(r => r.json());
+     const orderProperty = order === "date" ? "created_at_i" :
+                           order === "points" ? "points" : "num_comments"
+     this.stories = hits
+       .sort((a, b) => b.points - a.points)
+       .slice(0, unit === "n" ? n : Math.ceil(hits.length * (n / 100)))
+       .sort((a, b) => b[orderProperty] - a[orderProperty])
+       .map(s => {
+         if (!seen[s.objectID]) seen[s.objectID] = Date.now();
+         if (!s.url) s.url = `https://news.ycombinator.com/item?id=${s.objectID}`;
+         s.hostname = new URL(s.url).hostname.replace(/^(www\.)/, "");
+         return s
+       });
+     this.maxPoints = Math.max(...this.stories.map(s => s.points));
+     this.maxComments = Math.max(...this.stories.map(s => s.num_comments));
+     this.app.update();
+   }
+ });
+</script>
+<script type="module">
+import {define, Component} from '/src/runtime.mjs';
+
+ define("x-story", class extends Component {
+   onRender(props) {
+     this.getStory();
+     if (this.story) document.title = this.story.title;
+   }
+
+   toNode(html) {
+     const div = document.createElement("div");
+     div.innerHTML = html;
+     return div;
+   }
+
+   timeSince() {
+     const fmt = (n, unit) => `${n} ${unit}${n === 1 ? "" : "s"}`;
+     const s = Date.now() / 1000 - this.story.created_at_i;
+     if (s < 60 * 60) return fmt(Math.floor(s / 60), "minute");
+     else if (s < 60 * 60 * 24) return fmt(Math.floor(s / 60 / 60), "hour");
+     else return fmt(Math.floor(s / 60 / 60 / 24), "day");
+   }
+
+   async getStory() {
+     const id = this.app.query.id;
+     if (this.id === id) return;
+     this.id = id;
+     this.error = null;
+     this.story = null;
+     try {
+       this.story = await fetch("https://hn.algolia.com/api/v1/items/" + id).then(r => r.json());
+     } catch(e) {
+       this.error = `Story with id "${id}" does not exist`;
+       return void this.app.update();
+     }
+     this.maxComments = 0;
+     const processItem = (item) => {
+       item.children = item.children
+                           .filter(item => item.author)
+                           .map(processItem)
+                           .sort((a, b) => b.childCount - a.childCount);
+       item.childCount = item.children.reduce((count, item) => count + 1 + item.childCount, 0);
+       if (item !== this.story) this.maxComments = Math.max(this.maxComments, item.childCount)
+       return item;
+     }
+     this.story = processItem(this.story);
+     if (!this.story.url) this.story.url = `https://news.ycombinator.com/item?id=${this.story.id}`;
+     this.story.hostname = new URL(this.story.url).hostname.replace(/^(www\.)/, "");
+     this.update();
+   }
+ });
+</script>
+<script type="module">
+
+xm.register("x-app", ``, function() {
+    const $ = this;
+    
+    return () => {
+      
+    };
+  }, []);
+
+xm.register("x-stories", `
+<nav>
+<div id="logo">hackernews</div>
+<div id="settings">
+      top
+      <input id="top-value">
+<select id="top-unit">
+<option>n</option>
+<option>%</option>
+</select>
+      sorted by
+      <select id="top-order">
+<option>date</option>
+<option>points</option>
+<option>comments</option>
+</select>
+</div>
+</nav>
+<table id="stories">
+<thead>
+<tr>
+<th class="points">pts</th>
+<th class="comments">cmnts</th>
+</tr>
+</thead>
+<tbody>
+<!---->
+</tbody>
+</table>
+`, function() {
+    const $ = this;
+    let _children_0_node = this.firstChild;
+let _children_1_node = _children_0_node.nextSibling;
+let _children_2_node = _children_1_node.firstChild;
+let _children_3_node = _children_2_node.nextSibling;
+let _children_4_node = _children_3_node.firstChild;
+let _children_5_node = _children_3_node.nextSibling;
+let _children_6_node = _children_5_node.nextSibling;
+let _children_7_node = _children_6_node.firstChild;
+let _children_8_node = _children_7_node.nextSibling;
+let _bind_9_node = _children_8_node;
+if ($.n !== undefined) _bind_9_node["value"] = $.n;
+
+               _bind_9_node.addEventListener("keyup", () => $.n = _bind_9_node["value"]);
+_children_8_node.addEventListener("change", function($event) {
+                   $.updateStories();
+                   
+                 });
+let _children_10_node = _children_8_node.nextSibling;
+let _children_11_node = _children_10_node.nextSibling;
+let _children_12_node = _children_11_node.firstChild;
+let _children_13_node = _children_12_node.nextSibling;
+let _children_14_node = _children_13_node.firstChild;
+let _children_15_node = _children_13_node.nextSibling;
+let _children_16_node = _children_15_node.nextSibling;
+let _children_17_node = _children_16_node.firstChild;
+let _children_18_node = _children_16_node.nextSibling;
+let _bind_19_node = _children_11_node;
+if ($.unit !== undefined) _bind_19_node["value"] = $.unit;
+
+               _bind_19_node.addEventListener("change", () => $.unit = _bind_19_node["value"]);
+_children_11_node.addEventListener("change", function($event) {
+                   $.updateStories();
+                   
+                 });
+let _children_20_node = _children_11_node.nextSibling;
+let _children_21_node = _children_20_node.nextSibling;
+let _children_22_node = _children_21_node.firstChild;
+let _children_23_node = _children_22_node.nextSibling;
+let _children_24_node = _children_23_node.firstChild;
+let _children_25_node = _children_23_node.nextSibling;
+let _children_26_node = _children_25_node.nextSibling;
+let _children_27_node = _children_26_node.firstChild;
+let _children_28_node = _children_26_node.nextSibling;
+let _children_29_node = _children_28_node.nextSibling;
+let _children_30_node = _children_29_node.firstChild;
+let _children_31_node = _children_29_node.nextSibling;
+let _bind_32_node = _children_21_node;
+if ($.order !== undefined) _bind_32_node["value"] = $.order;
+
+               _bind_32_node.addEventListener("change", () => $.order = _bind_32_node["value"]);
+_children_21_node.addEventListener("change", function($event) {
+                   $.updateStories();
+                   
+                 });
+let _children_33_node = _children_21_node.nextSibling;
+let _children_34_node = _children_6_node.nextSibling;
+let _children_35_node = _children_1_node.nextSibling;
+let _children_36_node = _children_35_node.nextSibling;
+let _children_37_node = _children_36_node.firstChild;
+let _children_38_node = _children_37_node.nextSibling;
+let _children_39_node = _children_38_node.firstChild;
+let _children_40_node = _children_39_node.nextSibling;
+let _children_41_node = _children_40_node.firstChild;
+let _children_42_node = _children_41_node.nextSibling;
+let _children_43_node = _children_42_node.firstChild;
+let _children_44_node = _children_42_node.nextSibling;
+let _children_45_node = _children_44_node.nextSibling;
+let _children_46_node = _children_45_node.firstChild;
+let _children_47_node = _children_45_node.nextSibling;
+let _children_48_node = _children_40_node.nextSibling;
+let _children_49_node = _children_38_node.nextSibling;
+let _children_50_node = _children_49_node.nextSibling;
+let _children_51_node = _children_50_node.firstChild;
+let _children_52_node = _children_51_node.nextSibling;
+let _for_53_anchor = _children_52_node, _for_53_node = xm.fragment(`<tr>
+<td class="points">
+<p><!----></p>
+</td>
+<td class="comments">
+<a><!----></a>
+</td>
+<td class="title">
+<a><!----></a>
+<small>(<a><!----></a>)</small>
+<div class="author">
+            <!----> ago by
+            <a><!----></a>
+</div>
+</td>
+</tr>`, 0).firstChild;
+               function _for_53_create($, ..._args) {
+                 let _children_52_node = _for_53_node.cloneNode(true);
+                 let story = _args[0];
+                 let _children_54_node = _children_52_node.firstChild;
+let _children_55_node = _children_54_node.nextSibling;
+let _properties_56_node = _children_55_node;
+xm.setProperty(_properties_56_node, "style", "--alpha: " + ((story.points / $.maxPoints) * 100) + "%;");
+let _children_57_node = _children_55_node.firstChild;
+let _children_58_node = _children_57_node.nextSibling;
+let _properties_59_node = _children_58_node;
+xm.setProperty(_properties_59_node, "class", ($.isOld(story) ? 'old' : ''));
+let _children_60_node = _children_58_node.firstChild;
+let _children_62_node = _children_58_node;
+const _children_61_nodes = [_children_60_node], _children_61_values = [];
+                 xm.updateChildNodes(_children_62_node, null, _children_61_nodes, _children_61_values, [(story.points || 0)], $, xm.createChildNode);
+let _children_63_node = _children_58_node.nextSibling;
+let _children_64_node = _children_55_node.nextSibling;
+let _children_65_node = _children_64_node.nextSibling;
+let _properties_66_node = _children_65_node;
+xm.setProperty(_properties_66_node, "style", "--alpha: " + ((story.num_comments / $.maxComments) * 100) + "%;");
+let _children_67_node = _children_65_node.firstChild;
+let _children_68_node = _children_67_node.nextSibling;
+let _properties_69_node = _children_68_node;
+xm.setProperty(_properties_69_node, "href", "#/story?id=" + (story.objectID));
+let _children_70_node = _children_68_node.firstChild;
+let _children_72_node = _children_68_node;
+const _children_71_nodes = [_children_70_node], _children_71_values = [];
+                 xm.updateChildNodes(_children_72_node, null, _children_71_nodes, _children_71_values, [(story.num_comments || 0)], $, xm.createChildNode);
+let _children_73_node = _children_68_node.nextSibling;
+let _children_74_node = _children_65_node.nextSibling;
+let _children_75_node = _children_74_node.nextSibling;
+let _children_76_node = _children_75_node.firstChild;
+let _children_77_node = _children_76_node.nextSibling;
+let _properties_78_node = _children_77_node;
+xm.setProperty(_properties_78_node, "href", (story.url));
+let _children_79_node = _children_77_node.firstChild;
+let _children_81_node = _children_77_node;
+const _children_80_nodes = [_children_79_node], _children_80_values = [];
+                 xm.updateChildNodes(_children_81_node, null, _children_80_nodes, _children_80_values, [(story.title)], $, xm.createChildNode);
+let _children_82_node = _children_77_node.nextSibling;
+let _children_83_node = _children_82_node.nextSibling;
+let _children_84_node = _children_83_node.firstChild;
+let _children_85_node = _children_84_node.nextSibling;
+let _properties_86_node = _children_85_node;
+xm.setProperty(_properties_86_node, "href", "https://news.ycombinator.com/from?site=" + (story.hostname));
+let _children_87_node = _children_85_node.firstChild;
+let _children_89_node = _children_85_node;
+const _children_88_nodes = [_children_87_node], _children_88_values = [];
+                 xm.updateChildNodes(_children_89_node, null, _children_88_nodes, _children_88_values, [(story.hostname)], $, xm.createChildNode);
+let _children_90_node = _children_85_node.nextSibling;
+let _children_91_node = _children_83_node.nextSibling;
+let _children_92_node = _children_91_node.nextSibling;
+let _children_93_node = _children_92_node.firstChild;
+let _children_94_node = _children_93_node.nextSibling.nextSibling.nextSibling;
+let _properties_95_node = _children_94_node;
+xm.setProperty(_properties_95_node, "href", "https://news.ycombinator.com/user?id=" + (story.author));
+let _children_96_node = _children_94_node.firstChild;
+let _children_98_node = _children_94_node;
+const _children_97_nodes = [_children_96_node], _children_97_values = [];
+                 xm.updateChildNodes(_children_98_node, null, _children_97_nodes, _children_97_values, [(story.author)], $, xm.createChildNode);
+let _children_99_node = _children_94_node.nextSibling;
+let _children_101_node = _children_92_node;
+const _children_100_nodes = [_children_93_node.nextSibling], _children_100_values = [];
+                 xm.updateChildNodes(_children_101_node, null, _children_100_nodes, _children_100_values, [($.timeSince(story))], $, xm.createChildNode);
+let _children_102_node = _children_92_node.nextSibling;
+let _children_103_node = _children_75_node.nextSibling;
+
+                 _children_52_node[xm.symbols.updateChildNode] = (..._args) => {
+                   story = _args[0];
+                   xm.setProperty(_properties_56_node, "style", "--alpha: " + ((story.points / $.maxPoints) * 100) + "%;");
+xm.setProperty(_properties_59_node, "class", ($.isOld(story) ? 'old' : ''));
+xm.updateChildNodes(_children_62_node, null, _children_61_nodes, _children_61_values, [(story.points || 0)], $, xm.createChildNode);
+xm.setProperty(_properties_66_node, "style", "--alpha: " + ((story.num_comments / $.maxComments) * 100) + "%;");
+xm.setProperty(_properties_69_node, "href", "#/story?id=" + (story.objectID));
+xm.updateChildNodes(_children_72_node, null, _children_71_nodes, _children_71_values, [(story.num_comments || 0)], $, xm.createChildNode);
+xm.setProperty(_properties_78_node, "href", (story.url));
+xm.updateChildNodes(_children_81_node, null, _children_80_nodes, _children_80_values, [(story.title)], $, xm.createChildNode);
+xm.setProperty(_properties_86_node, "href", "https://news.ycombinator.com/from?site=" + (story.hostname));
+xm.updateChildNodes(_children_89_node, null, _children_88_nodes, _children_88_values, [(story.hostname)], $, xm.createChildNode);
+xm.setProperty(_properties_95_node, "href", "https://news.ycombinator.com/user?id=" + (story.author));
+xm.updateChildNodes(_children_98_node, null, _children_97_nodes, _children_97_values, [(story.author)], $, xm.createChildNode);
+xm.updateChildNodes(_children_101_node, null, _children_100_nodes, _children_100_values, [($.timeSince(story))], $, xm.createChildNode);
+
+                   return _children_52_node;
+                 };
+                 return _children_52_node;
+               }
+const _for_53_values = [], _for_53_nodes = [];
+               xm.updateChildNodes(_for_53_anchor.parentNode, _for_53_anchor, _for_53_nodes, _for_53_values, $.stories || [], $, _for_53_create);
+let _children_104_node = _children_52_node.nextSibling;
+let _children_105_node = _children_50_node.nextSibling;
+let _children_106_node = _children_36_node.nextSibling;
+
+    return () => {
+      if (document.activeElement !== _bind_9_node && $.n !== undefined) _bind_9_node["value"] = $.n;
+if (document.activeElement !== _bind_19_node && $.unit !== undefined) _bind_19_node["value"] = $.unit;
+if (document.activeElement !== _bind_32_node && $.order !== undefined) _bind_32_node["value"] = $.order;
+xm.updateChildNodes(_for_53_anchor.parentNode, _for_53_anchor, _for_53_nodes, _for_53_values, $.stories || [], $, _for_53_create);
+
+    };
+  }, []);
+
+xm.register("x-story", `
+<nav>
+<a id="logo" href="#/">hackernews</a>
+</nav>
+<!---->
+<!---->
+`, function() {
+    const $ = this;
+    let _children_107_node = this.firstChild;
+let _children_108_node = _children_107_node.nextSibling;
+let _children_109_node = _children_108_node.firstChild;
+let _children_110_node = _children_109_node.nextSibling;
+let _children_111_node = _children_110_node.firstChild;
+let _children_112_node = _children_110_node.nextSibling;
+let _children_113_node = _children_108_node.nextSibling;
+let _children_114_node = _children_113_node.nextSibling;
+let _if_115_anchor = _children_114_node, _if_115_node = xm.fragment(`<h1><!----></h1>`, 0).firstChild;
+               function _if_115_create($, ..._args) {
+                 let _children_114_node = _if_115_node.cloneNode(true);
+                 
+                 let _children_116_node = _children_114_node.firstChild;
+let _children_118_node = _children_114_node;
+const _children_117_nodes = [_children_116_node], _children_117_values = [];
+                 xm.updateChildNodes(_children_118_node, null, _children_117_nodes, _children_117_values, [($.error)], $, xm.createChildNode);
+
+                 _children_114_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.updateChildNodes(_children_118_node, null, _children_117_nodes, _children_117_values, [($.error)], $, xm.createChildNode);
+
+                   return _children_114_node;
+                 };
+                 return _children_114_node;
+               }
+let _if_115_connected = xm.nodeIf(($.error), _if_115_anchor, _if_115_anchor, $, _if_115_create);
+               _children_114_node = _if_115_connected;
+let _children_119_node = _children_114_node.nextSibling;
+let _children_120_node = _children_119_node.nextSibling;
+let _if_121_anchor = _children_120_node, _if_121_node = xm.fragment(`<main id="story">
+<h1 id="title">
+<a><!----></a>
+<a><small>(<!---->)</small></a>
+</h1>
+<div>
+      <!---->
+    </div>
+<div id="meta">
+<div>
+<b><!----> points</b> |
+        <!----> ago |
+        <a><!----></a>
+</div>
+      <!----> comments
+    </div>
+<div id="comments">
+<!---->
+</div>
+</main>`, 0).firstChild;
+               function _if_121_create($, ..._args) {
+                 let _children_120_node = _if_121_node.cloneNode(true);
+                 
+                 let _children_122_node = _children_120_node.firstChild;
+let _children_123_node = _children_122_node.nextSibling;
+let _children_124_node = _children_123_node.firstChild;
+let _children_125_node = _children_124_node.nextSibling;
+let _properties_126_node = _children_125_node;
+xm.setProperty(_properties_126_node, "href", ($.story.url));
+let _children_127_node = _children_125_node.firstChild;
+let _children_129_node = _children_125_node;
+const _children_128_nodes = [_children_127_node], _children_128_values = [];
+                 xm.updateChildNodes(_children_129_node, null, _children_128_nodes, _children_128_values, [($.story.title)], $, xm.createChildNode);
+let _children_130_node = _children_125_node.nextSibling;
+let _children_131_node = _children_130_node.nextSibling;
+let _properties_132_node = _children_131_node;
+xm.setProperty(_properties_132_node, "href", "https://news.ycombinator.com/from?site=" + ($.story.hostname));
+let _children_133_node = _children_131_node.firstChild;
+let _children_134_node = _children_133_node.firstChild;
+let _children_136_node = _children_133_node;
+const _children_135_nodes = [_children_134_node.nextSibling], _children_135_values = [];
+                 xm.updateChildNodes(_children_136_node, null, _children_135_nodes, _children_135_values, [($.story.hostname)], $, xm.createChildNode);
+let _children_137_node = _children_131_node.nextSibling;
+let _children_138_node = _children_123_node.nextSibling;
+let _children_139_node = _children_138_node.nextSibling;
+let _children_140_node = _children_139_node.firstChild;
+let _children_142_node = _children_139_node;
+const _children_141_nodes = [_children_140_node.nextSibling], _children_141_values = [];
+                 xm.updateChildNodes(_children_142_node, null, _children_141_nodes, _children_141_values, [($.toNode($.story.text))], $, xm.createChildNode);
+let _children_143_node = _children_139_node.nextSibling;
+let _children_144_node = _children_143_node.nextSibling;
+let _children_145_node = _children_144_node.firstChild;
+let _children_146_node = _children_145_node.nextSibling;
+let _children_147_node = _children_146_node.firstChild;
+let _children_148_node = _children_147_node.nextSibling;
+let _children_149_node = _children_148_node.firstChild;
+let _children_151_node = _children_148_node;
+const _children_150_nodes = [_children_149_node], _children_150_values = [];
+                 xm.updateChildNodes(_children_151_node, null, _children_150_nodes, _children_150_values, [($.story.points)], $, xm.createChildNode);
+let _children_152_node = _children_148_node.nextSibling;
+let _children_153_node = _children_152_node.nextSibling.nextSibling.nextSibling;
+let _properties_154_node = _children_153_node;
+xm.setProperty(_properties_154_node, "href", "https://news.ycombinator.com/user?id=" + ($.story.author));
+let _children_155_node = _children_153_node.firstChild;
+let _children_157_node = _children_153_node;
+const _children_156_nodes = [_children_155_node], _children_156_values = [];
+                 xm.updateChildNodes(_children_157_node, null, _children_156_nodes, _children_156_values, [($.story.author)], $, xm.createChildNode);
+let _children_158_node = _children_153_node.nextSibling;
+let _children_160_node = _children_146_node;
+const _children_159_nodes = [_children_152_node.nextSibling], _children_159_values = [];
+                 xm.updateChildNodes(_children_160_node, null, _children_159_nodes, _children_159_values, [($.timeSince($.story))], $, xm.createChildNode);
+let _children_161_node = _children_146_node.nextSibling;
+let _children_163_node = _children_144_node;
+const _children_162_nodes = [_children_161_node.nextSibling], _children_162_values = [];
+                 xm.updateChildNodes(_children_163_node, null, _children_162_nodes, _children_162_values, [($.story.childCount)], $, xm.createChildNode);
+let _children_164_node = _children_144_node.nextSibling;
+let _children_165_node = _children_164_node.nextSibling;
+let _children_166_node = _children_165_node.firstChild;
+let _children_167_node = _children_166_node.nextSibling;
+let _for_168_anchor = _children_167_node, _for_168_node = xm.fragment(`<x-comment></x-comment>`, 0).firstChild;
+               function _for_168_create($, ..._args) {
+                 let _children_167_node = _for_168_node.cloneNode(true);
+                 let comment = _args[0];
+                 _children_167_node.init($.app, $, {["comment"]: (comment)});
+
+                 _children_167_node[xm.symbols.updateChildNode] = (..._args) => {
+                   comment = _args[0];
+                   _children_167_node.update({["comment"]: (comment)});
+
+                   return _children_167_node;
+                 };
+                 return _children_167_node;
+               }
+const _for_168_values = [], _for_168_nodes = [];
+               xm.updateChildNodes(_for_168_anchor.parentNode, _for_168_anchor, _for_168_nodes, _for_168_values, $.story.children || [], $, _for_168_create);
+let _children_169_node = _children_167_node.nextSibling;
+let _children_170_node = _children_165_node.nextSibling;
+
+                 _children_120_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.setProperty(_properties_126_node, "href", ($.story.url));
+xm.updateChildNodes(_children_129_node, null, _children_128_nodes, _children_128_values, [($.story.title)], $, xm.createChildNode);
+xm.setProperty(_properties_132_node, "href", "https://news.ycombinator.com/from?site=" + ($.story.hostname));
+xm.updateChildNodes(_children_136_node, null, _children_135_nodes, _children_135_values, [($.story.hostname)], $, xm.createChildNode);
+xm.updateChildNodes(_children_142_node, null, _children_141_nodes, _children_141_values, [($.toNode($.story.text))], $, xm.createChildNode);
+xm.updateChildNodes(_children_151_node, null, _children_150_nodes, _children_150_values, [($.story.points)], $, xm.createChildNode);
+xm.setProperty(_properties_154_node, "href", "https://news.ycombinator.com/user?id=" + ($.story.author));
+xm.updateChildNodes(_children_157_node, null, _children_156_nodes, _children_156_values, [($.story.author)], $, xm.createChildNode);
+xm.updateChildNodes(_children_160_node, null, _children_159_nodes, _children_159_values, [($.timeSince($.story))], $, xm.createChildNode);
+xm.updateChildNodes(_children_163_node, null, _children_162_nodes, _children_162_values, [($.story.childCount)], $, xm.createChildNode);
+xm.updateChildNodes(_for_168_anchor.parentNode, _for_168_anchor, _for_168_nodes, _for_168_values, $.story.children || [], $, _for_168_create);
+
+                   return _children_120_node;
+                 };
+                 return _children_120_node;
+               }
+let _if_121_connected = xm.nodeIf(($.story), _if_121_anchor, _if_121_anchor, $, _if_121_create);
+               _children_120_node = _if_121_connected;
+let _children_171_node = _children_120_node.nextSibling;
+
+    return () => {
+      _if_115_connected = xm.nodeIf(($.error), _if_115_connected, _if_115_anchor, $, _if_115_create);
+_if_121_connected = xm.nodeIf(($.story), _if_121_connected, _if_121_anchor, $, _if_121_create);
+
+    };
+  }, []);
+
+xm.register("x-comment", `
+<div class="comment">
+<div class="header">
+<a><!----></a>
+<a><!----> ago</a>
+</div>
+    <!---->
+    <!---->
+<!---->
+</div>
+`, function() {
+    const $ = this;
+    $["story"] = xm.inject($, "X-STORY");
+let _children_172_node = this.firstChild;
+let _children_173_node = _children_172_node.nextSibling;
+let _children_174_node = _children_173_node.firstChild;
+let _children_175_node = _children_174_node.nextSibling;
+let _properties_176_node = _children_175_node;
+xm.setProperty(_properties_176_node, "style", "--alpha: " + (($.comment.childCount / $.story.maxComments) * 100) + "%;");
+let _children_177_node = _children_175_node.firstChild;
+let _children_178_node = _children_177_node.nextSibling;
+let _properties_179_node = _children_178_node;
+xm.setProperty(_properties_179_node, "href", "https://news.ycombinator.com/user?id=" + ($.comment.author));
+let _children_180_node = _children_178_node.firstChild;
+let _children_182_node = _children_178_node;
+const _children_181_nodes = [_children_180_node], _children_181_values = [];
+                 xm.updateChildNodes(_children_182_node, null, _children_181_nodes, _children_181_values, [($.comment.author)], $, xm.createChildNode);
+let _children_183_node = _children_178_node.nextSibling;
+let _children_184_node = _children_183_node.nextSibling;
+let _properties_185_node = _children_184_node;
+xm.setProperty(_properties_185_node, "href", "https://news.ycombinator.com/item?id=" + ($.comment.id));
+let _children_186_node = _children_184_node.firstChild;
+let _children_188_node = _children_184_node;
+const _children_187_nodes = [_children_186_node], _children_187_values = [];
+                 xm.updateChildNodes(_children_188_node, null, _children_187_nodes, _children_187_values, [($.story.timeSince($.comment))], $, xm.createChildNode);
+let _children_189_node = _children_184_node.nextSibling;
+let _children_190_node = _children_175_node.nextSibling;
+let _children_191_node = _children_190_node.nextSibling.nextSibling.nextSibling;
+let _if_192_anchor = _children_191_node, _if_192_node = xm.fragment(`<div class="count">
+      [<!---->
+      <!---->/<!---->]
+    </div>`, 0).firstChild;
+               function _if_192_create($, ..._args) {
+                 let _children_191_node = _if_192_node.cloneNode(true);
+                 
+                 let _children_193_node = _children_191_node.firstChild;
+let _children_195_node = _children_191_node;
+const _children_194_nodes = [_children_193_node.nextSibling,_children_193_node.nextSibling.nextSibling.nextSibling,_children_193_node.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling], _children_194_values = [];
+                 xm.updateChildNodes(_children_195_node, null, _children_194_nodes, _children_194_values, [($.comment.showChildren ? "-" : "+"),($.comment.children.length),($.comment.childCount)], $, xm.createChildNode);
+_children_191_node.addEventListener("click", function($event) {
+                   $.comment.showChildren = !$.comment.showChildren;
+                   $.app.update();
+                 });
+
+                 _children_191_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.updateChildNodes(_children_195_node, null, _children_194_nodes, _children_194_values, [($.comment.showChildren ? "-" : "+"),($.comment.children.length),($.comment.childCount)], $, xm.createChildNode);
+
+                   return _children_191_node;
+                 };
+                 return _children_191_node;
+               }
+let _if_192_connected = xm.nodeIf(($.comment.childCount !== 0), _if_192_anchor, _if_192_anchor, $, _if_192_create);
+               _children_191_node = _if_192_connected;
+let _children_196_node = _children_191_node.nextSibling;
+let _children_197_node = _children_196_node.nextSibling;
+let _if_198_anchor = _children_197_node, _if_198_node = xm.fragment(`<div class="comments">
+<!---->
+</div>`, 0).firstChild;
+               function _if_198_create($, ..._args) {
+                 let _children_197_node = _if_198_node.cloneNode(true);
+                 
+                 let _children_199_node = _children_197_node.firstChild;
+let _children_200_node = _children_199_node.nextSibling;
+let _for_201_anchor = _children_200_node, _for_201_node = xm.fragment(`<x-comment></x-comment>`, 0).firstChild;
+               function _for_201_create($, ..._args) {
+                 let _children_200_node = _for_201_node.cloneNode(true);
+                 let comment = _args[0];
+                 _children_200_node.init($.app, $, {["comment"]: (comment)});
+
+                 _children_200_node[xm.symbols.updateChildNode] = (..._args) => {
+                   comment = _args[0];
+                   _children_200_node.update({["comment"]: (comment)});
+
+                   return _children_200_node;
+                 };
+                 return _children_200_node;
+               }
+const _for_201_values = [], _for_201_nodes = [];
+               xm.updateChildNodes(_for_201_anchor.parentNode, _for_201_anchor, _for_201_nodes, _for_201_values, $.comment.children || [], $, _for_201_create);
+let _children_202_node = _children_200_node.nextSibling;
+
+                 _children_197_node[xm.symbols.updateIfNode] = (..._args) => {
+                   
+                   xm.updateChildNodes(_for_201_anchor.parentNode, _for_201_anchor, _for_201_nodes, _for_201_values, $.comment.children || [], $, _for_201_create);
+
+                   return _children_197_node;
+                 };
+                 return _children_197_node;
+               }
+let _if_198_connected = xm.nodeIf(($.comment.showChildren), _if_198_anchor, _if_198_anchor, $, _if_198_create);
+               _children_197_node = _if_198_connected;
+let _children_203_node = _children_197_node.nextSibling;
+let _children_205_node = _children_173_node;
+const _children_204_nodes = [_children_190_node.nextSibling], _children_204_values = [];
+                 xm.updateChildNodes(_children_205_node, null, _children_204_nodes, _children_204_values, [($.story.toNode($.comment.text))], $, xm.createChildNode);
+let _children_206_node = _children_173_node.nextSibling;
+
+    return () => {
+      xm.setProperty(_properties_176_node, "style", "--alpha: " + (($.comment.childCount / $.story.maxComments) * 100) + "%;");
+xm.setProperty(_properties_179_node, "href", "https://news.ycombinator.com/user?id=" + ($.comment.author));
+xm.updateChildNodes(_children_182_node, null, _children_181_nodes, _children_181_values, [($.comment.author)], $, xm.createChildNode);
+xm.setProperty(_properties_185_node, "href", "https://news.ycombinator.com/item?id=" + ($.comment.id));
+xm.updateChildNodes(_children_188_node, null, _children_187_nodes, _children_187_values, [($.story.timeSince($.comment))], $, xm.createChildNode);
+_if_192_connected = xm.nodeIf(($.comment.childCount !== 0), _if_192_connected, _if_192_anchor, $, _if_192_create);
+_if_198_connected = xm.nodeIf(($.comment.showChildren), _if_198_connected, _if_198_anchor, $, _if_198_create);
+xm.updateChildNodes(_children_205_node, null, _children_204_nodes, _children_204_values, [($.story.toNode($.comment.text))], $, xm.createChildNode);
+
+    };
+  }, ["comment",]);
+</script>
+<link href="/src/base.css" rel="stylesheet">
+<link href="/hackernews/hackernews.css" rel="stylesheet">
+
+
+  
+    <title>hackernews</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="manifest" href="manifest.json">
+    <link href="/src/base.css" rel="stylesheet">
+    <link href="/hackernews/hackernews.css" rel="stylesheet">
+    
+    
+    
+    
+  </head>
+  <body>
+
+</body></html>
