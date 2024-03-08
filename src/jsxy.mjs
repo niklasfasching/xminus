@@ -167,8 +167,8 @@ function renderChildren(parentNode, vnodes, component, ns) {
   for (let k in oldHooks) {
     if (!(k in newHooks)) for (let h of oldHooks[k]) h.unmount?.();
   }
-  for (let n = parentNode.childNodes.length - vnodes.length; n > 0; n--) {
-    unmount(parentNode.lastChild).remove();
+  for (let i = nodes.length-1; i >= vnodes.length; i--) {
+    unmount(nodes[i]).remove()
   }
 }
 

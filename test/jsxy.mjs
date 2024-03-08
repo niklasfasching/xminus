@@ -254,11 +254,18 @@ t.describe("jsxy", () => {
       t.assertFixture(document.body.innerHTML);
     });
 
+    t("renderChildren works correctly when removing multiple children", () => {
+      render(html`<div>${[1, 2, 3]}</div>`, document.body);
+      t.assertFixture(document.body.innerHTML);
+      render(html`<div>${[null, 3]}</div>`, document.body);
+      t.assertFixture(document.body.innerHTML);
+    });
+
     t("render removes existing vnode props when necessary", () => {
       render(html`<div .class>hello world</div>`, document.body);
       render(html`<div>hello world</div>`, document.body);
       t.assertFixture(document.body.innerHTML);
-    })
+    });
   });
 
   t.describe("db/query", () => {
